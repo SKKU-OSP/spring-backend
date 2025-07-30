@@ -56,6 +56,7 @@ public class GithubAccount {
         this.githubName = githubName;
         this.githubToken = githubToken;
         this.githubEmail = githubEmail;
+        this.lastCrawling = null;
         this.userAccount = userAccount;
     }
 
