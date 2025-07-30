@@ -1,11 +1,10 @@
 package com.sosd.sosd_backend.entity.user;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.sosd.sosd_backend.entity.github.GithubAccount;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -19,11 +18,12 @@ import org.hibernate.annotations.CreationTimestamp;
 @Table(name = "user_account")
 public class UserAccount {
 
-    // 데이터베이스 필드
+    // 기본 키
     @Id
     @Column(name = "student_id", length = 20)
     private String studentId; // SSO로 받은 학교 학번 사용
 
+    // 일반 컬럼
     @Column(nullable = false, length = 40)
     private String name;
 
@@ -58,6 +58,11 @@ public class UserAccount {
     @Column(name = "is_active")
     private boolean isActive;
 
+    // 연관관계 설정
+    @OneToMany(mappedBy = "userAccount", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<GithubAccount> githubAccounts;
+
+    // 생성자
     @Builder
     public UserAccount(
             String studentId,
