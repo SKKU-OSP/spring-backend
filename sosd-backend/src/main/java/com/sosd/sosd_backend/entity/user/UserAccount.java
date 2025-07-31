@@ -58,10 +58,6 @@ public class UserAccount {
     @Column(name = "is_active")
     private boolean isActive;
 
-    // 연관관계 설정
-    @OneToMany(mappedBy = "userAccount", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<GithubAccount> githubAccounts;
-
     // 생성자
     @Builder
     public UserAccount(
