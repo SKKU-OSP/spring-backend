@@ -12,6 +12,6 @@ CREATE TABLE IF NOT EXISTS user_account (
     portfolio TEXT COMMENT '포트폴리오',
     date_joined TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '가입일시',
     last_login TIMESTAMP NULL COMMENT '마지막 로그인',
-    absence INT NOT NULL DEFAULT 0 COMMENT '휴학',
+    absence INT NOT NULL DEFAULT 0 COMMENT '재학 여부 (0: 재학, 1: 휴학, 2: 졸업 등)',
     is_active BOOLEAN NOT NULL DEFAULT TRUE COMMENT '활성 상태'
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='사용자 계정 테이블';
