@@ -1,5 +1,6 @@
 -- src/main/resources/schema/user-schema.sql
 
+-- 유저 테이블
 CREATE TABLE IF NOT EXISTS user_account (
     student_id VARCHAR(20) NOT NULL PRIMARY KEY COMMENT '학번 (SSO)',
     name VARCHAR(40) NOT NULL COMMENT '이름(SSO)',
@@ -15,3 +16,19 @@ CREATE TABLE IF NOT EXISTS user_account (
     absence INT NOT NULL DEFAULT 0 COMMENT '재학 여부 (0: 재학, 1: 휴학, 2: 졸업 등)',
     is_active BOOLEAN NOT NULL DEFAULT TRUE COMMENT '활성 상태'
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='사용자 계정 테이블';
+
+-- ================================
+-- 인덱스 생성
+-- ================================
+
+-- 활성 시용자 조회용
+CREATE INDEX IF NOT EXISTS idx_user_is_active ON user_account(is_active);
+
+-- 재학생 통계용
+CREATE INDEX IF NOT EXISTS idx_user_active_college_dept ON user_account(is_active, college, dept);
+
+-- 가입자 분석용
+CREATE INDEX IF NOT EXISTS idx_user_date_joined ON user_account(date_joined);
+
+-- 활동 분석용
+CREATE INDEX IF NOT EXISTS idx_user_last_login ON user_account(last_login);

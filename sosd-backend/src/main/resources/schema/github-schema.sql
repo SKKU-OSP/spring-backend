@@ -18,6 +18,12 @@ CREATE TABLE IF NOT EXISTS github_account (
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub 계정 테이블';
 
--- 인덱스 추가
+-- ================================
+-- 인덱스 생성
+-- ================================
+
+-- username을 통한 조회용
 CREATE INDEX IF NOT EXISTS idx_github_account_login ON github_account(github_login);
+
+-- 스케쥴링할 때 기간 쿼리용
 CREATE INDEX IF NOT EXISTS idx_github_account_last_crawling ON github_account(last_crawling);
