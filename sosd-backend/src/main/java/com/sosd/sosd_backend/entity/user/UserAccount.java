@@ -1,10 +1,8 @@
 package com.sosd.sosd_backend.entity.user;
 
-import com.sosd.sosd_backend.entity.github.GithubAccount;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import lombok.Builder;
 import lombok.Getter;
