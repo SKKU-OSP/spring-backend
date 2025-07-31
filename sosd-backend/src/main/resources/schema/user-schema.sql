@@ -21,11 +21,11 @@ CREATE TABLE IF NOT EXISTS user_account (
 -- 인덱스 생성
 -- ================================
 
--- 활성 시용자 조회용
-CREATE INDEX IF NOT EXISTS idx_user_is_active ON user_account(is_active);
+-- 재학 여부 필터용
+CREATE INDEX IF NOT EXISTS idx_user_is_active ON user_account(absence);
 
 -- 재학생 통계용
-CREATE INDEX IF NOT EXISTS idx_user_active_college_dept ON user_account(is_active, college, dept);
+CREATE INDEX IF NOT EXISTS idx_user_active_college_dept ON user_account(is_active, college, dept, absence);
 
 -- 가입자 분석용
 CREATE INDEX IF NOT EXISTS idx_user_date_joined ON user_account(date_joined);
