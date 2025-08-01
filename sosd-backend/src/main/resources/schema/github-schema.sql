@@ -139,3 +139,20 @@ CREATE TABLE IF NOT EXISTS issue (
     ON DELETE CASCADE ON UPDATE CASCADE
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Issue 테이블';
+
+-- Fork 테이블
+CREATE TABLE IF NOT EXISTS fork (
+    id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'Auto increment ID',
+    fork_user_id BIGINT NOT NULL COMMENT 'Fork한 사용자 ID',
+    fork_date DATETIME NOT NULL COMMENT 'Fork 일시',
+    repo_id BIGINT NOT NULL COMMENT '저장소 ID (외래키)',
+
+    INDEX idx_fork_repo_id (repo_id) COMMENT '해당 레포의 fork 조회용',
+
+    -- 외래키 제약조건
+    CONSTRAINT fk_fork_repository
+    FOREIGN KEY (repo_id)
+    REFERENCES repository(repo_id)
+    ON DELETE CASCADE ON UPDATE CASCADE
+
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Fork 테이블';
