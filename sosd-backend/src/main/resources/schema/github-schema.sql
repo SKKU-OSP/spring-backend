@@ -106,9 +106,10 @@ CREATE TABLE IF NOT EXISTS pull_request (
     head_branch VARCHAR(255) NOT NULL COMMENT '소스 브랜치 (병합 소스)',
     repo_id BIGINT NOT NULL COMMENT '저장소 ID (외래키)',
 
+    -- 인덱스
     INDEX idx_repo_id_pr_number (repo_id, pr_number) COMMENT 'pr 조회용',
     INDEX idx_merged (merged) COMMENT '병합 여부 조회용',
-    INDEX idx_pr_date (pr_date) COMMENT 'pr 생성 날짜 필터용'
+    INDEX idx_pr_date (pr_date) COMMENT 'pr 생성 날짜 필터용',
 
     -- 외래키 제약조건
     CONSTRAINT fk_pull_request_repository
@@ -118,3 +119,23 @@ CREATE TABLE IF NOT EXISTS pull_request (
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Pull Request 테이블';
 
+-- Issue 테이블
+CREATE TABLE IF NOT EXISTS issue (
+    issue_id BIGINT NOT NULL PRIMARY KEY COMMENT 'GitHub Issue ID (깃허브에서 제공하는 고유 id)',
+    issue_number INT NOT NULL COMMENT 'Issue 번호',
+    issue_title VARCHAR(255) NOT NULL COMMENT 'Issue 제목',
+    issue_body TEXT COMMENT 'Issue 본문',
+    issue_date DATETIME NOT NULL COMMENT 'Issue 생성일시',
+    repo_id BIGINT NOT NULL COMMENT '저장소 ID (외래키)',
+
+    -- 인덱스
+    INDEX idx_repo_id_issue_number (repo_id, issue_number) COMMENT 'issue 조회용',
+    INDEX idx_issue_date (issue_date) COMMENT 'issue 생성 날짜 조회용',
+
+    -- 외래키 제약조건
+    CONSTRAINT fk_issue_repository
+    FOREIGN KEY (repo_id)
+    REFERENCES repository(repo_id)
+    ON DELETE CASCADE ON UPDATE CASCADE
+
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Issue 테이블';
