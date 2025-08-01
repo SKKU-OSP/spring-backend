@@ -149,7 +149,7 @@ CREATE TABLE IF NOT EXISTS fork (
 
     -- 인덱스
     INDEX idx_fork_repo_id (repo_id) COMMENT '해당 레포의 fork 조회용',
-    INDEX idx_fork_date (fork_date) COMMENT 'fork 날짜 필터용'
+    INDEX idx_fork_date (fork_date) COMMENT 'fork 날짜 필터용',
 
     -- 외래키 제약조건
     CONSTRAINT fk_fork_repository
@@ -166,8 +166,8 @@ CREATE TABLE IF NOT EXISTS star (
     repo_id BIGINT NOT NULL COMMENT '저장소 ID (외래키)',
 
     -- 인덱스
-    INDEX idx_star_repo_id (repo_id) COMMENT '해당 레포의 star 조회용'
-    INDEX idx_star_date (repo_id) COMMENT 'star 날짜 필터용'
+    INDEX idx_star_repo_id (repo_id) COMMENT '해당 레포의 star 조회용',
+    INDEX idx_star_date (repo_id) COMMENT 'star 날짜 필터용',
 
     -- 외래키 제약조건
     CONSTRAINT fk_star_repository
