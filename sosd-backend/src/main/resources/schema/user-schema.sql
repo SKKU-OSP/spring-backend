@@ -15,20 +15,11 @@ CREATE TABLE IF NOT EXISTS user_account (
     last_login TIMESTAMP NULL COMMENT '마지막 로그인',
     absence INT NOT NULL DEFAULT 0 COMMENT '재학 여부 (0: 재학, 1: 휴학, 2: 졸업 등)',
     is_active BOOLEAN NOT NULL DEFAULT TRUE COMMENT '활성 상태'
+
+    -- 인덱스
+    INDEX idx_user_absence (absence) COMMENT '재학 여부 필터용',
+    INDEX idx_user_active_college_dept (is_active, college, dept, absence) COMMENT '재학생 통계용',
+    INDEX idx_user_date_joined (date_joined) COMMENT '가입자 분석용',
+    INDEX idx_user_last_login (last_login) COMMENT '활동 분석용'
+
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='사용자 계정 테이블';
-
--- ================================
--- 인덱스 생성
--- ================================
-
--- 재학 여부 필터용
-CREATE INDEX idx_user_absence ON user_account(absence);
-
--- 재학생 통계용
-CREATE INDEX idx_user_active_college_dept ON user_account(is_active, college, dept, absence);
-
--- 가입자 분석용
-CREATE INDEX idx_user_date_joined ON user_account(date_joined);
-
--- 활동 분석용
-CREATE INDEX idx_user_last_login ON user_account(last_login);
