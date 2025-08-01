@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS repository (
 -- Commit 테이블
 CREATE TABLE IF NOT EXISTS commit (
     sha VARCHAR(40) NOT NULL PRIMARY KEY COMMENT 'Git commit SHA (40자 고정길이 해시값)',
-    addiction INT NOT NULL COMMENT '추가된 라인 수',
+    addition INT NOT NULL COMMENT '추가된 라인 수',
     deletion INT NOT NULL COMMENT '삭제된 라인 수',
     author_date DATETIME NOT NULL COMMENT '커밋 작성자 시간',
     committer_date DATETIME NOT NULL COMMENT '푸시 시간',
@@ -167,7 +167,7 @@ CREATE TABLE IF NOT EXISTS star (
 
     -- 인덱스
     INDEX idx_star_repo_id (repo_id) COMMENT '해당 레포의 star 조회용',
-    INDEX idx_star_date (repo_id) COMMENT 'star 날짜 필터용',
+    INDEX idx_star_date (star_date) COMMENT 'star 날짜 필터용',
 
     -- 외래키 제약조건
     CONSTRAINT fk_star_repository
