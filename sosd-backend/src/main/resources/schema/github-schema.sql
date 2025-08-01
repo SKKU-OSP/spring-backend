@@ -68,4 +68,28 @@ CREATE TABLE IF NOT EXISTS repository (
     REFERENCES github_account(github_id)
     ON DELETE CASCADE ON UPDATE CASCADE
 
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub 저장소 테이블';
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub 레포지토리 테이블';
+
+-- Commit 테이블
+CREATE TABLE IF NOT EXISTS commit (
+    sha VARCHAR(40) NOT NULL PRIMARY KEY COMMENT 'Git commit SHA (40자 고정길이 해시값)',
+    addiction INT NOT NULL COMMENT '추가된 라인 수',
+    deletion INT NOT NULL COMMENT '삭제된 라인 수',
+    author_date DATETIME NOT NULL COMMENT '커밋 작성자 시간',
+    committer_date DATETIME NOT NULL COMMENT '푸시 시간',
+    message TEXT COMMENT '커밋 메시지',
+    branch VARCHAR(255) NOT NULL COMMENT '브랜치명',
+    repo_id BIGINT NOT NULL COMMENT '저장소 ID (외래키)',
+
+    -- 인덱스
+
+    INDEX idx_commit_branch (branch) COMMENT 'default 브랜치 병합 조회용',
+    INDEX idx_commit_repo_id (repo_id) COMMENT '레포지토리 기준 커밋 조회용',
+
+    -- 외래키 제약조건
+    CONSTRAINT fk_commit_repository
+    FOREIGN KEY (repo_id)
+    REFERENCES repository(repo_id)
+    ON DELETE CASCADE ON UPDATE CASCADE
+
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Github 커밋 테이블';
