@@ -147,7 +147,9 @@ CREATE TABLE IF NOT EXISTS fork (
     fork_date DATETIME NOT NULL COMMENT 'Fork 일시',
     repo_id BIGINT NOT NULL COMMENT '저장소 ID (외래키)',
 
+    -- 인덱스
     INDEX idx_fork_repo_id (repo_id) COMMENT '해당 레포의 fork 조회용',
+    INDEX idx_fork_date (fork_date) COMMENT 'fork 날짜 필터용'
 
     -- 외래키 제약조건
     CONSTRAINT fk_fork_repository
@@ -156,3 +158,21 @@ CREATE TABLE IF NOT EXISTS fork (
     ON DELETE CASCADE ON UPDATE CASCADE
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Fork 테이블';
+
+CREATE TABLE IF NOT EXISTS star (
+    id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'Auto increment ID',
+    star_user_id BIGINT NOT NULL COMMENT 'Star한 사용자 ID',
+    star_date DATETIME NOT NULL COMMENT 'Star 일시',
+    repo_id BIGINT NOT NULL COMMENT '저장소 ID (외래키)',
+
+    -- 인덱스
+    INDEX idx_star_repo_id (repo_id) COMMENT '해당 레포의 star 조회용'
+    INDEX idx_star_date (repo_id) COMMENT 'star 날짜 필터용'
+
+    -- 외래키 제약조건
+    CONSTRAINT fk_star_repository
+    FOREIGN KEY (repo_id)
+    REFERENCES repository(repo_id)
+    ON DELETE CASCADE ON UPDATE CASCADE
+
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Star 테이블';
