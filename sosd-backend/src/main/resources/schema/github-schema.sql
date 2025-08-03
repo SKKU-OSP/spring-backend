@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS github_account (
 -- ================================
 
 -- username을 통한 조회용
-CREATE INDEX IF NOT EXISTS idx_github_account_login ON github_account(github_login);
+CREATE INDEX idx_github_account_login ON github_account(github_login);
 
 -- 스케쥴링할 때 기간 쿼리용
-CREATE INDEX IF NOT EXISTS idx_github_account_last_crawling ON github_account(last_crawling);
+CREATE INDEX idx_github_account_last_crawling ON github_account(last_crawling);
