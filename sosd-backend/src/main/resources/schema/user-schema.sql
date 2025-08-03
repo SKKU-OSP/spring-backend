@@ -2,7 +2,7 @@
 
 -- 유저 테이블
 CREATE TABLE IF NOT EXISTS user_account (
-    student_id VARCHAR(20) NOT NULL PRIMARY KEY COMMENT '학번 (SSO)',
+                                            student_id VARCHAR(20) NOT NULL PRIMARY KEY COMMENT '학번 (SSO)',
     name VARCHAR(40) NOT NULL COMMENT '이름(SSO)',
     role INT NOT NULL DEFAULT 0 COMMENT '역할 (0: 일반회원, 1: 관리자 등), 추후 역할 추가 가능성이 있기에 int로 설정',
     college VARCHAR(255) NOT NULL COMMENT '단과대학',
@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS user_account (
     introduction TEXT COMMENT '자기소개',
     portfolio TEXT COMMENT '포트폴리오',
     date_joined TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '가입일시',
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '업데이트 날짜',
     last_login TIMESTAMP NULL COMMENT '마지막 로그인',
     absence INT NOT NULL DEFAULT 0 COMMENT '재학 여부 (0: 재학, 1: 휴학, 2: 졸업 등)',
     is_active BOOLEAN NOT NULL DEFAULT TRUE COMMENT '활성 상태'
@@ -29,6 +30,9 @@ CREATE INDEX idx_user_active_college_dept ON user_account(is_active, college, de
 
 -- 가입자 분석용
 CREATE INDEX idx_user_date_joined ON user_account(date_joined);
+
+-- 업데이트 날짜 기반 분석용
+CREATE INDEX idx_user_updated_at ON user_account(updated_at);
 
 -- 활동 분석용
 CREATE INDEX idx_user_last_login ON user_account(last_login);
