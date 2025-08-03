@@ -3,7 +3,7 @@
 -- GitHub 계정 테이블
 CREATE TABLE IF NOT EXISTS github_account (
     github_id BIGINT NOT NULL PRIMARY KEY COMMENT 'GitHub ID(Github 내부적으로 사용하는 고유 id)',
-    github_login VARCHAR(255) NOT NULL COMMENT 'GitHub 로그인명 (username)',
+    github_login_username VARCHAR(255) NOT NULL COMMENT 'GitHub 로그인명 (username)',
     github_name VARCHAR(255) COMMENT 'GitHub 표시명',
     github_token VARCHAR(255) COMMENT 'GitHub 액세스 토큰(private 레포까지 수집 원하는 유저만 추가)',
     github_email VARCHAR(255) NOT NULL COMMENT 'GitHub 이메일',
@@ -11,14 +11,8 @@ CREATE TABLE IF NOT EXISTS github_account (
     student_id VARCHAR(20) NOT NULL COMMENT '연결된 학번 (외래키)',
 
     -- 인덱스
-    INDEX idx_github_account_login (github_login) COMMENT 'username을 통한 조회용',
+    INDEX idx_github_account_login (github_login_username) COMMENT 'username을 통한 조회용',
     INDEX idx_github_account_last_crawling (last_crawling) COMMENT '스케쥴링할 때 기간 쿼리용',
-
-    -- 외래키 제약조건
-    CONSTRAINT fk_github_account_user
-    FOREIGN KEY (student_id)
-    REFERENCES user_account(student_id)
-    ON DELETE CASCADE ON UPDATE CASCADE
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub 계정 테이블';
 
@@ -46,27 +40,20 @@ CREATE TABLE IF NOT EXISTS repository (
     description VARCHAR(255) COMMENT '저장소 설명',
     readme TEXT COMMENT 'README 내용',
     license VARCHAR(255) COMMENT '라이선스 이름',
-    created_at DATETIME NOT NULL COMMENT '생성 일시',
-    updated_at DATETIME NOT NULL COMMENT '수정 일시',
+    github_repository_created_at DATETIME NOT NULL COMMENT '생성 일시',
+    github_repository_updated_at DATETIME NOT NULL COMMENT '수정 일시',
     pushed_at DATETIME NOT NULL COMMENT '마지막 푸시일시',
-    language TEXT COMMENT '사용 언어 (JSON 형태)', -- 별도 테이블로 정규화할지 논의
+    additional_data TEXT COMMENT '사용 언어 등 추가 정보 (JSON 형태)', -- 별도 테이블로 정규화할지 논의
     contributor INT DEFAULT 0 COMMENT '기여자 수',
     is_private BOOLEAN DEFAULT FALSE COMMENT '비공개 여부',
     github_id BIGINT NOT NULL COMMENT 'GitHub 계정 ID (외래키)',
 
     -- 인덱스
-    INDEX idx_repository_github_id (github_id) COMMENT '특정 사용자의 저장소 조회용',
-    INDEX idx_repository_owner_repo (owner_name, repo_name) COMMENT '저장소 full_name으로 직접 조회용 (owner/repo)',
-    INDEX idx_repository_created_at (created_at) COMMENT '생성일 기준 조회 및 통계용',
-    INDEX idx_repository_updated_at (updated_at) COMMENT '최근 업데이트 저장소 조회용',
-    INDEX idx_repository_score (score) COMMENT '점수 기준 랭킹 및 정렬용',
-    INDEX idx_repository_is_private (is_private) COMMENT '공개/비공개 저장소 필터링용',
-
-    -- 외래키 제약조건
-    CONSTRAINT fk_repository_github_account
-    FOREIGN KEY (github_id)
-    REFERENCES github_account(github_id)
-    ON DELETE CASCADE ON UPDATE CASCADE
+    INDEX idx_repository_github_id (github_id, is_private) COMMENT '특정 사용자의 저장소 조회용',
+    INDEX idx_repository_owner_repo (owner_name, repo_name, is_private) COMMENT '저장소 full_name으로 직접 조회용 (owner/repo)',
+    INDEX idx_repository_created_at (github_repository_created_at,is_private) COMMENT '생성일 기준 조회 및 통계용',
+    INDEX idx_repository_updated_at (github_repository_updated_at,is_private) COMMENT '최근 업데이트 저장소 조회용',
+    INDEX idx_repository_score (score, is_private) COMMENT '점수 기준 랭킹 및 정렬용',
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub 레포지토리 테이블';
 
@@ -86,11 +73,6 @@ CREATE TABLE IF NOT EXISTS commit (
     INDEX idx_commit_branch (branch) COMMENT 'default 브랜치 병합 조회용',
     INDEX idx_commit_repo_id (repo_id) COMMENT '레포지토리 기준 커밋 조회용',
 
-    -- 외래키 제약조건
-    CONSTRAINT fk_commit_repository
-    FOREIGN KEY (repo_id)
-    REFERENCES repository(repo_id)
-    ON DELETE CASCADE ON UPDATE CASCADE
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Github 커밋 테이블';
 
@@ -111,12 +93,6 @@ CREATE TABLE IF NOT EXISTS pull_request (
     INDEX idx_merged (merged) COMMENT '병합 여부 조회용',
     INDEX idx_pr_date (pr_date) COMMENT 'pr 생성 날짜 필터용',
 
-    -- 외래키 제약조건
-    CONSTRAINT fk_pull_request_repository
-    FOREIGN KEY (repo_id)
-    REFERENCES repository(repo_id)
-    ON DELETE CASCADE ON UPDATE CASCADE
-
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Pull Request 테이블';
 
 -- Issue 테이블
@@ -132,12 +108,6 @@ CREATE TABLE IF NOT EXISTS issue (
     INDEX idx_repo_id_issue_number (repo_id, issue_number) COMMENT 'issue 조회용',
     INDEX idx_issue_date (issue_date) COMMENT 'issue 생성 날짜 조회용',
 
-    -- 외래키 제약조건
-    CONSTRAINT fk_issue_repository
-    FOREIGN KEY (repo_id)
-    REFERENCES repository(repo_id)
-    ON DELETE CASCADE ON UPDATE CASCADE
-
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Issue 테이블';
 
 -- Fork 테이블
@@ -151,12 +121,6 @@ CREATE TABLE IF NOT EXISTS fork (
     INDEX idx_fork_repo_id (repo_id) COMMENT '해당 레포의 fork 조회용',
     INDEX idx_fork_date (fork_date) COMMENT 'fork 날짜 필터용',
 
-    -- 외래키 제약조건
-    CONSTRAINT fk_fork_repository
-    FOREIGN KEY (repo_id)
-    REFERENCES repository(repo_id)
-    ON DELETE CASCADE ON UPDATE CASCADE
-
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Fork 테이블';
 
 CREATE TABLE IF NOT EXISTS star (
@@ -168,11 +132,5 @@ CREATE TABLE IF NOT EXISTS star (
     -- 인덱스
     INDEX idx_star_repo_id (repo_id) COMMENT '해당 레포의 star 조회용',
     INDEX idx_star_date (star_date) COMMENT 'star 날짜 필터용',
-
-    -- 외래키 제약조건
-    CONSTRAINT fk_star_repository
-    FOREIGN KEY (repo_id)
-    REFERENCES repository(repo_id)
-    ON DELETE CASCADE ON UPDATE CASCADE
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Star 테이블';
