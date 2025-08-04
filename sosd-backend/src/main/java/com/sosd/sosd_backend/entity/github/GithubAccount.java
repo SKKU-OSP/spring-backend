@@ -21,8 +21,8 @@ public class GithubAccount {
     private Long githubId;
 
     // 일반 컬럼
-    @Column(name = "github_login", nullable = false)
-    private String githubLogin;
+    @Column(name = "github_login_username", nullable = false)
+    private String githubLoginUsername;
 
     @Column(name = "github_name")
     private String githubName;
@@ -45,14 +45,14 @@ public class GithubAccount {
     @Builder
     public GithubAccount(
             Long githubId,
-            String githubLogin,
+            String githubLoginUsername,
             String githubName,
             String githubToken,
             String githubEmail,
             UserAccount userAccount
     ) {
         this.githubId = githubId;
-        this.githubLogin = githubLogin;
+        this.githubLoginUsername = githubLoginUsername;
         this.githubName = githubName;
         this.githubToken = githubToken;
         this.githubEmail = githubEmail;

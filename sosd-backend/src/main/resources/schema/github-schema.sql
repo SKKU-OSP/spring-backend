@@ -123,6 +123,7 @@ CREATE TABLE IF NOT EXISTS fork (
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Fork 테이블';
 
+-- Star 테이블
 CREATE TABLE IF NOT EXISTS star (
     id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'Auto increment ID',
     star_user_id BIGINT NOT NULL COMMENT 'Star한 사용자 ID',
