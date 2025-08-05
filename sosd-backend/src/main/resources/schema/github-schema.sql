@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS github_account (
 
     -- 인덱스
     INDEX idx_github_account_login (github_login_username) COMMENT 'username을 통한 조회용',
-    INDEX idx_github_account_last_crawling (last_crawling) COMMENT '스케쥴링할 때 기간 쿼리용',
+    INDEX idx_github_account_last_crawling (last_crawling) COMMENT '스케쥴링할 때 기간 쿼리용'
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub 계정 테이블';
 
@@ -53,12 +53,12 @@ CREATE TABLE IF NOT EXISTS repository (
     INDEX idx_repository_owner_repo (owner_name, repo_name, is_private) COMMENT '저장소 full_name으로 직접 조회용 (owner/repo)',
     INDEX idx_repository_created_at (github_repository_created_at,is_private) COMMENT '생성일 기준 조회 및 통계용',
     INDEX idx_repository_updated_at (github_repository_updated_at,is_private) COMMENT '최근 업데이트 저장소 조회용',
-    INDEX idx_repository_score (score, is_private) COMMENT '점수 기준 랭킹 및 정렬용',
+    INDEX idx_repository_score (score, is_private) COMMENT '점수 기준 랭킹 및 정렬용'
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub 레포지토리 테이블';
 
 -- Commit 테이블
-CREATE TABLE IF NOT EXISTS commit (
+CREATE TABLE IF NOT EXISTS `commit` (
     sha VARCHAR(40) NOT NULL PRIMARY KEY COMMENT 'Git commit SHA (40자 고정길이 해시값)',
     addition INT NOT NULL COMMENT '추가된 라인 수',
     deletion INT NOT NULL COMMENT '삭제된 라인 수',
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS commit (
     -- 인덱스
 
     INDEX idx_commit_branch (branch) COMMENT 'default 브랜치 병합 조회용',
-    INDEX idx_commit_repo_id (repo_id) COMMENT '레포지토리 기준 커밋 조회용',
+    INDEX idx_commit_repo_id (repo_id) COMMENT '레포지토리 기준 커밋 조회용'
 
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Github 커밋 테이블';
@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS pull_request (
     -- 인덱스
     INDEX idx_repo_id_pr_number (repo_id, pr_number) COMMENT 'pr 조회용',
     INDEX idx_merged (merged) COMMENT '병합 여부 조회용',
-    INDEX idx_pr_date (pr_date) COMMENT 'pr 생성 날짜 필터용',
+    INDEX idx_pr_date (pr_date) COMMENT 'pr 생성 날짜 필터용'
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Pull Request 테이블';
 
@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS issue (
 
     -- 인덱스
     INDEX idx_repo_id_issue_number (repo_id, issue_number) COMMENT 'issue 조회용',
-    INDEX idx_issue_date (issue_date) COMMENT 'issue 생성 날짜 조회용',
+    INDEX idx_issue_date (issue_date) COMMENT 'issue 생성 날짜 조회용'
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Issue 테이블';
 
@@ -119,7 +119,7 @@ CREATE TABLE IF NOT EXISTS fork (
 
     -- 인덱스
     INDEX idx_fork_repo_id (repo_id) COMMENT '해당 레포의 fork 조회용',
-    INDEX idx_fork_date (fork_date) COMMENT 'fork 날짜 필터용',
+    INDEX idx_fork_date (fork_date) COMMENT 'fork 날짜 필터용'
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Fork 테이블';
 
@@ -132,6 +132,6 @@ CREATE TABLE IF NOT EXISTS star (
 
     -- 인덱스
     INDEX idx_star_repo_id (repo_id) COMMENT '해당 레포의 star 조회용',
-    INDEX idx_star_date (star_date) COMMENT 'star 날짜 필터용',
+    INDEX idx_star_date (star_date) COMMENT 'star 날짜 필터용'
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Star 테이블';
