@@ -6,6 +6,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +70,8 @@ public class GithubRestClient {
             return this;
         }
 
+        // TODO: 에러 핸들링
+
         // GET 요청 - 단일 객체
         public <T> T get(Class<T> responseType) {
             RestClient.RequestHeadersSpec<?> request = buildGetRequest();
@@ -79,6 +82,33 @@ public class GithubRestClient {
         public <T> List<T> getList(ParameterizedTypeReference<List<T>> responseType) {
             RestClient.RequestHeadersSpec<?> request = buildGetRequest();
             return request.retrieve().body(responseType);
+        }
+
+        // GET 요청 - 페이지네이션
+        // TODO: 모든 페이지의 데이터를 들고 있다가 반환하면 메모리 낭비가 심해질 것 같아서 실시간 처리에 대해 고민
+        // 커밋같은 경우는 페이지가 200개씩 넘게 나오는 분들도 계서서 고민해봐야 할 듯
+        public <T> List<T> getAllPages(ParameterizedTypeReference<List<T>> responseType, int perPage) {
+            List<T> results = new ArrayList<>();
+            int page = 1;
+
+            while(true){
+                queryParams.put("page", String.valueOf(page));
+                queryParams.put("per_page", String.valueOf(perPage));
+
+                List<T> pageResults = getList(responseType);
+
+                if(pageResults == null || pageResults.isEmpty()){
+                    break;
+                }
+
+                results.addAll(pageResults);
+
+                if(pageResults.size() < perPage){
+                    break;
+                }
+                page++;
+            }
+            return results;
         }
 
         private RestClient.RequestHeadersSpec<?> buildGetRequest(){
