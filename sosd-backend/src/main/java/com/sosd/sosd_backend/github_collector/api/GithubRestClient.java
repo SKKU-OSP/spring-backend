@@ -17,6 +17,7 @@ public class GithubRestClient {
     private final RestClient restClient;
 
     public GithubRestClient(@Value("${github.token}") String githubToken) {
+        System.out.println("github_token value: " + githubToken);
         this.restClient = RestClient.builder()
                 .baseUrl(GITHUB_BASE_URL)
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + githubToken)

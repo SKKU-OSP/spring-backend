@@ -22,17 +22,17 @@ CREATE TABLE IF NOT EXISTS user_account (
 -- 인덱스 생성
 -- ================================
 
--- 재학 여부 필터용
-CREATE INDEX idx_user_absence ON user_account(absence);
-
--- 재학생 통계용
-CREATE INDEX idx_user_active_college_dept ON user_account(is_active, college, dept, absence);
-
--- 가입자 분석용
-CREATE INDEX idx_user_date_joined ON user_account(date_joined);
-
--- 업데이트 날짜 기반 분석용
-CREATE INDEX idx_user_updated_at ON user_account(updated_at);
-
--- 활동 분석용
-CREATE INDEX idx_user_last_login ON user_account(last_login);
+-- -- 재학 여부 필터용
+-- CREATE INDEX idx_user_absence ON user_account(absence);
+--
+-- -- 재학생 통계용
+-- CREATE INDEX idx_user_active_college_dept ON user_account(is_active, college, dept, absence);
+--
+-- -- 가입자 분석용
+-- CREATE INDEX idx_user_date_joined ON user_account(date_joined);
+--
+-- -- 업데이트 날짜 기반 분석용
+-- CREATE INDEX idx_user_updated_at ON user_account(updated_at);
+--
+-- -- 활동 분석용
+-- CREATE INDEX idx_user_last_login ON user_account(last_login);
