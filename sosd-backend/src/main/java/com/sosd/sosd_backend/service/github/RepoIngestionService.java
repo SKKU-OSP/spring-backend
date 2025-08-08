@@ -29,7 +29,7 @@ public class RepoIngestionService {
      * github username을 받아서 기여한 모든 레포 수집 후 DB upsert
      */
     @Transactional
-    public void ingestAccount(String githubLoginUsername){
+    public void ingestGithubAccount(String githubLoginUsername){
         // 1) 깃허브 api를 통해 수집
         List<RepositoryDetailDto> dtos = repoCollector.getAllContributedRepos(githubLoginUsername);
 

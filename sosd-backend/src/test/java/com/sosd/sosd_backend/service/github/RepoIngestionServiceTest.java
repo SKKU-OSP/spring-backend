@@ -28,7 +28,7 @@ public class RepoIngestionServiceTest {
         String githubLoginUsername = "byungKHee";
 
         // when
-        repoIngestionService.ingestAccount(githubLoginUsername);
+        repoIngestionService.ingestGithubAccount(githubLoginUsername);
 
         // then
         Iterable<GithubRepository> all = githubRepositoryRepository.findAll();
