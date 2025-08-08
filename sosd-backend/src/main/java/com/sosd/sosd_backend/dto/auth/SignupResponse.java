@@ -14,8 +14,6 @@ public class SignupResponse {
     private String dept;
     private int pluralMajor;
     private int absence;
-    private LocalDateTime dateJoined;
-
     private Long githubId;
     private String githubLoginUsername;
     private String githubName;
