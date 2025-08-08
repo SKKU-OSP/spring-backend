@@ -28,4 +28,18 @@ public record RepositoryDetailDto(
     public record LicenseDto(
             String name
     ) {}
+
+    /** fullName에서 repoName 부분만 추출 */
+    public String repoNameOnly() {
+        if (fullName == null) return null;
+        int idx = fullName.indexOf('/');
+        return (idx >= 0 && idx + 1 < fullName.length()) ? fullName.substring(idx + 1) : fullName;
+    }
+
+    /** fullName에서 ownerName 부분만 추출 */
+    public String ownerNameOnly() {
+        if (fullName == null) return null;
+        int idx = fullName.indexOf('/');
+        return (idx > 0) ? fullName.substring(0, idx) : null;
+    }
 }
