@@ -17,7 +17,8 @@ public record RepositoryDetailDto(
         @JsonProperty("stargazers_count") int stargazersCount,
         int forks,
         LicenseDto license,
-        @JsonProperty("default_branch") String defaultBranch
+        @JsonProperty("default_branch") String defaultBranch,
+        int watchers
 ) {
     public record OwnerDto(
             String login,
