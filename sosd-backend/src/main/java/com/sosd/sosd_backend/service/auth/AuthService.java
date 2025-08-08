@@ -51,7 +51,6 @@ public class AuthService {
                 .dept(savedUser.getDept())
                 .pluralMajor(savedUser.getPluralMajor())
                 .absence(savedUser.getAbsence())
-                .dateJoined(savedUser.getDateJoined())
                 .githubId(github.getGithubId())
                 .githubLoginUsername(github.getGithubLoginUsername())
                 .githubName(github.getGithubName())
