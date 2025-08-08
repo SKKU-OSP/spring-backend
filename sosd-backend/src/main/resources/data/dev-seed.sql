@@ -1,0 +1,42 @@
+-- 기본 유저 계정 데이터
+INSERT INTO user_account (
+    student_id, name, role, college, dept, plural_major, photo, introduction, portfolio,
+    date_joined, updated_at, last_login, absence, is_active
+)
+VALUES (
+           '2020315013', -- 학번
+           '강병희', -- 이름
+           0,           -- 역할
+           '소프트웨어대학', -- 단과대학
+           '소프트웨어학과', -- 학과
+           0,           -- 복수전공 여부
+           NULL,        -- 프로필 사진
+           '안녕하세요. 테스트 계정입니다.', -- 자기소개
+           NULL,        -- 포트폴리오
+           NOW(),       -- 가입일
+           NOW(),       -- 업데이트일
+           NULL,        -- 마지막 로그인
+           0,           -- 재학
+           TRUE         -- 활성 상태
+       )
+    ON DUPLICATE KEY UPDATE
+                         name = VALUES(name),
+                         updated_at = NOW();
+
+-- GitHub 계정 데이터 (연결된 유저)
+INSERT INTO github_account (
+    github_id, github_login_username, github_name, github_token, github_email, last_crawling, student_id
+)
+VALUES (
+           80045655,              -- GitHub ID
+           'byungKHee',             -- GitHub username
+           NULL,         -- GitHub 표시명
+           NULL,                   -- GitHub 토큰
+           'byungheekang@g.skku.edu', -- 이메일
+           NULL,                   -- 마지막 크롤링
+           '2020315013'            -- 연결 학번
+       )
+    ON DUPLICATE KEY UPDATE
+                         github_name = VALUES(github_name),
+                         github_email = VALUES(github_email),
+                         last_crawling = VALUES(last_crawling);
