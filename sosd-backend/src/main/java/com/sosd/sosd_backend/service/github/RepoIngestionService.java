@@ -1,18 +1,10 @@
 package com.sosd.sosd_backend.service.github;
 
 import com.sosd.sosd_backend.dto.RepositoryDetailDto;
-import com.sosd.sosd_backend.entity.github.GithubAccount;
-import com.sosd.sosd_backend.entity.github.GithubRepositoryEntity;
 import com.sosd.sosd_backend.github_collector.collector.RepoCollector;
-import com.sosd.sosd_backend.repository.github.GithubAccountRepository;
-import com.sosd.sosd_backend.repository.github.GithubRepositoryRepository;
-import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 
 @Service
@@ -20,58 +12,28 @@ import java.util.List;
 public class RepoIngestionService {
 
     private final RepoCollector repoCollector;
-    private final GithubRepositoryRepository githubRepositoryRepository;
-    private final GithubAccountRepository githubAccountRepository;
+    private final RepoUpsertService repoUpsertService;
 
 
     /**
-     * Github Account 단위 요청
-     * github username을 받아서 기여한 모든 레포 수집 후 DB upsert
+     * 주어진 GitHub 계정의 기여 저장소 목록을 수집하고, DB에 저장(upsert)까지 진행합니다.
+     *
+     * <ul>
+     *   <li>외부 GitHub API를 호출하여 해당 계정의 기여 저장소 목록을 수집</li>
+     *   <li>수집된 데이터를 {@link RepoUpsertService}를 통해 DB에 upsert 처리</li>
+     *   <li>이 메서드 자체는 트랜잭션을 열지 않으며, DB 작업은 {@code RepoUpsertService} 내에서 처리됨</li>
+     * </ul>
+     *
+     * @param githubLoginUsername GitHub 계정 로그인 ID
      */
-    @Transactional
+
     public void ingestGithubAccount(String githubLoginUsername){
         // 1) 깃허브 api를 통해 수집
         List<RepositoryDetailDto> dtos = repoCollector.getAllContributedRepos(githubLoginUsername);
 
         // 2) 저장
-        upsertRepos(githubLoginUsername, dtos);
+        repoUpsertService.upsertRepos(githubLoginUsername, dtos);
 
-    }
-
-    private void upsertRepos(String githubLoginUsername, List<RepositoryDetailDto> dtos){
-        // 2-1) 계정 로딩
-        GithubAccount account = githubAccountRepository.findByGithubLoginUsername(githubLoginUsername)
-                .orElseThrow(()->new RuntimeException("GithubAccount 없음: " + githubLoginUsername));
-
-        // 2-2)
-        List<GithubRepositoryEntity> entities = dtos.stream()
-                .map(dto -> toEntity(dto, account))
-                .toList();
-
-        // 2-3) 저장 (repository는 보통 그렇게 많지 않기 때문에 네이티브 사용x)
-        githubRepositoryRepository.saveAll(entities);
-    }
-
-
-    private GithubRepositoryEntity toEntity(RepositoryDetailDto dto, GithubAccount account){
-        return GithubRepositoryEntity.builder()
-                .repoId(dto.id())
-                .ownerName(dto.ownerNameOnly())
-                .repoName(dto.repoNameOnly())
-                .defaultBranch(nvl(dto.defaultBranch(), "main"))
-                .githubRepositoryCreatedAt(toUtcLocal(dto.createdAt()))
-                .githubRepositoryUpdatedAt(toUtcLocal(dto.updatedAt()))
-                .pushedAt(toUtcLocal(dto.pushedAt()))
-                .githubAccount(account)
-                .build();
-    }
-
-    private static LocalDateTime toUtcLocal(OffsetDateTime odt) {
-        return odt != null ? odt.withOffsetSameInstant(ZoneOffset.UTC).toLocalDateTime() : null;
-    }
-
-    private static String nvl(String v, String def) {
-        return (v == null || v.isEmpty()) ? def : v;
     }
 
 }
