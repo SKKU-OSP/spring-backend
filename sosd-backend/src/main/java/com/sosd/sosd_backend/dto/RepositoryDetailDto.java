@@ -7,7 +7,7 @@ import java.time.OffsetDateTime;
 public record RepositoryDetailDto(
         long id,
         @JsonProperty("full_name") String fullName,
-        @JsonProperty("private") boolean _private, // 'private'는 예약어라 이름 변경
+        @JsonProperty("private") boolean isPrivate, //
         OwnerDto owner,
         String description,
         @JsonProperty("created_at") OffsetDateTime createdAt,

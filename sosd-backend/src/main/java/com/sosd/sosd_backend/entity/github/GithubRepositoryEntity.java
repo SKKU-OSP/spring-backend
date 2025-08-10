@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "repository")
-public class GithubRepository {
+public class GithubRepositoryEntity {
     @Id
     @Column(name = "repo_id", nullable = false)
     private Long repoId;
@@ -104,7 +104,7 @@ public class GithubRepository {
     private GithubAccount githubAccount;
 
     @Builder
-    public GithubRepository(
+    public GithubRepositoryEntity(
             Long repoId,
             String ownerName,
             String repoName,
