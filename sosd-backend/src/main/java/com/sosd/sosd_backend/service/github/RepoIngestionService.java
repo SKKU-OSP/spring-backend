@@ -2,7 +2,7 @@ package com.sosd.sosd_backend.service.github;
 
 import com.sosd.sosd_backend.dto.RepositoryDetailDto;
 import com.sosd.sosd_backend.entity.github.GithubAccount;
-import com.sosd.sosd_backend.entity.github.GithubRepository;
+import com.sosd.sosd_backend.entity.github.GithubRepositoryEntity;
 import com.sosd.sosd_backend.github_collector.collector.RepoCollector;
 import com.sosd.sosd_backend.repository.github.GithubAccountRepository;
 import com.sosd.sosd_backend.repository.github.GithubRepositoryRepository;
@@ -44,7 +44,7 @@ public class RepoIngestionService {
                 .orElseThrow(()->new RuntimeException("GithubAccount 없음: " + githubLoginUsername));
 
         // 2-2)
-        List<GithubRepository> entities = dtos.stream()
+        List<GithubRepositoryEntity> entities = dtos.stream()
                 .map(dto -> toEntity(dto, account))
                 .toList();
 
@@ -53,8 +53,8 @@ public class RepoIngestionService {
     }
 
 
-    private GithubRepository toEntity(RepositoryDetailDto dto, GithubAccount account){
-        return GithubRepository.builder()
+    private GithubRepositoryEntity toEntity(RepositoryDetailDto dto, GithubAccount account){
+        return GithubRepositoryEntity.builder()
                 .repoId(dto.id())
                 .ownerName(dto.ownerNameOnly())
                 .repoName(dto.repoNameOnly())
