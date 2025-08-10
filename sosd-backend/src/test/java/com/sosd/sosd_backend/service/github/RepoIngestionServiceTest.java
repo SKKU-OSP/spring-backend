@@ -1,6 +1,6 @@
 package com.sosd.sosd_backend.service.github;
 
-import com.sosd.sosd_backend.entity.github.GithubRepository;
+import com.sosd.sosd_backend.entity.github.GithubRepositoryEntity;
 import com.sosd.sosd_backend.repository.github.GithubRepositoryRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +31,7 @@ public class RepoIngestionServiceTest {
         repoIngestionService.ingestGithubAccount(githubLoginUsername);
 
         // then
-        Iterable<GithubRepository> all = githubRepositoryRepository.findAll();
+        Iterable<GithubRepositoryEntity> all = githubRepositoryRepository.findAll();
 
         assertThat(all).isNotEmpty();
         all.forEach(repo -> {
