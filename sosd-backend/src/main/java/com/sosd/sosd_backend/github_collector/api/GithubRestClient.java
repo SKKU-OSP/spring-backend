@@ -1,5 +1,6 @@
 package com.sosd.sosd_backend.github_collector.api;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
@@ -11,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Component
 public class GithubRestClient {
 
@@ -18,7 +20,7 @@ public class GithubRestClient {
     private final RestClient restClient;
 
     public GithubRestClient(@Value("${github.token}") String githubToken) {
-        System.out.println("github_token value: " + githubToken);
+        log.debug("GithubRestClient: githubToken={}", githubToken);
         this.restClient = RestClient.builder()
                 .baseUrl(GITHUB_BASE_URL)
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + githubToken)
