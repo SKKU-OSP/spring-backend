@@ -4,9 +4,9 @@
   "settings": {
     "width": 2000,
     "height": 2000,
-    "scrollTop": -680.2953,
+    "scrollTop": -475,
     "scrollLeft": -800,
-    "zoomLevel": 0.82,
+    "zoomLevel": 1,
     "show": 495,
     "database": 4,
     "databaseName": "",
@@ -1571,20 +1571,20 @@
       "PUkg1w0g_yUvchf_S09Uy": {
         "id": "PUkg1w0g_yUvchf_S09Uy",
         "tableId": "Wn5S9dcex38_Ns5BnGnWf",
-        "name": "pr_id",
+        "name": "github_pr_id",
         "comment": "깃허브에서 제공",
         "dataType": "",
         "default": "",
         "options": 12,
         "ui": {
           "keys": 0,
-          "widthName": 60,
+          "widthName": 68,
           "widthComment": 89,
           "widthDataType": 60,
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1754964589094,
+          "updateAt": 1754978660864,
           "createAt": 1752129075619
         }
       },
@@ -2571,20 +2571,20 @@
       "caM1MHVviEIFb7HRrWply": {
         "id": "caM1MHVviEIFb7HRrWply",
         "tableId": "tGokp1AVC2q5Qtig6dDGu",
-        "name": "repo_id",
+        "name": "github_repo_id",
         "comment": "",
         "dataType": "",
         "default": "",
         "options": 4,
         "ui": {
           "keys": 0,
-          "widthName": 60,
+          "widthName": 81,
           "widthComment": 60,
           "widthDataType": 60,
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1754964524293,
+          "updateAt": 1754978641441,
           "createAt": 1754964465270
         }
       },
@@ -2651,20 +2651,20 @@
       "snQEnCtCZuqyR0__Wefbh": {
         "id": "snQEnCtCZuqyR0__Wefbh",
         "tableId": "393ygiue4eRpi6k0hh9s-",
-        "name": "issue_id",
+        "name": "github_issue_id",
         "comment": "깃허브에서 제공",
         "dataType": "",
         "default": "",
         "options": 4,
         "ui": {
           "keys": 0,
-          "widthName": 60,
+          "widthName": 83,
           "widthComment": 89,
           "widthDataType": 60,
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1754964654269,
+          "updateAt": 1754978668669,
           "createAt": 1754964623406
         }
       }
@@ -2736,7 +2736,7 @@
           "columnIds": [
             "SndfoACEixcnnO8PtUcQJ"
           ],
-          "x": 1544.7297000000003,
+          "x": 1545.2297000000003,
           "y": 549.7291,
           "direction": 8
         },
@@ -2764,7 +2764,7 @@
           "columnIds": [
             "SndfoACEixcnnO8PtUcQJ"
           ],
-          "x": 1340.3297000000002,
+          "x": 1340.4297000000001,
           "y": 549.7291,
           "direction": 8
         },
@@ -2792,7 +2792,7 @@
           "columnIds": [
             "SndfoACEixcnnO8PtUcQJ"
           ],
-          "x": 1442.5297000000003,
+          "x": 1442.8297000000002,
           "y": 549.7291,
           "direction": 8
         },
@@ -2801,7 +2801,7 @@
           "columnIds": [
             "9cdIz-_SgYQUEkt7b-r71"
           ],
-          "x": 1088.2862,
+          "x": 1096.2862,
           "y": 1582.7949,
           "direction": 2
         },
@@ -2820,7 +2820,7 @@
           "columnIds": [
             "SndfoACEixcnnO8PtUcQJ"
           ],
-          "x": 1646.9297000000004,
+          "x": 1647.6297000000004,
           "y": 549.7291,
           "direction": 8
         },
@@ -2848,7 +2848,7 @@
           "columnIds": [
             "SndfoACEixcnnO8PtUcQJ"
           ],
-          "x": 1749.1297000000004,
+          "x": 1750.0297000000005,
           "y": 549.7291,
           "direction": 8
         },
