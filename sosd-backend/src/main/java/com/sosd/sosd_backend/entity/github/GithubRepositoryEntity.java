@@ -12,11 +12,15 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "repository")
+@Table(name = "github_repository")
 public class GithubRepositoryEntity {
     @Id
-    @Column(name = "repo_id", nullable = false)
-    private Long repoId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
+    private Long id;
+
+    @Column(name = "github_repo_id", nullable = false)
+    private Long githubRepoId;
 
     @Column(name = "owner_name", nullable = false)
     private String ownerName;
@@ -24,11 +28,11 @@ public class GithubRepositoryEntity {
     @Column(name = "repo_name", nullable = false)
     private String repoName;
 
+    @Column(name = "full_name", insertable = false, updatable = false)
+    private String fullName;
+
     @Column(name = "default_branch", nullable = false)
     private String defaultBranch;
-
-    @Column(name = "score")
-    private Integer score;
 
     @Column(name = "watcher")
     private Integer watcher;
@@ -38,36 +42,6 @@ public class GithubRepositoryEntity {
 
     @Column(name = "fork")
     private Integer fork;
-
-    @Column(name = "commit_count")
-    private Integer commitCount;
-
-    @Column(name = "commit_line")
-    private Integer commitLine;
-
-    @Column(name = "commit_del")
-    private Integer commitDel;
-
-    @Column(name = "commit_add")
-    private Integer commitAdd;
-
-    @Column(name = "unmerged_commit_count")
-    private Integer unmergedCommitCount;
-
-    @Column(name = "unmerged_commit_line")
-    private Integer unmergedCommitLine;
-
-    @Column(name = "unmerged_commit_del")
-    private Integer unmergedCommitDel;
-
-    @Column(name = "unmerged_commit_add")
-    private Integer unmergedCommitAdd;
-
-    @Column(name = "pr")
-    private Integer pr;
-
-    @Column(name = "issue")
-    private Integer issue;
 
     @Column(name = "dependency")
     private Integer dependency;
@@ -87,8 +61,8 @@ public class GithubRepositoryEntity {
     @Column(name = "github_repository_updated_at", nullable = false)
     private LocalDateTime githubRepositoryUpdatedAt;
 
-    @Column(name = "pushed_at", nullable = false)
-    private LocalDateTime pushedAt;
+    @Column(name = "github_pushed_at", nullable = false)
+    private LocalDateTime githubPushedAt;
 
     @Column(name = "additional_data", columnDefinition = "TEXT")
     private String additionalData;
@@ -99,29 +73,23 @@ public class GithubRepositoryEntity {
     @Column(name = "is_private")
     private Boolean isPrivate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "github_id", nullable = false)
-    private GithubAccount githubAccount;
-
     @Builder
     public GithubRepositoryEntity(
-            Long repoId,
+            Long githubRepoId,
             String ownerName,
             String repoName,
             String defaultBranch,
             LocalDateTime githubRepositoryCreatedAt,
             LocalDateTime githubRepositoryUpdatedAt,
-            LocalDateTime pushedAt,
-            GithubAccount githubAccount
+            LocalDateTime githubPushedAt
     ) {
-        this.repoId = repoId;
+        this.githubRepoId = githubRepoId;
         this.ownerName = ownerName;
         this.repoName = repoName;
         this.defaultBranch = defaultBranch;
         this.githubRepositoryCreatedAt = githubRepositoryCreatedAt;
         this.githubRepositoryUpdatedAt = githubRepositoryUpdatedAt;
-        this.pushedAt = pushedAt;
-        this.githubAccount = githubAccount;
+        this.githubPushedAt = githubPushedAt;
     }
 
 }

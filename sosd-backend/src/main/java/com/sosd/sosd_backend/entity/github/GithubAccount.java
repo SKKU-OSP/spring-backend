@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -40,6 +42,16 @@ public class GithubAccount {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id", nullable = false)
     private UserAccount userAccount;
+
+    // 레포지토리 다대다 설정
+    // account -> repo 로 단방향 many to many 설정
+    @ManyToMany
+    @JoinTable(
+            name = "github_account_repository",
+            joinColumns = @JoinColumn(name = "github_account_id", referencedColumnName = "github_id"),
+            inverseJoinColumns = @JoinColumn(name = "github_repo_id", referencedColumnName = "id")
+    )
+    private Set<GithubRepositoryEntity> repositoryEntities = new HashSet<>();
 
     // 생성자
     @Builder

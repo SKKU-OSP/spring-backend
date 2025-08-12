@@ -52,7 +52,6 @@ CREATE TABLE IF NOT EXISTS github_repository (
 CREATE TABLE IF NOT EXISTS github_account_repository (
     github_account_id BIGINT NOT NULL COMMENT 'github_account 테이블 id (외례키)',
     github_repo_id BIGINT NOT NULL COMMENT 'github_repository 테이블 id (외례키)',
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (github_account_id, github_repo_id) COMMENT '복합 PK',
 
     -- 인덱스
