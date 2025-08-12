@@ -4,7 +4,7 @@
   "settings": {
     "width": 2000,
     "height": 2000,
-    "scrollTop": -475,
+    "scrollTop": 0,
     "scrollLeft": -800,
     "zoomLevel": 1,
     "show": 495,
@@ -157,7 +157,8 @@
           "mQFXIk1deHsl3s3mwS_iK",
           "zjok5tKh5bbSUEKVo6ExH",
           "C8_O2YpT1nzXd5dNGIcu-",
-          "uBavAwcvoGuLrO1oPEH1i"
+          "uBavAwcvoGuLrO1oPEH1i",
+          "XLg9Vdb6Kp9MID0BtvyCp"
         ],
         "seqColumnIds": [
           "SndfoACEixcnnO8PtUcQJ",
@@ -190,7 +191,8 @@
           "mQFXIk1deHsl3s3mwS_iK",
           "zjok5tKh5bbSUEKVo6ExH",
           "C8_O2YpT1nzXd5dNGIcu-",
-          "uBavAwcvoGuLrO1oPEH1i"
+          "uBavAwcvoGuLrO1oPEH1i",
+          "XLg9Vdb6Kp9MID0BtvyCp"
         ],
         "ui": {
           "x": 1289.2297,
@@ -201,7 +203,7 @@
           "color": "#FF5722"
         },
         "meta": {
-          "updateAt": 1754964511102,
+          "updateAt": 1754979307309,
           "createAt": 1752123292288
         }
       },
@@ -378,84 +380,6 @@
         "meta": {
           "updateAt": 1754964714715,
           "createAt": 1752129592485
-        }
-      },
-      "WrKJrit6zGutAjdlQ5e8X": {
-        "id": "WrKJrit6zGutAjdlQ5e8X",
-        "name": "github_total_data",
-        "comment": "연도별 총 통계량(default branch만 반영)",
-        "columnIds": [
-          "T2qVY3i5JTAe-qUBiElRL",
-          "oUvQV6dHP7XQBq6KwwlwY",
-          "oDQxwfdiSLB-ZM-k_5P26",
-          "75XLyJyGqwOSiybJIVmLZ",
-          "adkbRhJ6Zc_ekqPnu7JTQ",
-          "LtnzqCEdOaqcAfrNFJGl_",
-          "7FLDoibJHUnbQMR34kSu2",
-          "e3bv6nSpf4L65cztwt6of",
-          "sNlLpOcAsLU_ZR8qaLfMz",
-          "GLqibB1L4E7y7YKFUF_BI"
-        ],
-        "seqColumnIds": [
-          "T2qVY3i5JTAe-qUBiElRL",
-          "oUvQV6dHP7XQBq6KwwlwY",
-          "oDQxwfdiSLB-ZM-k_5P26",
-          "75XLyJyGqwOSiybJIVmLZ",
-          "adkbRhJ6Zc_ekqPnu7JTQ",
-          "LtnzqCEdOaqcAfrNFJGl_",
-          "7FLDoibJHUnbQMR34kSu2",
-          "e3bv6nSpf4L65cztwt6of",
-          "sNlLpOcAsLU_ZR8qaLfMz",
-          "GLqibB1L4E7y7YKFUF_BI"
-        ],
-        "ui": {
-          "x": 367.3478,
-          "y": 1184.4347,
-          "zIndex": 786,
-          "widthName": 94,
-          "widthComment": 216,
-          "color": "#4CAF50"
-        },
-        "meta": {
-          "updateAt": 1752220113728,
-          "createAt": 1752219329055
-        }
-      },
-      "oYgEYkx0-sM1-Bw27sM6B": {
-        "id": "oYgEYkx0-sM1-Bw27sM6B",
-        "name": "github_score",
-        "comment": "",
-        "columnIds": [
-          "UlWidgU8sM_Vf6_2JJ-sU",
-          "MxtTCSlbg5AXeXygX7yKZ",
-          "SHtwCkTTl_Hi5shN8iVHC",
-          "4uxsfjUz3RNN0Qmmp4UyC",
-          "l7myLScWLmOOCQURO4M9G",
-          "Zupd_yM9fwxxJpus3SC2I",
-          "h4sHCSW23Cx251ytQM8YK",
-          "Vt9RMvYJwx8pnRZQTXXDS"
-        ],
-        "seqColumnIds": [
-          "UlWidgU8sM_Vf6_2JJ-sU",
-          "MxtTCSlbg5AXeXygX7yKZ",
-          "SHtwCkTTl_Hi5shN8iVHC",
-          "4uxsfjUz3RNN0Qmmp4UyC",
-          "l7myLScWLmOOCQURO4M9G",
-          "Zupd_yM9fwxxJpus3SC2I",
-          "h4sHCSW23Cx251ytQM8YK",
-          "Vt9RMvYJwx8pnRZQTXXDS"
-        ],
-        "ui": {
-          "x": -4,
-          "y": 1513,
-          "zIndex": 854,
-          "widthName": 70,
-          "widthComment": 60,
-          "color": "#4CAF50"
-        },
-        "meta": {
-          "updateAt": 1752220113728,
-          "createAt": 1752219521962
         }
       },
       "SSx8AS1rDk2wnLrBbaKFz": {
@@ -1211,60 +1135,60 @@
       "dYosxFHh6LcJUgg06bhLO": {
         "id": "dYosxFHh6LcJUgg06bhLO",
         "tableId": "tGokp1AVC2q5Qtig6dDGu",
-        "name": "commit_date",
+        "name": "github_pushed_at",
         "comment": "",
         "dataType": "DATETIME",
         "default": "",
         "options": 0,
         "ui": {
           "keys": 0,
-          "widthName": 71,
+          "widthName": 96,
           "widthComment": 60,
           "widthDataType": 60,
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1752220006406,
+          "updateAt": 1754979293642,
           "createAt": 1752125377760
         }
       },
       "mQFXIk1deHsl3s3mwS_iK": {
         "id": "mQFXIk1deHsl3s3mwS_iK",
         "tableId": "tGokp1AVC2q5Qtig6dDGu",
-        "name": "update_date",
+        "name": "github_update_date",
         "comment": "",
         "dataType": "DATETIME",
         "default": "",
         "options": 0,
         "ui": {
           "keys": 0,
-          "widthName": 68,
+          "widthName": 108,
           "widthComment": 60,
           "widthDataType": 60,
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1752220007968,
+          "updateAt": 1754979298123,
           "createAt": 1752125392196
         }
       },
       "zjok5tKh5bbSUEKVo6ExH": {
         "id": "zjok5tKh5bbSUEKVo6ExH",
         "tableId": "tGokp1AVC2q5Qtig6dDGu",
-        "name": "created_date",
+        "name": "github_created_date",
         "comment": "",
         "dataType": "DATETIME",
         "default": "",
         "options": 0,
         "ui": {
           "keys": 0,
-          "widthName": 70,
+          "widthName": 110,
           "widthComment": 60,
           "widthDataType": 60,
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1752220009593,
+          "updateAt": 1754979305224,
           "createAt": 1752125392342
         }
       },
@@ -2048,366 +1972,6 @@
           "createAt": 1752218627265
         }
       },
-      "T2qVY3i5JTAe-qUBiElRL": {
-        "id": "T2qVY3i5JTAe-qUBiElRL",
-        "tableId": "WrKJrit6zGutAjdlQ5e8X",
-        "name": "id",
-        "comment": "auto",
-        "dataType": "INT",
-        "default": "",
-        "options": 10,
-        "ui": {
-          "keys": 1,
-          "widthName": 60,
-          "widthComment": 60,
-          "widthDataType": 60,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1752219389250,
-          "createAt": 1752219370721
-        }
-      },
-      "oDQxwfdiSLB-ZM-k_5P26": {
-        "id": "oDQxwfdiSLB-ZM-k_5P26",
-        "tableId": "WrKJrit6zGutAjdlQ5e8X",
-        "name": "year",
-        "comment": "github_id + year로 UQ1",
-        "dataType": "",
-        "default": "",
-        "options": 4,
-        "ui": {
-          "keys": 0,
-          "widthName": 60,
-          "widthComment": 128,
-          "widthDataType": 60,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1752219436899,
-          "createAt": 1752219391170
-        }
-      },
-      "oUvQV6dHP7XQBq6KwwlwY": {
-        "id": "oUvQV6dHP7XQBq6KwwlwY",
-        "tableId": "WrKJrit6zGutAjdlQ5e8X",
-        "name": "github_id",
-        "comment": "깃허브에서 제공하는 Id",
-        "dataType": "BIGINT",
-        "default": "",
-        "options": 12,
-        "ui": {
-          "keys": 0,
-          "widthName": 60,
-          "widthComment": 127,
-          "widthDataType": 60,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1752219428140,
-          "createAt": 1752219406164
-        }
-      },
-      "75XLyJyGqwOSiybJIVmLZ": {
-        "id": "75XLyJyGqwOSiybJIVmLZ",
-        "tableId": "WrKJrit6zGutAjdlQ5e8X",
-        "name": "commit_line",
-        "comment": "",
-        "dataType": "",
-        "default": "",
-        "options": 0,
-        "ui": {
-          "keys": 0,
-          "widthName": 66,
-          "widthComment": 60,
-          "widthDataType": 60,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1752219455721,
-          "createAt": 1752219440190
-        }
-      },
-      "adkbRhJ6Zc_ekqPnu7JTQ": {
-        "id": "adkbRhJ6Zc_ekqPnu7JTQ",
-        "tableId": "WrKJrit6zGutAjdlQ5e8X",
-        "name": "commit_count",
-        "comment": "",
-        "dataType": "",
-        "default": "",
-        "options": 0,
-        "ui": {
-          "keys": 0,
-          "widthName": 77,
-          "widthComment": 60,
-          "widthDataType": 60,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1752219469189,
-          "createAt": 1752219458705
-        }
-      },
-      "LtnzqCEdOaqcAfrNFJGl_": {
-        "id": "LtnzqCEdOaqcAfrNFJGl_",
-        "tableId": "WrKJrit6zGutAjdlQ5e8X",
-        "name": "pr_count",
-        "comment": "",
-        "dataType": "",
-        "default": "",
-        "options": 0,
-        "ui": {
-          "keys": 0,
-          "widthName": 60,
-          "widthComment": 60,
-          "widthDataType": 60,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1752219474560,
-          "createAt": 1752219472071
-        }
-      },
-      "7FLDoibJHUnbQMR34kSu2": {
-        "id": "7FLDoibJHUnbQMR34kSu2",
-        "tableId": "WrKJrit6zGutAjdlQ5e8X",
-        "name": "issue_count",
-        "comment": "",
-        "dataType": "",
-        "default": "",
-        "options": 0,
-        "ui": {
-          "keys": 0,
-          "widthName": 63,
-          "widthComment": 60,
-          "widthDataType": 60,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1752219482089,
-          "createAt": 1752219475643
-        }
-      },
-      "e3bv6nSpf4L65cztwt6of": {
-        "id": "e3bv6nSpf4L65cztwt6of",
-        "tableId": "WrKJrit6zGutAjdlQ5e8X",
-        "name": "star_count",
-        "comment": "",
-        "dataType": "",
-        "default": "",
-        "options": 0,
-        "ui": {
-          "keys": 0,
-          "widthName": 60,
-          "widthComment": 60,
-          "widthDataType": 60,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1752219487626,
-          "createAt": 1752219484056
-        }
-      },
-      "sNlLpOcAsLU_ZR8qaLfMz": {
-        "id": "sNlLpOcAsLU_ZR8qaLfMz",
-        "tableId": "WrKJrit6zGutAjdlQ5e8X",
-        "name": "fork_count",
-        "comment": "",
-        "dataType": "",
-        "default": "",
-        "options": 0,
-        "ui": {
-          "keys": 0,
-          "widthName": 60,
-          "widthComment": 60,
-          "widthDataType": 60,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1752219495470,
-          "createAt": 1752219492791
-        }
-      },
-      "GLqibB1L4E7y7YKFUF_BI": {
-        "id": "GLqibB1L4E7y7YKFUF_BI",
-        "tableId": "WrKJrit6zGutAjdlQ5e8X",
-        "name": "score",
-        "comment": "",
-        "dataType": "",
-        "default": "",
-        "options": 0,
-        "ui": {
-          "keys": 0,
-          "widthName": 60,
-          "widthComment": 60,
-          "widthDataType": 60,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1752219499706,
-          "createAt": 1752219498024
-        }
-      },
-      "UlWidgU8sM_Vf6_2JJ-sU": {
-        "id": "UlWidgU8sM_Vf6_2JJ-sU",
-        "tableId": "oYgEYkx0-sM1-Bw27sM6B",
-        "name": "id",
-        "comment": "",
-        "dataType": "INT",
-        "default": "",
-        "options": 10,
-        "ui": {
-          "keys": 1,
-          "widthName": 60,
-          "widthComment": 60,
-          "widthDataType": 60,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1752219685547,
-          "createAt": 1752219545812
-        }
-      },
-      "SHtwCkTTl_Hi5shN8iVHC": {
-        "id": "SHtwCkTTl_Hi5shN8iVHC",
-        "tableId": "oYgEYkx0-sM1-Bw27sM6B",
-        "name": "year",
-        "comment": "github_id + year로 UQ1",
-        "dataType": "",
-        "default": "",
-        "options": 0,
-        "ui": {
-          "keys": 0,
-          "widthName": 60,
-          "widthComment": 128,
-          "widthDataType": 60,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1752219733076,
-          "createAt": 1752219686897
-        }
-      },
-      "MxtTCSlbg5AXeXygX7yKZ": {
-        "id": "MxtTCSlbg5AXeXygX7yKZ",
-        "tableId": "oYgEYkx0-sM1-Bw27sM6B",
-        "name": "github_id",
-        "comment": "깃허브에서 제공하는 Id",
-        "dataType": "BIGINT",
-        "default": "",
-        "options": 8,
-        "ui": {
-          "keys": 0,
-          "widthName": 60,
-          "widthComment": 127,
-          "widthDataType": 60,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1752219695446,
-          "createAt": 1752219695446
-        }
-      },
-      "4uxsfjUz3RNN0Qmmp4UyC": {
-        "id": "4uxsfjUz3RNN0Qmmp4UyC",
-        "tableId": "oYgEYkx0-sM1-Bw27sM6B",
-        "name": "best_repo_name",
-        "comment": "",
-        "dataType": "",
-        "default": "",
-        "options": 0,
-        "ui": {
-          "keys": 0,
-          "widthName": 88,
-          "widthComment": 60,
-          "widthDataType": 60,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1752219748511,
-          "createAt": 1752219741833
-        }
-      },
-      "l7myLScWLmOOCQURO4M9G": {
-        "id": "l7myLScWLmOOCQURO4M9G",
-        "tableId": "oYgEYkx0-sM1-Bw27sM6B",
-        "name": "activity_level_score",
-        "comment": "활동 수준 점수",
-        "dataType": "",
-        "default": "",
-        "options": 0,
-        "ui": {
-          "keys": 0,
-          "widthName": 101,
-          "widthComment": 81,
-          "widthDataType": 60,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1752219814747,
-          "createAt": 1752219753383
-        }
-      },
-      "Zupd_yM9fwxxJpus3SC2I": {
-        "id": "Zupd_yM9fwxxJpus3SC2I",
-        "tableId": "oYgEYkx0-sM1-Bw27sM6B",
-        "name": "activity_diversity_score",
-        "comment": "활동 다양성 점수",
-        "dataType": "",
-        "default": "",
-        "options": 0,
-        "ui": {
-          "keys": 0,
-          "widthName": 121,
-          "widthComment": 93,
-          "widthDataType": 60,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1752219817765,
-          "createAt": 1752219785320
-        }
-      },
-      "h4sHCSW23Cx251ytQM8YK": {
-        "id": "h4sHCSW23Cx251ytQM8YK",
-        "tableId": "oYgEYkx0-sM1-Bw27sM6B",
-        "name": "activity_ influence_score",
-        "comment": "활동 영향력 점수",
-        "dataType": "",
-        "default": "",
-        "options": 0,
-        "ui": {
-          "keys": 0,
-          "widthName": 129,
-          "widthComment": 93,
-          "widthDataType": 60,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1752219820511,
-          "createAt": 1752219793352
-        }
-      },
-      "Vt9RMvYJwx8pnRZQTXXDS": {
-        "id": "Vt9RMvYJwx8pnRZQTXXDS",
-        "tableId": "oYgEYkx0-sM1-Bw27sM6B",
-        "name": "score",
-        "comment": "총 점수",
-        "dataType": "",
-        "default": "",
-        "options": 0,
-        "ui": {
-          "keys": 0,
-          "widthName": 60,
-          "widthComment": 60,
-          "widthDataType": 60,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1752219826751,
-          "createAt": 1752219821805
-        }
-      },
       "hZARCVqk90iOTqno46DJo": {
         "id": "hZARCVqk90iOTqno46DJo",
         "tableId": "tGokp1AVC2q5Qtig6dDGu",
@@ -2667,6 +2231,26 @@
           "updateAt": 1754978668669,
           "createAt": 1754964623406
         }
+      },
+      "XLg9Vdb6Kp9MID0BtvyCp": {
+        "id": "XLg9Vdb6Kp9MID0BtvyCp",
+        "tableId": "tGokp1AVC2q5Qtig6dDGu",
+        "name": "additional_data",
+        "comment": "",
+        "dataType": "TEXT",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 83,
+          "widthComment": 60,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1754979314963,
+          "createAt": 1754979307309
+        }
       }
     },
     "relationshipEntities": {
@@ -2698,34 +2282,6 @@
           "createAt": 1752123128476
         }
       },
-      "Vh8rxmZNboXlKCGZcN4UB": {
-        "id": "Vh8rxmZNboXlKCGZcN4UB",
-        "identification": false,
-        "relationshipType": 4,
-        "startRelationshipType": 2,
-        "start": {
-          "tableId": "M98IyDSU7ob4spyji_LWS",
-          "columnIds": [
-            "uPC2xJQDjEXYLzF4Jgl9C"
-          ],
-          "x": 560.4445,
-          "y": 932.6666,
-          "direction": 2
-        },
-        "end": {
-          "tableId": "tGokp1AVC2q5Qtig6dDGu",
-          "columnIds": [
-            "f-aM0W8UR1yHFh10nodyV"
-          ],
-          "x": 1239.1388,
-          "y": 466.5927,
-          "direction": 1
-        },
-        "meta": {
-          "updateAt": 1752123384187,
-          "createAt": 1752123384187
-        }
-      },
       "D93xB00L91sbgt4D7sq9M": {
         "id": "D93xB00L91sbgt4D7sq9M",
         "identification": false,
@@ -2736,8 +2292,8 @@
           "columnIds": [
             "SndfoACEixcnnO8PtUcQJ"
           ],
-          "x": 1545.2297000000003,
-          "y": 549.7291,
+          "x": 1559.7297000000003,
+          "y": 573.7291,
           "direction": 8
         },
         "end": {
@@ -2764,8 +2320,8 @@
           "columnIds": [
             "SndfoACEixcnnO8PtUcQJ"
           ],
-          "x": 1340.4297000000001,
-          "y": 549.7291,
+          "x": 1343.3297000000002,
+          "y": 573.7291,
           "direction": 8
         },
         "end": {
@@ -2792,8 +2348,8 @@
           "columnIds": [
             "SndfoACEixcnnO8PtUcQJ"
           ],
-          "x": 1442.8297000000002,
-          "y": 549.7291,
+          "x": 1451.5297000000003,
+          "y": 573.7291,
           "direction": 8
         },
         "end": {
@@ -2820,8 +2376,8 @@
           "columnIds": [
             "SndfoACEixcnnO8PtUcQJ"
           ],
-          "x": 1647.6297000000004,
-          "y": 549.7291,
+          "x": 1667.9297000000004,
+          "y": 573.7291,
           "direction": 8
         },
         "end": {
@@ -2848,8 +2404,8 @@
           "columnIds": [
             "SndfoACEixcnnO8PtUcQJ"
           ],
-          "x": 1750.0297000000005,
-          "y": 549.7291,
+          "x": 1776.1297000000004,
+          "y": 573.7291,
           "direction": 8
         },
         "end": {
@@ -2864,62 +2420,6 @@
         "meta": {
           "updateAt": 1752129636603,
           "createAt": 1752129636603
-        }
-      },
-      "EvLclSg00jda9RnRNGxzY": {
-        "id": "EvLclSg00jda9RnRNGxzY",
-        "identification": false,
-        "relationshipType": 16,
-        "startRelationshipType": 2,
-        "start": {
-          "tableId": "M98IyDSU7ob4spyji_LWS",
-          "columnIds": [
-            "uPC2xJQDjEXYLzF4Jgl9C"
-          ],
-          "x": 560.4445,
-          "y": 982.6666,
-          "direction": 2
-        },
-        "end": {
-          "tableId": "WrKJrit6zGutAjdlQ5e8X",
-          "columnIds": [
-            "oUvQV6dHP7XQBq6KwwlwY"
-          ],
-          "x": 607.3478,
-          "y": 1184.4347,
-          "direction": 4
-        },
-        "meta": {
-          "updateAt": 1752219406164,
-          "createAt": 1752219406164
-        }
-      },
-      "_fEjO2v0-2LhqxsNfj0OU": {
-        "id": "_fEjO2v0-2LhqxsNfj0OU",
-        "identification": false,
-        "relationshipType": 16,
-        "startRelationshipType": 2,
-        "start": {
-          "tableId": "M98IyDSU7ob4spyji_LWS",
-          "columnIds": [
-            "uPC2xJQDjEXYLzF4Jgl9C"
-          ],
-          "x": 302.9445,
-          "y": 1032.6666,
-          "direction": 8
-        },
-        "end": {
-          "tableId": "oYgEYkx0-sM1-Bw27sM6B",
-          "columnIds": [
-            "MxtTCSlbg5AXeXygX7yKZ"
-          ],
-          "x": 262,
-          "y": 1513,
-          "direction": 4
-        },
-        "meta": {
-          "updateAt": 1752219695446,
-          "createAt": 1752219695446
         }
       },
       "QQ33vOPy8SW0T1qr0FeDB": {
@@ -2961,7 +2461,7 @@
             "SndfoACEixcnnO8PtUcQJ"
           ],
           "x": 1289.2297,
-          "y": 305.7291,
+          "y": 317.7291,
           "direction": 1
         },
         "end": {
@@ -2982,22 +2482,6 @@
     "indexEntities": {},
     "indexColumnEntities": {},
     "memoEntities": {
-      "Rwy3Ef778V17qVSVlJYPq": {
-        "id": "Rwy3Ef778V17qVSVlJYPq",
-        "value": "깃허브 내부에서 관리하는 유저 정보는 다음 3가지\n{\n  \"login\": \"octocat\",\n  \"id\": 583231,\n  \"name\": \"The Octocat\",\n}\n\n이 중에서 id만 고유하고 나머지는 변경될 수 있기 때문에 무결성을 위해서 모든 테이블에서는 id를 FK로 참조하고 username이 필요하다면 Github_account 테이블과 join을 통해 가져올 것!",
-        "ui": {
-          "x": 401.4444,
-          "y": 597.3333,
-          "zIndex": 228,
-          "width": 349,
-          "height": 170,
-          "color": ""
-        },
-        "meta": {
-          "updateAt": 1752219203986,
-          "createAt": 1752124517614
-        }
-      },
       "J68we_lGTznnMLZDKoIvF": {
         "id": "J68we_lGTznnMLZDKoIvF",
         "value": "정규화를 위해서 여러명이 기여했지만 레포는 하나만 저장하고,\n조인 테이블을 이용해서 계정과 N:N관계 유지",
