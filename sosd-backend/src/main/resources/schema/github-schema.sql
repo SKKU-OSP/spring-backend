@@ -70,12 +70,13 @@ CREATE TABLE IF NOT EXISTS github_commit (
     message TEXT COMMENT '커밋 메시지',
     branch VARCHAR(255) NOT NULL COMMENT '브랜치명',
     repo_id BIGINT NOT NULL COMMENT '저장소 ID (외래키)',
+    github_id BIGINT NOT NULL COMMENT '커밋 작성자 id(외례키)',
 
     -- 인덱스
-    UNIQUE INDEX uq_commit_sha (sha) COMMENT 'commit 고유 sha 값 유니크 키',
+    UNIQUE INDEX uq_commit_sha (repo_id, sha) COMMENT '레포당 commit 고유 sha 값 유니크 키',
+    INDEX idx_commit_github_id_date (github_id, author_date) COMMENT '작성자별 커밋 조회용',
     INDEX idx_commit_branch (branch) COMMENT 'default 브랜치 병합 조회용',
     INDEX idx_commit_repo_id (repo_id) COMMENT '레포지토리 기준 커밋 조회용'
-
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Github 커밋 테이블';
 
@@ -91,12 +92,14 @@ CREATE TABLE IF NOT EXISTS github_pull_request (
     base_branch VARCHAR(255) NOT NULL COMMENT '기준 브랜치 (병합 대상)',
     head_branch VARCHAR(255) NOT NULL COMMENT '소스 브랜치 (병합 소스)',
     repo_id BIGINT NOT NULL COMMENT '저장소 ID (외래키)',
+    github_id BIGINT NOT NULL COMMENT 'PR 작성자 id(외례키)',
 
     -- 인덱스
     UNIQUE uq_pull_request_github_pr_id (github_pr_id) COMMENT 'pr id 유니크 키 (깃허브 api에서 제공)',
     INDEX idx_repo_id_pr_number (repo_id, pr_number) COMMENT 'pr 조회용',
     INDEX idx_merged (merged) COMMENT '병합 여부 조회용',
-    INDEX idx_pr_date (pr_date) COMMENT 'pr 생성 날짜 필터용'
+    INDEX idx_pr_date (pr_date) COMMENT 'pr 생성 날짜 필터용',
+    INDEX idx_github_id_date (github_id, pr_date) COMMENT '작성자별 pr 조회용'
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Pull Request 테이블';
 
@@ -109,11 +112,13 @@ CREATE TABLE IF NOT EXISTS github_issue (
     issue_body TEXT COMMENT 'Issue 본문',
     issue_date DATETIME NOT NULL COMMENT 'Issue 생성일시',
     repo_id BIGINT NOT NULL COMMENT '저장소 ID (외래키)',
+    github_id BIGINT NOT NULL COMMENT 'issue 작성자 id (외례키)',
 
     -- 인덱스
     UNIQUE uq_issue_github_issue_id (github_issue_id) COMMENT 'issue id 유니크 키 (깃허브 api에서 제공)',
     INDEX idx_repo_id_issue_number (repo_id, issue_number) COMMENT 'issue 조회용',
-    INDEX idx_issue_date (issue_date) COMMENT 'issue 생성 날짜 조회용'
+    INDEX idx_issue_date (issue_date) COMMENT 'issue 생성 날짜 조회용',
+    INDEX idx_github_id_date (github_id, issue_date) COMMENT '작성자별 issue 조회용'
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Issue 테이블';
 
@@ -142,3 +147,17 @@ CREATE TABLE IF NOT EXISTS github_star (
     INDEX idx_star_date (star_date) COMMENT 'star 날짜 필터용'
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Star 테이블';
+
+-- 증분 수집용 커서 테이블
+CREATE TABLE IF NOT EXISTS github_sync_cursors (
+    github_account_id BIGINT NOT NULL COMMENT 'github_account 테이블 id (외례키)',
+    github_repo_id BIGINT NOT NULL COMMENT 'github_repository 테이블 id (외례키)',
+    resource_type ENUM('commit', 'issue', 'pr', 'star') NOT NULL COMMENT '리소스 타입',
+    last_processed_sha VARCHAR(40) COMMENT '마지막 처리된 default branch의 sha값 (commit 증분 처리용)',
+    last_processed_at DATETIME COMMENT '마지막 처리된 시간 (issue/pr/star 증분 처리용)',
+    last_updated_at DATETIME NOT NULL COMMENT '마지막 동기화 시간',
+
+    -- 인덱스
+    PRIMARY KEY (github_account_id, github_repo_id, resource_type) COMMENT '복합 PK',
+    INDEX idx_last_updated_at (last_updated_at) COMMENT '스케쥴링용 동기화 시간 인덱스'
+)
