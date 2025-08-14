@@ -32,7 +32,7 @@ public class RepoUpsertService {
         if (ids.isEmpty()) return;
 
         // 2) 기존 엔티티 벌크 로딩
-        List<GithubRepositoryEntity> existing = githubRepositoryRepository.findALLByGithubRepoIdIn(ids);
+        List<GithubRepositoryEntity> existing = githubRepositoryRepository.findAllByGithubRepoIdIn(ids);
         Map<Long, GithubRepositoryEntity> byRepoId = new HashMap<>(existing.size());
         for (GithubRepositoryEntity entity : existing) {
             byRepoId.put(entity.getGithubRepoId(), entity);

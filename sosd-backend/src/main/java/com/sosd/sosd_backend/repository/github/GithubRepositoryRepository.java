@@ -18,7 +18,7 @@ public interface GithubRepositoryRepository extends JpaRepository<GithubReposito
     Optional<GithubRepositoryEntity> findByGithubRepoId(Long githubRepoId);
 
     // githubRepoId 기준으로 벌크 로딩
-    List<GithubRepositoryEntity> findALLByGithubRepoIdIn(Collection<Long> githubRepoIds);
+    List<GithubRepositoryEntity> findAllByGithubRepoIdIn(Collection<Long> githubRepoIds);
 
     // 유니크 인덱스
     boolean existsByOwnerNameAndRepoName(String ownerName, String repoName);
