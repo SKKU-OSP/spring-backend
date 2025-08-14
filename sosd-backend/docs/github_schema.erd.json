@@ -4,9 +4,9 @@
   "settings": {
     "width": 2000,
     "height": 2000,
-    "scrollTop": 0,
-    "scrollLeft": -800,
-    "zoomLevel": 1,
+    "scrollTop": -295.4507,
+    "scrollLeft": -497.9534,
+    "zoomLevel": 0.76,
     "show": 495,
     "database": 4,
     "databaseName": "",
@@ -389,8 +389,7 @@
         "columnIds": [
           "ODv8w5x3x2vGpcQ69iwcy",
           "3Iq0fSMTpUpBRSzTOG14_",
-          "y4kue9YlcLC9VM7BOS4Ry",
-          "mf3o6sYMSWPL8aPIci0Ea"
+          "y4kue9YlcLC9VM7BOS4Ry"
         ],
         "seqColumnIds": [
           "ODv8w5x3x2vGpcQ69iwcy",
@@ -407,7 +406,7 @@
           "color": ""
         },
         "meta": {
-          "updateAt": 1754964867782,
+          "updateAt": 1755149388989,
           "createAt": 1754964385838
         }
       },
@@ -2442,7 +2441,7 @@
             "3Iq0fSMTpUpBRSzTOG14_"
           ],
           "x": 635,
-          "y": 306,
+          "y": 294,
           "direction": 1
         },
         "meta": {
@@ -2470,7 +2469,7 @@
             "y4kue9YlcLC9VM7BOS4Ry"
           ],
           "x": 1141,
-          "y": 306,
+          "y": 294,
           "direction": 2
         },
         "meta": {
