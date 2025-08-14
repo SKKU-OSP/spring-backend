@@ -1,6 +1,6 @@
 package com.sosd.sosd_backend.service.github;
 
-import com.sosd.sosd_backend.dto.GithubRepositoryUpsertDto;
+import com.sosd.sosd_backend.dto.github.GithubRepositoryUpsertDto;
 
 import com.sosd.sosd_backend.entity.github.GithubRepositoryEntity;
 import com.sosd.sosd_backend.repository.github.GithubAccountRepository;
