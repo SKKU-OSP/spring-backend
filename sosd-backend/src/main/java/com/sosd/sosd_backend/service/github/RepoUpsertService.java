@@ -3,6 +3,7 @@ package com.sosd.sosd_backend.service.github;
 import com.sosd.sosd_backend.dto.github.GithubRepositoryUpsertDto;
 
 import com.sosd.sosd_backend.entity.github.GithubRepositoryEntity;
+import com.sosd.sosd_backend.github_collector.dto.RepoRef;
 import com.sosd.sosd_backend.repository.github.GithubAccountRepository;
 import com.sosd.sosd_backend.repository.github.GithubRepositoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,9 +20,9 @@ public class RepoUpsertService {
     private final GithubAccountRepository githubAccountRepository;
 
     @Transactional
-    public void upsertRepos(List<GithubRepositoryUpsertDto> dtos) {
+    public List<RepoRef> upsertRepos(List<GithubRepositoryUpsertDto> dtos) {
         if (dtos == null || dtos.isEmpty()) {
-            return;
+            return List.of();
         }
 
         // 1) 입력 검증 + 키 수집
@@ -29,7 +30,7 @@ public class RepoUpsertService {
                 .map(GithubRepositoryUpsertDto::githubRepoId)
                 .filter(Objects::nonNull)
                 .toList();
-        if (ids.isEmpty()) return;
+        if (ids.isEmpty()) return List.of();
 
         // 2) 기존 엔티티 벌크 로딩
         List<GithubRepositoryEntity> existing = githubRepositoryRepository.findAllByGithubRepoIdIn(ids);
@@ -51,7 +52,20 @@ public class RepoUpsertService {
             }
             toSave.add(entity);
         }
-        githubRepositoryRepository.saveAll(toSave);
+
+        // 4) 저장
+        List<GithubRepositoryEntity> saved =  githubRepositoryRepository.saveAll(toSave);
+
+        // 5) RepoRef로 매핑하여 반환
+        return saved.stream()
+                .map(e -> new RepoRef(
+                        e.getId(),
+                        e.getGithubRepoId(),
+                        e.getOwnerName(),
+                        e.getRepoName(),
+                        e.getOwnerName() + "/" + e.getRepoName()
+                ))
+                .toList();
     }
 
 

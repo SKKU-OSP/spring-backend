@@ -3,6 +3,7 @@ package com.sosd.sosd_backend.service.github;
 import com.sosd.sosd_backend.dto.github.GithubRepositoryUpsertDto;
 import com.sosd.sosd_backend.github_collector.dto.GithubRepositoryResponseDto;
 import com.sosd.sosd_backend.github_collector.collector.RepoCollector;
+import com.sosd.sosd_backend.github_collector.dto.RepoRef;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -10,7 +11,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class RepoIngestionService {
+public class UserRepoIngestionService {
 
     private final RepoCollector repoCollector;
     private final RepoUpsertService repoUpsertService;
@@ -28,7 +29,7 @@ public class RepoIngestionService {
      * @param githubLoginUsername GitHub 계정 로그인 ID
      */
 
-    public void ingestGithubAccount(String githubLoginUsername){
+    public List<RepoRef> collectAndSaveUserRepos(String githubLoginUsername){
         // 1) 깃허브 api를 통해 수집
         List<GithubRepositoryResponseDto> collectedDto = repoCollector.getAllContributedRepos(githubLoginUsername);
 
@@ -37,8 +38,8 @@ public class RepoIngestionService {
                 .map(GithubRepositoryUpsertDto::from)
                         .toList();
 
-        // 3) 저장
-        repoUpsertService.upsertRepos(upsertDtos);
+        // 3) 저장 & 참조 반환
+        return repoUpsertService.upsertRepos(upsertDtos);
 
     }
 
