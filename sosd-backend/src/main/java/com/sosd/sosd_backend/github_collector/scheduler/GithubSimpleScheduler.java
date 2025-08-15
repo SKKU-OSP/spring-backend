@@ -1,7 +1,7 @@
 package com.sosd.sosd_backend.github_collector.scheduler;
 
 import com.sosd.sosd_backend.entity.user.UserAccount;
-import com.sosd.sosd_backend.github_collector.collector.UserCollectionOrchestrator;
+import com.sosd.sosd_backend.github_collector.orchestrator.UserCollectionOrchestrator;
 import com.sosd.sosd_backend.github_collector.dto.ref.UserAccountRef;
 import com.sosd.sosd_backend.repository.user.UserAccountRepository;
 import org.springframework.stereotype.Component;

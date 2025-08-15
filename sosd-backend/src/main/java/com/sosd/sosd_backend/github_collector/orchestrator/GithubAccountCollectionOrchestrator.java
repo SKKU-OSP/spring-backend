@@ -1,6 +1,7 @@
-package com.sosd.sosd_backend.github_collector.collector;
+package com.sosd.sosd_backend.github_collector.orchestrator;
 
 import com.sosd.sosd_backend.entity.github.GithubRepositoryEntity;
+import com.sosd.sosd_backend.github_collector.collector.RepoCollector;
 import com.sosd.sosd_backend.github_collector.dto.ref.GithubAccountRef;
 import org.springframework.stereotype.Component;
 
