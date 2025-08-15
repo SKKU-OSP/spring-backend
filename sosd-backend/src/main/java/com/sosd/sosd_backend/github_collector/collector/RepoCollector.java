@@ -1,6 +1,6 @@
 package com.sosd.sosd_backend.github_collector.collector;
 
-import com.sosd.sosd_backend.dto.RepositoryDetailDto;
+import com.sosd.sosd_backend.github_collector.dto.response.GithubRepositoryResponseDto;
 import com.sosd.sosd_backend.github_collector.dto.RepoCollectorDtos.EventRepoDto;
 import com.sosd.sosd_backend.github_collector.dto.RepoCollectorDtos.SearchIssuesDto;
 import com.sosd.sosd_backend.github_collector.dto.RepoCollectorDtos.UserRepoDto;
@@ -22,7 +22,7 @@ public class RepoCollector {
     /**
      * username이 기여한 모든 repo의 상세 정보를 반환
      */
-    public List<RepositoryDetailDto> getAllContributedRepos(String username) {
+    public List<GithubRepositoryResponseDto> getAllContributedRepos(String username) {
         Set<String> fullNames = new HashSet<>();
 
         fullNames.addAll(fetchReposFromUserRepos(username));
@@ -48,14 +48,15 @@ public class RepoCollector {
     /**
      * 단일 repo 정보 조회
      */
-    public RepositoryDetailDto getRepoInfo(String owner, String name){
+    public GithubRepositoryResponseDto getRepoInfo(String owner, String name){
         try {
             return githubRestClient.request()
                     .endpoint("/repos/" + owner + "/" + name)
-                    .get(RepositoryDetailDto.class);
+                    .get(GithubRepositoryResponseDto.class);
         } catch (org.springframework.web.client.HttpClientErrorException.NotFound e) {
             // 404 에러 발생 시 null 반환
-            return null;        }
+            return null;
+        }
     }
 
 
