@@ -29,7 +29,7 @@ public class AuthControllerTest {
     @MockitoBean
     AuthService authService;
 
-    private SignupRequest req(){
+    private SignupRequest createBaseRequest(){
         SignupRequest r = new SignupRequest();
         r.setStudentId("2025111111");
         r.setName("테스트");
@@ -41,6 +41,23 @@ public class AuthControllerTest {
         r.setGithubLoginUsername("githubloginusername");
         r.setGithubName("githubname");
         r.setGithubEmail("githubemail@example.com");
+        return r;
+    }
+
+    private SignupRequest createRequestWithDuplicateStudentId(){
+        SignupRequest r = createBaseRequest();
+        // 학번은 같지만 GitHub 정보는 다른 경우
+        r.setGithubId(999999L);
+        r.setGithubLoginUsername("different_github");
+        r.setGithubEmail("different@example.com");
+        return r;
+    }
+
+    private SignupRequest createRequestWithDuplicateGithubId(){
+        SignupRequest r = createBaseRequest();
+        // GitHub ID는 같지만 학번은 다른 경우
+        r.setStudentId("2099123456");
+        r.setName("다른사람");
         return r;
     }
 
@@ -56,19 +73,32 @@ public class AuthControllerTest {
 
         mockMvc.perform(post("/api/auth/signup")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(req())))
+                .content(objectMapper.writeValueAsString(createBaseRequest())))
                 .andExpect(jsonPath("$.studentId").value("2025111111"))
                 .andExpect(jsonPath("$.githubLoginUsername").value("githubloginusername"));
     }
 
     @Test
-    void signup_duplicate_user() throws Exception{
+    void signup_duplicate_user_id() throws Exception{
         Mockito.when(authService.signup(any(SignupRequest.class)))
                 .thenThrow(new SignUpDuplicateUserException());
 
         mockMvc.perform(post("/api/auth/signup")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(req())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createRequestWithDuplicateStudentId())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("USER_ALREADY_EXISTS"))
+                .andExpect(jsonPath("$.path").value("/api/auth/signup"));
+    }
+
+    @Test
+    void signup_duplicate_github_id() throws Exception{
+        Mockito.when(authService.signup(any(SignupRequest.class)))
+                .thenThrow(new SignUpDuplicateUserException());
+
+        mockMvc.perform(post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createRequestWithDuplicateGithubId())))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("USER_ALREADY_EXISTS"))
                 .andExpect(jsonPath("$.path").value("/api/auth/signup"));
