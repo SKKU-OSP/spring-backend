@@ -1,6 +1,7 @@
 package com.sosd.sosd_backend.entity.github;
 
 import com.sosd.sosd_backend.entity.user.UserAccount;
+import com.sosd.sosd_backend.github_collector.dto.ref.GithubAccountRef;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -75,6 +76,17 @@ public class GithubAccount {
     // 수집기 작동 시 호출 메소드
     public void updateLastCrawling() {
         this.lastCrawling = LocalDateTime.now();
+    }
+
+    // 엔티티 -> githubAccountRef 변환 메서드
+    public GithubAccountRef toGithubAccountRef(){
+        return new GithubAccountRef(
+                this.githubId,
+                this.githubLoginUsername,
+                this.githubName,
+                this.githubToken,
+                this.githubEmail
+        );
     }
 
 }
