@@ -1,5 +1,6 @@
 package com.sosd.sosd_backend.entity.user;
 
+import com.sosd.sosd_backend.github_collector.dto.ref.UserAccountRef;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -93,5 +94,10 @@ public class UserAccount {
     // 로그인 시 호출 메소드
     public void updateLastLogin() {
         this.lastLogin = LocalDateTime.now();
+    }
+
+    // 엔티티 -> UserAccountRef 변환 메서드
+    public UserAccountRef toUserRef(){
+        return new UserAccountRef(this.studentId, this.name);
     }
 }
