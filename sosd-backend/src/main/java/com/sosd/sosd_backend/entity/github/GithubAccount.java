@@ -1,6 +1,7 @@
 package com.sosd.sosd_backend.entity.github;
 
 import com.sosd.sosd_backend.entity.user.UserAccount;
+import com.sosd.sosd_backend.github_collector.dto.ref.GithubAccountRef;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -8,6 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -41,6 +44,16 @@ public class GithubAccount {
     @JoinColumn(name = "student_id", nullable = false)
     private UserAccount userAccount;
 
+    // 레포지토리 다대다 설정
+    // account -> repo 로 단방향 many to many 설정
+    @ManyToMany
+    @JoinTable(
+            name = "github_account_repository",
+            joinColumns = @JoinColumn(name = "github_account_id", referencedColumnName = "github_id"),
+            inverseJoinColumns = @JoinColumn(name = "github_repo_id", referencedColumnName = "id")
+    )
+    private Set<GithubRepositoryEntity> repositoryEntities = new HashSet<>();
+
     // 생성자
     @Builder
     public GithubAccount(
@@ -63,6 +76,17 @@ public class GithubAccount {
     // 수집기 작동 시 호출 메소드
     public void updateLastCrawling() {
         this.lastCrawling = LocalDateTime.now();
+    }
+
+    // 엔티티 -> githubAccountRef 변환 메서드
+    public GithubAccountRef toGithubAccountRef(){
+        return new GithubAccountRef(
+                this.githubId,
+                this.githubLoginUsername,
+                this.githubName,
+                this.githubToken,
+                this.githubEmail
+        );
     }
 
 }
