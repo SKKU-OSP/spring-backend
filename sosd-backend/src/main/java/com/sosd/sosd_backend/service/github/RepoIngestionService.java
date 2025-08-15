@@ -1,7 +1,7 @@
 package com.sosd.sosd_backend.service.github;
 
-import com.sosd.sosd_backend.dto.GithubRepositoryUpsertDto;
-import com.sosd.sosd_backend.github_collector.dto.GithubRepositoryResponseDto;
+import com.sosd.sosd_backend.dto.github.GithubRepositoryUpsertDto;
+import com.sosd.sosd_backend.github_collector.dto.response.GithubRepositoryResponseDto;
 import com.sosd.sosd_backend.github_collector.collector.RepoCollector;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

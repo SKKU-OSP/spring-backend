@@ -1,6 +1,6 @@
 package com.sosd.sosd_backend.github_collector;
 
-import com.sosd.sosd_backend.github_collector.dto.GithubRepositoryResponseDto;
+import com.sosd.sosd_backend.github_collector.dto.response.GithubRepositoryResponseDto;
 import com.sosd.sosd_backend.github_collector.collector.RepoCollector;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

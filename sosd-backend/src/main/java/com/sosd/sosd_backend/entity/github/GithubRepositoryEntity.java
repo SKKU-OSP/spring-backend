@@ -1,7 +1,7 @@
 package com.sosd.sosd_backend.entity.github;
 
 
-import com.sosd.sosd_backend.dto.GithubRepositoryUpsertDto;
+import com.sosd.sosd_backend.dto.github.GithubRepositoryUpsertDto;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

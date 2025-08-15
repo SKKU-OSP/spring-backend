@@ -1,6 +1,6 @@
 package com.sosd.sosd_backend.github_collector.collector;
 
-import com.sosd.sosd_backend.github_collector.dto.GithubRepositoryResponseDto;
+import com.sosd.sosd_backend.github_collector.dto.response.GithubRepositoryResponseDto;
 import com.sosd.sosd_backend.github_collector.dto.RepoCollectorDtos.EventRepoDto;
 import com.sosd.sosd_backend.github_collector.dto.RepoCollectorDtos.SearchIssuesDto;
 import com.sosd.sosd_backend.github_collector.dto.RepoCollectorDtos.UserRepoDto;

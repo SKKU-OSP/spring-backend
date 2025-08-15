@@ -1,7 +1,7 @@
-package com.sosd.sosd_backend.dto;
+package com.sosd.sosd_backend.dto.github;
 
 
-import com.sosd.sosd_backend.github_collector.dto.GithubRepositoryResponseDto;
+import com.sosd.sosd_backend.github_collector.dto.response.GithubRepositoryResponseDto;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;

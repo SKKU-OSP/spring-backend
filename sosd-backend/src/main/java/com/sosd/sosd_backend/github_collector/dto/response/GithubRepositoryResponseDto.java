@@ -1,4 +1,4 @@
-package com.sosd.sosd_backend.github_collector.dto;
+package com.sosd.sosd_backend.github_collector.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
