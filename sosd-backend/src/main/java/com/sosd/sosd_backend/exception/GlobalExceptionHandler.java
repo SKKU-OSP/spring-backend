@@ -14,7 +14,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ErrorResponse> handleCustomException(CustomException e, HttpServletRequest request) {
         ErrorCode code = e.getErrorCode();
-        ErrorResponse resposne = new ErrorResponse(
+        ErrorResponse response = new ErrorResponse(
                 LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME),
                 code.getStatus().value(),
                 code.getStatus().getReasonPhrase(),
@@ -22,6 +22,6 @@ public class GlobalExceptionHandler {
                 code.getMessage(),
                 request.getRequestURI()
         );
-        return ResponseEntity.status(code.getStatus()).body(resposne);
+        return ResponseEntity.status(code.getStatus()).body(response);
     }
 }
