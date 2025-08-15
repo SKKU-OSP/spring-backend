@@ -19,7 +19,14 @@ public class AuthService {
 
     @Transactional
     public SignupResponse signup(SignupRequest request){
+
+        // 1. 학번 중복 체크
         if (userAccountRepository.existsByStudentId(request.getStudentId())){
+            throw new SignUpDuplicateUserException();
+        }
+
+        // 2. 깃허브 id 중복 체크
+        if(githubAccountRepository.existsByGithubId(request.getGithubId())){
             throw new SignUpDuplicateUserException();
         }
 
