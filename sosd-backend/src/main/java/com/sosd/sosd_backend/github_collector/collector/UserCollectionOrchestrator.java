@@ -1,0 +1,27 @@
+package com.sosd.sosd_backend.github_collector.collector;
+
+import com.sosd.sosd_backend.entity.github.GithubAccount;
+import com.sosd.sosd_backend.github_collector.dto.ref.GithubAccountRef;
+import com.sosd.sosd_backend.github_collector.dto.ref.UserAccountRef;
+import com.sosd.sosd_backend.repository.github.GithubAccountRepository;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+@Component
+public class UserCollectionOrchestrator {
+
+    List<GithubAccount> githubAccounts;
+    GithubAccountRepository githubAccountRepository;
+
+    public void collectByUser(UserAccountRef userAccountRef){
+        // 1. 각 유저별 깃허브 계정 조회
+        githubAccounts = githubAccountRepository.findAllByUserAccount_StudentId(userAccountRef.studentId());
+
+        // 2. 각 github 계정별 수집 실행
+        for (GithubAccount githubAccount : githubAccounts){
+            GithubAccountRef githubAccountRef = githubAccount.toGithubAccountRef();
+        }
+
+    }
+}
