@@ -1,32 +1,258 @@
-# GitHub Data Collector Architecture
+# GitHub Data Collector
 
 ## 개요
 
-GitHub API를 통해 사용자별 기여 데이터(커밋, PR, 이슈, 스타)를 효율적으로 수집하는 시스템입니다. **증분 수집**을 통해 중복 수집을 방지하고 속도를 향상시켰으며, 인터페이스 기반 설계로 확장성을 보장합니다.
+GitHub API를 통해 사용자별 기여 데이터(커밋, PR, 이슈, 스타)를 효율적으로 수집하는 시스템입니다. 계층별 설계와 증분 수집을 통해 안정적이고 확장 가능한 데이터 수집을 제공합니다.
 
 ## 핵심 특징
 
-- **증분 수집**: SHA 기반(커밋) / 날짜 기반(PR, 이슈, 스타) 증분 처리
-- **사용자 중심 수집**: 등록된 사용자의 기여만 선별적 수집
-- **인터페이스 기반 설계**: 새로운 수집기 추가 용이
-- **스케줄링 지원**: 백그라운드 자동 수집
+- **계층별 책임 분리**: 스케줄러 → 사용자 → GitHub 계정 → 레포지토리 → 리소스
+- **증분 수집**: SHA 기반(커밋) / 날짜 기반(PR, 이슈, 스타)
+- **독립적 호출**: 각 계층별로 개별 API 호출 지원
+- **관심사 분리**: API 호출과 DB 저장 로직 분리
+
+## 시스템 아키텍처
+
+```
+Scheduler (스케줄러)
+    ↓
+UserCollectionOrchestrator (사용자별 수집)
+    ↓
+GithubAccountCollector (GitHub 계정별 수집)
+    ↓
+RepositoryCollector (레포지토리별 수집)
+    ↓
+ResourceCollectors (리소스별 수집: Commit, PR, Issue, Star)
+```
+
+## 모듈별 상세 설명
+**!! 아래 코드는 아키텍쳐 설명을 위한 의사 코드 예시이며, 구현 중 세부사항은 변경될 수 있습니다**
+
+### 1. Scheduler - 최상위 스케줄러
+
+전체 사용자에 대한 주기적 데이터 수집을 담당합니다.
+
+```java
+public class DataCollectionScheduler {
+    
+    public void scheduleDataCollection() {
+        List<User> activeUsers = userService.getAllActiveUsers();
+        
+        for (User user : activeUsers) {
+            userCollectionOrchestrator.collectByUser(user);
+        }
+    }
+}
+```
+
+**역할:**
+- 활성 사용자 목록 조회
+- 각 사용자별 수집 작업 실행
+- 스케줄링 관리 (예: 1시간마다 실행)
+
+### 2. UserCollectionOrchestrator - 사용자별 수집 오케스트레이터
+
+한 사용자에 연결된 모든 GitHub 계정의 데이터를 수집합니다.
+
+```java
+public class UserCollectionOrchestrator {
+    
+    public void collectByUser(User user) {
+        // 1. 해당 사용자의 모든 GitHub 계정 조회
+        List<GithubAccount> githubAccounts = githubAccountService.getAccountsByUser(user.getStudentId());
+        
+        // 2. 각 GitHub 계정별로 수집 실행
+        for (GithubAccount githubAccount : githubAccounts) {
+            githubAccountCollector.collectByGithubAccount(githubAccount);
+        }
+        
+        // 3. 사용자별 수집 완료 시간 업데이트
+        userService.updateLastCrawlingTime(user.getStudentId());
+    }
+}
+```
+
+**역할:**
+- 사용자 → GitHub 계정 목록 매핑
+- 하위 GitHub 계정 수집기 호출
+- 사용자별 수집 상태 관리
+
+### 3. GithubAccountCollector - GitHub 계정별 수집기
+
+특정 GitHub 계정에 속한 모든 레포지토리의 데이터를 수집합니다.
+
+```java
+public class GithubAccountCollector {
+    
+    public void collectByGithubAccount(GithubAccount githubAccount) {
+        // 1. 해당 GitHub 계정의 모든 레포 조회/갱신
+        List<Repository> repositories = repositoryService.collectAndUpdateRepositories(githubAccount);
+        
+        // 2. 각 레포별로 리소스 수집 실행
+        for (Repository repository : repositories) {
+            repositoryCollector.collectByRepository(githubAccount, repository);
+        }
+        
+        // 3. GitHub 계정별 수집 완료 시간 업데이트
+        githubAccountService.updateLastCrawlingTime(githubAccount.getGithubId());
+    }
+}
+```
+
+**역할:**
+- GitHub 계정 → 레포지토리 목록 매핑
+- 레포지토리 메타데이터 수집/갱신
+- 하위 레포지토리 수집기 호출
+- 계정별 수집 상태 관리
+
+### 4. RepositoryCollector - 레포지토리별 수집기
+
+특정 레포지토리의 모든 리소스(커밋, PR, 이슈, 스타)를 수집합니다.
+
+```java
+public class RepositoryCollector {
+    
+    public void collectByRepository(GithubAccount githubAccount, Repository repository) {
+        // 모든 리소스 수집기 실행 (Commit, PR, Issue, Star)
+        for (ResourceCollectorInterface collector : resourceCollectors) {
+            // API 호출과 DB 저장 분리
+            List<?> collectedData = collector.collect(githubAccount, repository);
+            
+            if (!collectedData.isEmpty()) {
+                collector.persist(githubAccount, repository, collectedData);
+            }
+        }
+    }
+}
+```
+
+**역할:**
+- 레포지토리별 모든 리소스 타입 수집 조율
+- 리소스 수집기들의 실행 관리
+- 수집 결과 검증 및 저장 호출
+
+### 5. ResourceCollectors - 리소스별 수집기들
+
+#### 5.1 수집기 인터페이스
+
+모든 리소스 수집기가 구현해야 하는 공통 인터페이스입니다.
+
+```java
+public interface ResourceCollectorInterface<T> {
+    List<T> collect(GithubAccount githubAccount, Repository repository);  // API 호출
+    void persist(GithubAccount githubAccount, Repository repository, List<T> data);  // DB 저장
+    String getType();  // 리소스 타입 반환
+}
+```
+
+#### 5.2 CommitCollector - 커밋 수집기
+
+**SHA 기반 증분 수집**으로 커밋 데이터를 수집합니다.
+
+```java
+public class CommitCollector implements ResourceCollectorInterface<Commit> {
+    
+    public List<Commit> collect(GithubAccount githubAccount, Repository repository) {
+        // SHA 기반 증분 수집
+        String lastSha = cursorService.getLastSha(githubAccount.getGithubId(), repository.getId(), "commit");
+        List<Commit> allCommits = githubApiClient.getCommits(repository.getFullName(), githubAccount.getGithubLoginUsername());
+        
+        // 새로운 커밋만 필터링 후 반환
+        return filterNewCommits(allCommits, lastSha);
+    }
+    
+    public void persist(GithubAccount githubAccount, Repository repository, List<Commit> commits) {
+        commitService.saveCommitsBatch(commits, githubAccount.getGithubId(), repository.getId());
+        
+        // 조상 커밋을 거슬러 올라가면서 마지막 수집 지점까지 update
+        if (!commits.isEmpty()) {
+            String latestSha = commits.get(commits.size() - 1).getSha();
+            cursorService.updateCursor(githubAccount.getGithubId(), repository.getId(), "commit", latestSha, null);
+        }
+    }
+    
+    public String getType() { return "commit"; }
+}
+```
+
+**특징:**
+- **증분 수집 방식**: SHA 기반 (마지막 수집한 커밋 SHA부터 최신까지)
+- **이유**: 브랜치 머지로 인한 날짜 순서 불일치 문제 해결
+
+#### 5.3 PullRequestCollector, IssueCollector, StarCollector
+
+**날짜 기반 증분 수집**으로 데이터를 수집합니다.
+
+```java
+public class PullRequestCollector implements ResourceCollectorInterface<PullRequest> {
+    
+    public List<PullRequest> collect(GithubAccount githubAccount, Repository repository) {
+        // 날짜 기반 증분 수집
+        LocalDateTime lastDate = cursorService.getLastProcessedDate(githubAccount.getGithubId(), repository.getId(), "pr");
+        return githubApiClient.getPullRequests(repository.getFullName(), githubAccount.getGithubLoginUsername(), lastDate);
+    }
+    
+    public void persist(GithubAccount githubAccount, Repository repository, List<PullRequest> pullRequests) {
+        pullRequestService.savePullRequestsBatch(pullRequests, githubAccount.getGithubId(), repository.getId());
+        
+        // Github API의 기간 쿼리를 이용하여 증분형 수집
+        if (!pullRequests.isEmpty()) {
+            LocalDateTime latestDate = pullRequests.stream()
+                .map(PullRequest::getCreatedAt)
+                .max(LocalDateTime::compareTo)
+                .orElse(null);
+            cursorService.updateCursor(githubAccount.getGithubId(), repository.getId(), "pr", null, latestDate);
+        }
+    }
+    
+    public String getType() { return "pr"; }
+}
+```
+
+**특징:**
+- **증분 수집 방식**: 날짜 기반 (마지막 수집 날짜 이후)
+- **적용 리소스**: PR, Issue, Star
+
+### 6. CollectionController - API 엔드포인트 예시
+
+각 계층별로 독립적인 수집 API를 제공합니다.
+
+```java
+public class CollectionController {
+    
+    // 사용자별 전체 수집
+    public void collectUser(String studentId) {
+        User user = userService.getByStudentId(studentId);
+        userCollectionOrchestrator.collectByUser(user);
+    }
+    
+    // GitHub 계정별 수집 
+    public void collectGithubAccount(String githubUsername) {
+        GithubAccount account = githubAccountService.getByUsername(githubUsername);
+        githubAccountCollector.collectByGithubAccount(account);
+    }
+    
+    // 특정 레포만 수집
+    public void collectRepository(String owner, String repo) {
+        Repository repository = repositoryService.getByFullName(owner + "/" + repo);
+        GithubAccount account = githubAccountService.getByRepoOwner(owner);
+        repositoryCollector.collectByRepository(account, repository);
+    }
+}
+```
+
+**제공 API 예시:**
+- `/api/collect/user/{studentId}`: 특정 사용자의 모든 데이터 수집
+- `/api/collect/github/{githubUsername}`: 특정 GitHub 계정의 모든 데이터 수집
+- `/api/collect/repo/{owner}/{repo}`: 특정 레포지토리만 수집
 
 ## 증분 수집 전략
 
-### 커밋 (SHA 기반)
-- **이유**: 브랜치 머지로 인한 날짜 순서 불일치 문제 해결
-- **방식**: HEAD부터 last_processed_sha까지 역순 수집
-- **장점**: 실제 main 브랜치(default branch) 반영 순서 보장
+### 커서 관리
 
-### PR/이슈/스타 (날짜 기반)
-- **이유**: 생성 시점이 곧 반영 시점
-- **방식**: since 파라미터로 last_processed_date 이후 데이터 수집
-- **장점**: 단순하고 효율적
-
-## 커서 관리
+각 GitHub 계정-레포지토리-리소스 타입별로 마지막 수집 지점을 저장합니다.
 
 ```sql
--- 증분 수집 상태 저장
 CREATE TABLE github_sync_cursors (
     github_id BIGINT,
     github_repo_id BIGINT,
@@ -36,246 +262,4 @@ CREATE TABLE github_sync_cursors (
     last_updated_at DATETIME,
     PRIMARY KEY (github_id, github_repo_id, resource_type)
 );
-```
-
-
-## 시스템 구조
-
-### 전체 아키텍처
-
-```
-백그라운드 스케줄러 (복수 유저에 대한 요청)
-    ↓
-CollectByUsers(userList)
-    ↓
-CollectBySingleUser(user)  <- Controller단의 API호출(단일 유저에 대한 호출)
-    ↓
-각종 Collector 구현체들 (CommitCollector, PRCollector, IssueCollector, StarCollector)
-```
-
-
-## 주요 컴포넌트
-**!!아래 코드는 모두 의사코드이며, 구현 중 세부사항이 변경될 수 있습니다**
-
-### 1. 스케줄러 레이어
-
-```java
-@Scheduled(fixedRate = 3600000) // 1시간마다 실행
-public void scheduleDataCollection() {
-    List<User> users = userService.getAllActiveUsers();
-    collectByUsers(users);
-}
-
-public void collectByUsers(List<User> userList) {
-    for (User user : userList) {
-        try {
-            collectBySingleUser(user);
-        } catch (Exception e) {
-            log.error("Failed to collect data for user: {}", user.getGithubId(), e);
-        }
-    }
-}
-```
-
-### 2. 사용자별 수집 오케스트레이터
-
-```java
-public void collectBySingleUser(User user) {
-    // 1. 레포 목록 수집 및 갱신
-    List<Repository> repoList = repoCollector.collectRepositories(user);
-    
-    // 2. 각 레포별 기여 데이터 수집
-    for (Repository repo : repoList) {
-        for (CollectorInterface collector : collectorList) { // collector에 대한 구현체 (CommitCollector, PrCollector.. 등등)
-            try {
-                // API 호출과 DB 저장 분리
-                List<?> collectedData = collector.collect(user, repo);
-                if (!collectedData.isEmpty()) {
-                    collector.persist(user, repo, collectedData);
-                }
-            } catch (Exception e) {
-                log.error("Failed to collect {} for user: {} repo: {}", 
-                    collector.getType(), user.getGithubId(), repo.getFullName(), e);
-            }
-        }
-    }
-}
-```
-
-### 3. 수집기 인터페이스
-
-```java
-public interface CollectorInterface<T> {
-    List<T> collect(User user, Repository repo);  // 외부 API 호출
-    void persist(User user, Repository repo, List<T> data);  // DB 저장
-    String getType(); // "commit", "pr", "issue", "star"
-}
-```
-
-### 4. 커밋 수집기 (SHA 기반 증분)
-
-- commit은 예전에 작성했어도 merge가 늦게 되면 날짜순이 꼬일 수 있기 때문에 **날짜 기준 증분 수집이 불가능함**
-- default branch 기준으로 마지막으로 수집한 sha를 DB에 저장해두고, **최근 sha부터 조상 sha로 거슬로 올라가서 마지막 수집 sha를 만날 때까지 수집**
-
-```java
-@Component
-public class CommitCollector implements CollectorInterface<Commit> {
-    
-    @Override
-    public List<Commit> collect(User user, Repository repo) {
-        // 1. 마지막 처리된 SHA 조회
-        String lastProcessedSha = cursorService.getLastSha(user.getGithubId(), repo.getId(), "commit");
-        
-        // 2. GitHub API 호출 (author 필터링)
-        List<Commit> commitList = githubApiClient.getCommits(repo.getFullName(), user.getGithubLoginUsername());
-        
-        // 3. 증분 처리 - 새로운 커밋만 필터링
-        List<Commit> newCommits = new ArrayList<>();
-        for (Commit commit : commitList) {
-            if (commit.getSha().equals(lastProcessedSha)) {
-                break; // 이전에 처리된 지점까지 도달
-            }
-            newCommits.add(commit);
-        }
-        
-        // 4. 시간순으로 정렬 (오래된 것부터)
-        Collections.reverse(newCommits);
-        return newCommits;
-    }
-    
-    @Override
-    public void persist(User user, Repository repo, List<Commit> commits) {
-        // 1. 트랜잭션 내에서 배치 저장
-        commitService.saveCommitsBatch(commits, user.getGithubId(), repo.getId());
-        
-        // 2. 커서 업데이트 (가장 최신 SHA로)
-        if (!commits.isEmpty()) {
-            String latestSha = commits.get(commits.size() - 1).getSha(); // 마지막이 최신
-            cursorService.updateCursor(user.getGithubId(), repo.getId(), "commit", latestSha, null);
-        }
-    }
-    
-    @Override
-    public String getType() {
-        return "commit";
-    }
-}
-```
-
-### 5. PR/이슈/스타 수집기 (날짜 기반 증분)
-
-- commit과 달리 날짜순으로 수집해도 중간에 추가되는 요소가 없기 때문에 마지막 수집 날짜 기준으로 증분 수집
-
-```java
-@Component
-public class PRCollector implements CollectorInterface<PullRequest> {
-    
-    @Override
-    public List<PullRequest> collect(User user, Repository repo) {
-        // 1. 마지막 처리된 날짜 조회
-        LocalDateTime lastProcessedDate = cursorService.getLastProcessedDate(
-            user.getGithubId(), repo.getId(), "pr");
-        
-        // 2. GitHub API 호출 (since 파라미터 사용)
-        List<PullRequest> prList = githubApiClient.getPullRequests(
-            repo.getFullName(), 
-            user.getGithubLoginUsername(),
-            lastProcessedDate
-        );
-        
-        return prList;
-    }
-    
-    @Override
-    public void persist(User user, Repository repo, List<PullRequest> pullRequests) {
-        // 1. 배치 저장
-        pullRequestService.savePullRequestsBatch(pullRequests, user.getGithubId(), repo.getId());
-        
-        // 2. 가장 최신 날짜 계산
-        LocalDateTime latestDate = pullRequests.stream()
-            .map(PullRequest::getCreatedAt)
-            .max(LocalDateTime::compareTo)
-            .orElse(null);
-        
-        // 3. 커서 업데이트
-        if (latestDate != null) {
-            cursorService.updateCursor(user.getGithubId(), repo.getId(), "pr", null, latestDate);
-        }
-    }
-    
-    @Override
-    public String getType() {
-        return "pr";
-    }
-}
-
-@Component
-public class IssueCollector implements CollectorInterface<Issue> {
-    
-    @Override
-    public List<Issue> collect(User user, Repository repo) {
-        LocalDateTime lastProcessedDate = cursorService.getLastProcessedDate(
-            user.getGithubId(), repo.getId(), "issue");
-        
-        return githubApiClient.getIssues(
-            repo.getFullName(), 
-            user.getGithubLoginUsername(),
-            lastProcessedDate
-        );
-    }
-    
-    @Override
-    public void persist(User user, Repository repo, List<Issue> issues) {
-        issueService.saveIssuesBatch(issues, user.getGithubId(), repo.getId());
-        
-        LocalDateTime latestDate = issues.stream()
-            .map(Issue::getCreatedAt)
-            .max(LocalDateTime::compareTo)
-            .orElse(null);
-        
-        if (latestDate != null) {
-            cursorService.updateCursor(user.getGithubId(), repo.getId(), "issue", null, latestDate);
-        }
-    }
-    
-    @Override
-    public String getType() {
-        return "issue";
-    }
-}
-
-@Component 
-public class StarCollector implements CollectorInterface<Star> {
-    
-    @Override
-    public List<Star> collect(User user, Repository repo) {
-        LocalDateTime lastProcessedDate = cursorService.getLastProcessedDate(
-            user.getGithubId(), repo.getId(), "star");
-        
-        return githubApiClient.getStars(
-            repo.getFullName(),
-            user.getGithubLoginUsername(), 
-            lastProcessedDate
-        );
-    }
-    
-    @Override
-    public void persist(User user, Repository repo, List<Star> stars) {
-        starService.saveStarsBatch(stars, user.getGithubId(), repo.getId());
-        
-        LocalDateTime latestDate = stars.stream()
-            .map(Star::getStarredAt)
-            .max(LocalDateTime::compareTo)
-            .orElse(null);
-        
-        if (latestDate != null) {
-            cursorService.updateCursor(user.getGithubId(), repo.getId(), "star", null, latestDate);
-        }
-    }
-    
-    @Override
-    public String getType() {
-        return "star";
-    }
-}
 ```
