@@ -94,21 +94,28 @@ public class GithubRestClient {
             int page = 1;
 
             while(true){
-                queryParams.put("page", String.valueOf(page));
-                queryParams.put("per_page", String.valueOf(perPage));
+                try {
 
-                List<T> pageResults = getList(responseType);
 
-                if(pageResults == null || pageResults.isEmpty()){
+                    queryParams.put("page", String.valueOf(page));
+                    queryParams.put("per_page", String.valueOf(perPage));
+
+                    List<T> pageResults = getList(responseType);
+
+                    if (pageResults == null || pageResults.isEmpty()) {
+                        break;
+                    }
+
+                    results.addAll(pageResults);
+
+                    if (pageResults.size() < perPage) {
+                        break;
+                    }
+                    page++;
+                } catch (Exception e) {
+                    System.err.println("페이지네이션 중단: page=" + page + ", error: " + e.getMessage());
                     break;
                 }
-
-                results.addAll(pageResults);
-
-                if(pageResults.size() < perPage){
-                    break;
-                }
-                page++;
             }
             return results;
         }
