@@ -152,7 +152,7 @@ CREATE TABLE IF NOT EXISTS github_star (
 CREATE TABLE IF NOT EXISTS github_sync_cursors (
     github_account_id BIGINT NOT NULL COMMENT 'github_account 테이블 id (외례키)',
     github_repo_id BIGINT NOT NULL COMMENT 'github_repository 테이블 id (외례키)',
-    resource_type ENUM('commit', 'issue', 'pr', 'star') NOT NULL COMMENT '리소스 타입',
+    resource_type ENUM('COMMIT', 'ISSUE', 'PR', 'STAR') NOT NULL COMMENT '리소스 타입',
     last_processed_sha VARCHAR(40) COMMENT '마지막 처리된 default branch의 sha값 (commit 증분 처리용)',
     last_processed_at DATETIME COMMENT '마지막 처리된 시간 (issue/pr/star 증분 처리용)',
     last_updated_at DATETIME NOT NULL COMMENT '마지막 동기화 시간',

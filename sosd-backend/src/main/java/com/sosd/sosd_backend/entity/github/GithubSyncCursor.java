@@ -7,25 +7,15 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-@IdClass(GithubSyncCursor.CursorId.class)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "github_sync_cursors")
 public class GithubSyncCursor {
 
-    @Id
-    @Column(name = "github_account_id", nullable = false)
-    private Long githubAccountId;
-
-    @Id
-    @Column(name = "github_repo_id", nullable = false)
-    private Long githubRepoId;
-
-    @Id
-    @Column(name = "resource_type", nullable = false)
-    @Enumerated(EnumType.STRING)
-    private ResourceType resourceType;
+    // 복합 PK키
+    @EmbeddedId
+    private CursorId id;
 
     @Column(name = "last_processed_sha", length = 40)
     private String lastProcessedSha;
@@ -36,6 +26,22 @@ public class GithubSyncCursor {
     @UpdateTimestamp
     @Column(name = "last_updated_at", nullable = false)
     private LocalDateTime lastUpdatedAt;
+
+    @Builder
+    private GithubSyncCursor(Long githubAccountId,
+                             Long githubRepoId,
+                             ResourceType resourceType,
+                             String lastProcessedSha,
+                             LocalDateTime lastProcessedAt) {
+        this.id = new CursorId(githubAccountId, githubRepoId, resourceType);
+        this.lastProcessedSha = lastProcessedSha;
+        this.lastProcessedAt = lastProcessedAt;
+    }
+
+    // 편의 접근자
+    public Long getGithubAccountId() { return id.githubAccountId; }
+    public Long getGithubRepoId() { return id.githubRepoId; }
+    public ResourceType getResourceType() { return id.resourceType; }
 
     // 비즈니스 메서드
     public void updateCommitCursor(String newSha) {
@@ -56,22 +62,21 @@ public class GithubSyncCursor {
     @NoArgsConstructor
     @AllArgsConstructor
     @EqualsAndHashCode
+    @Embeddable
     public static class CursorId implements Serializable {
-        private Long GithubAccountId;
-        private Long GithubRepoId;
+        @Column(name = "github_account_id", nullable = false)
+        private Long githubAccountId;
+
+        @Column(name = "github_repo_id", nullable = false)
+        private Long githubRepoId;
+
+        @Enumerated(EnumType.STRING) // DB ENUM('COMMIT','ISSUE','PR','STAR')와 1:1 매핑
+        @Column(name = "resource_type", nullable = false)
         private ResourceType resourceType;
     }
 
     @Getter
-    @RequiredArgsConstructor
     public enum ResourceType {
-        COMMIT("commit"),
-        ISSUE("issue"),
-        PR("pr"),
-        STAR("star");
-
-        private final String value;
+        COMMIT, ISSUE, PR, STAR
     }
 }
-
-
