@@ -10,5 +10,5 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, String
     UserAccount findByStudentId(String studentId);
 
     // active user 모두 조회
-    List<UserAccount> findAllByActiveTrue();
+    List<UserAccount> findAllByIsActiveTrue();
 }

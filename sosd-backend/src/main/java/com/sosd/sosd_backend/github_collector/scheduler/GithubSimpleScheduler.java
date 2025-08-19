@@ -16,7 +16,7 @@ public class GithubSimpleScheduler {
 
     public void run(){
         // 1. 활동 사용자 계정 모두 가져오기
-        userAccounts = userAccountRepository.findAllByActiveTrue();
+        userAccounts = userAccountRepository.findAllByIsActiveTrue();
 
         // 2. 각 계정별로 수집 로직 실행
         for(UserAccount userAccount : userAccounts){
