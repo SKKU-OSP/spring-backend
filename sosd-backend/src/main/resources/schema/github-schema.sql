@@ -75,14 +75,12 @@ CREATE TABLE IF NOT EXISTS github_commit (
     author_date DATETIME NOT NULL COMMENT '커밋 작성자 시간',
     committer_date DATETIME NOT NULL COMMENT '푸시 시간',
     message TEXT COMMENT '커밋 메시지',
-    branch VARCHAR(255) NOT NULL COMMENT '브랜치명',
     repo_id BIGINT NOT NULL COMMENT '저장소 ID (외래키)',
     github_id BIGINT NOT NULL COMMENT '커밋 작성자 id(외례키)',
 
     -- 인덱스
     UNIQUE INDEX uq_commit_sha (repo_id, sha) COMMENT '레포당 commit 고유 sha 값 유니크 키',
     INDEX idx_commit_github_id_date (github_id, author_date) COMMENT '작성자별 커밋 조회용',
-    INDEX idx_commit_branch (branch) COMMENT 'default 브랜치 병합 조회용',
     INDEX idx_commit_repo_id (repo_id) COMMENT '레포지토리 기준 커밋 조회용'
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Github 커밋 테이블';
