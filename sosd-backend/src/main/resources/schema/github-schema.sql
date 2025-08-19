@@ -93,16 +93,14 @@ CREATE TABLE IF NOT EXISTS github_pull_request (
     pr_title VARCHAR(255) NOT NULL COMMENT 'Pull Request 제목',
     pr_body TEXT COMMENT 'Pull Request 본문',
     pr_date DATETIME NOT NULL COMMENT 'Pull Request 생성일시',
-    merged BOOLEAN DEFAULT FALSE COMMENT '병합 여부',
-    base_branch VARCHAR(255) NOT NULL COMMENT '기준 브랜치 (병합 대상)',
-    head_branch VARCHAR(255) NOT NULL COMMENT '소스 브랜치 (병합 소스)',
+    is_open BOOLEAN NOT NULL COMMENT 'pr 상태 open/close',
     repo_id BIGINT NOT NULL COMMENT '저장소 ID (외래키)',
     github_id BIGINT NOT NULL COMMENT 'PR 작성자 id(외례키)',
 
     -- 인덱스
     UNIQUE uq_pull_request_github_pr_id (github_pr_id) COMMENT 'pr id 유니크 키 (깃허브 api에서 제공)',
     INDEX idx_repo_id_pr_number (repo_id, pr_number) COMMENT 'pr 조회용',
-    INDEX idx_merged (merged) COMMENT '병합 여부 조회용',
+    INDEX idx_merged (is_open) COMMENT 'pr 상태 조회용',
     INDEX idx_pr_date (pr_date) COMMENT 'pr 생성 날짜 필터용',
     INDEX idx_github_id_date (github_id, pr_date) COMMENT '작성자별 pr 조회용'
 
