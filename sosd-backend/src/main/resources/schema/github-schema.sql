@@ -125,19 +125,6 @@ CREATE TABLE IF NOT EXISTS github_issue (
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Issue 테이블';
 
--- Fork 테이블
-CREATE TABLE IF NOT EXISTS github_fork (
-    id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'Auto increment ID',
-    fork_user_id BIGINT NOT NULL COMMENT 'Fork한 사용자 ID',
-    fork_date DATETIME NOT NULL COMMENT 'Fork 일시',
-    repo_id BIGINT NOT NULL COMMENT '저장소 ID (외래키)',
-
-    -- 인덱스
-    INDEX idx_fork_repo_id (repo_id) COMMENT '해당 레포의 fork 조회용',
-    INDEX idx_fork_date (fork_date) COMMENT 'fork 날짜 필터용'
-
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Fork 테이블';
-
 -- Star 테이블
 CREATE TABLE IF NOT EXISTS github_star (
     id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'Auto increment ID',
