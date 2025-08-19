@@ -38,13 +38,16 @@ CREATE TABLE IF NOT EXISTS github_repository (
     additional_data TEXT COMMENT '사용 언어 등 추가 정보 (JSON 형태)', -- 별도 테이블로 정규화할지 논의
     contributor INT DEFAULT 0 COMMENT '기여자 수',
     is_private BOOLEAN DEFAULT FALSE COMMENT '비공개 여부',
+    last_starred_at DATETIME COMMENT 'star 증분형 수집을 위한 마지막 star 날짜 저장',
+    last_collected_at DATETIME COMMENT '만약 updated_at 보다 뒤라면, 레포 정보 + star 새롭게 증분 수집',
 
     -- 인덱스
     UNIQUE INDEX uq_repository_github_repo_id (github_repo_id) COMMENT '깃허브 저장소 고유 ID (깃허브 api에서 제공)',
     INDEX idx_repository_owner_repo (owner_name, repo_name, is_private) COMMENT '저장소 owner + name 조합으로 직접 조회용 (owner/repo)',
     INDEX idx_repository_full_name (full_name, is_private) COMMENT '저장소 full_name으로 직접 조회',
     INDEX idx_repository_created_at (github_repository_created_at,is_private) COMMENT '생성일 기준 조회 및 통계용',
-    INDEX idx_repository_updated_at (github_repository_updated_at,is_private) COMMENT '최근 업데이트 저장소 조회용'
+    INDEX idx_repository_updated_at (github_repository_updated_at,is_private) COMMENT '최근 업데이트 저장소 조회용',
+    INDEX idx_repository_last_collected_at (last_collected_at) COMMENT '스케쥴러에서 최근순 조회용'
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub 레포지토리 테이블';
 
@@ -53,6 +56,10 @@ CREATE TABLE IF NOT EXISTS github_account_repository (
     github_account_id BIGINT NOT NULL COMMENT 'github_account 테이블 id (외례키)',
     github_repo_id BIGINT NOT NULL COMMENT 'github_repository 테이블 id (외례키)',
     PRIMARY KEY (github_account_id, github_repo_id) COMMENT '복합 PK',
+    last_commit_sha VARCHAR(40) COMMENT '증분 처리를 위한 마지막 sha 지점',
+    last_pr_date DATETIME COMMENT '증분 처리를 위한 마지막 pr 날짜',
+    last_issue_date DATETIME COMMENT '증분 처리를 위한 마지막 issue 날짜',
+    last_updated_at DATETIME COMMENT '마지막 업데이트 시간 기록용',
 
     -- 인덱스
     INDEX idx_account_repository_repo_id (github_repo_id, github_account_id) COMMENT '저장소 id를 통한 계정 조회용'
@@ -147,17 +154,3 @@ CREATE TABLE IF NOT EXISTS github_star (
     INDEX idx_star_date (star_date) COMMENT 'star 날짜 필터용'
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Star 테이블';
-
--- 증분 수집용 커서 테이블
-CREATE TABLE IF NOT EXISTS github_sync_cursors (
-    github_account_id BIGINT NOT NULL COMMENT 'github_account 테이블 id (외례키)',
-    github_repo_id BIGINT NOT NULL COMMENT 'github_repository 테이블 id (외례키)',
-    resource_type ENUM('commit', 'issue', 'pr', 'star') NOT NULL COMMENT '리소스 타입',
-    last_processed_sha VARCHAR(40) COMMENT '마지막 처리된 default branch의 sha값 (commit 증분 처리용)',
-    last_processed_at DATETIME COMMENT '마지막 처리된 시간 (issue/pr/star 증분 처리용)',
-    last_updated_at DATETIME NOT NULL COMMENT '마지막 동기화 시간',
-
-    -- 인덱스
-    PRIMARY KEY (github_account_id, github_repo_id, resource_type) COMMENT '복합 PK',
-    INDEX idx_last_updated_at (last_updated_at) COMMENT '스케쥴링용 동기화 시간 인덱스'
-)
