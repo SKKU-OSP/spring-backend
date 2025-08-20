@@ -33,8 +33,8 @@ public interface GithubCommitRepository extends JpaRepository<GithubCommitEntity
 
     // 특정 사용자의 특정 레포에 대한 연도별 커밋 개수
     Long countByAccount_GithubIdAndRepository_idAndAuthorDateBetween(
-            Long repositoryId,
             Long accountGithubId,
+            Long repositoryId,
             LocalDateTime start,
             LocalDateTime end);
 
