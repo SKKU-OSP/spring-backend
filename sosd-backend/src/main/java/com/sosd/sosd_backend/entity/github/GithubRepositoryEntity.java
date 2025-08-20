@@ -74,6 +74,12 @@ public class GithubRepositoryEntity {
     @Column(name = "is_private")
     private Boolean isPrivate;
 
+    @Column(name = "last_starred_at")
+    private LocalDateTime lastStarredAt;
+
+    @Column(name = "last_collected_at")
+    private LocalDateTime lastCollectedAt;
+
     @Builder
     public GithubRepositoryEntity(
             Long githubRepoId,
