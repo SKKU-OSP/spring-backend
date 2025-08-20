@@ -3,6 +3,8 @@ package com.sosd.sosd_backend.repository.github;
 import com.sosd.sosd_backend.entity.github.GithubAccount;
 import com.sosd.sosd_backend.entity.github.GithubRepositoryEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -31,4 +33,15 @@ public interface GithubRepositoryRepository extends JpaRepository<GithubReposito
     // 변경 시각 기준 조회
     List<GithubRepositoryEntity> findAllByGithubRepositoryUpdatedAtAfter(LocalDateTime since);
 
+
+    // 증분형 처리를 위한 업데이트 쿼리
+    // last_starred_at 업데이트
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update GithubRepositoryEntity r set r.lastStarredAt = :ts where r.id = :repoId")
+    int updateLastStarredAt(Long repoId, LocalDateTime ts);
+
+    // last_collected_at 업데이트
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update GithubRepositoryEntity r set r.lastCollectedAt = :ts where r.id = :repoId")
+    int updateLastCollectedAt(Long repoId, LocalDateTime ts);
 }
