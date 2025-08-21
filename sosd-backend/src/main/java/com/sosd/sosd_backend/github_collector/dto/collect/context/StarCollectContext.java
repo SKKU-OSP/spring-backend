@@ -7,5 +7,5 @@ import java.time.OffsetDateTime;
 public record StarCollectContext(
         RepoRef repoRef,
         OffsetDateTime lastStarredAt
-) {
+) implements CollectContext {
 }
