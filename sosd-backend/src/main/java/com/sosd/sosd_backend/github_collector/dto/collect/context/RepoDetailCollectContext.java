@@ -7,5 +7,5 @@ import java.time.OffsetDateTime;
 public record RepoDetailCollectContext(
         RepoRef repoRef,
         OffsetDateTime lastCollectedAt
-) {
+) implements CollectContext {
 }

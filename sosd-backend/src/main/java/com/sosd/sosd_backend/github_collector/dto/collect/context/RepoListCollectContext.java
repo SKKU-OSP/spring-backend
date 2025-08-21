@@ -7,5 +7,5 @@ import java.time.OffsetDateTime;
 public record RepoListCollectContext(
         GithubAccountRef githubAccountRef,
         OffsetDateTime lastCrawling
-) {
+) implements CollectContext {
 }

@@ -9,5 +9,5 @@ public record IssueCollectContext(
         GithubAccountRef githubAccountRef,
         RepoRef repoRef,
         OffsetDateTime lastIssueDate
-) {
+) implements CollectContext {
 }
