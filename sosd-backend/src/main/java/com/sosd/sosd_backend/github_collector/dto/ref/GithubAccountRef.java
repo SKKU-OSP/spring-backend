@@ -6,6 +6,7 @@ import java.util.Objects;
  * 깃허브 수집 로직에서 사용할 github 계정 잠조 정보 DTO
  *
  * @param githubId
+ * @param githubGraphqlNodeId
  * @param githubLoginUsername
  * @param githubName
  * @param githubToken
@@ -13,6 +14,7 @@ import java.util.Objects;
  */
 public record GithubAccountRef(
         Long githubId,
+        String githubGraphqlNodeId,
         String githubLoginUsername,
         String githubName,
         String githubToken,
@@ -20,6 +22,7 @@ public record GithubAccountRef(
 ) {
     public GithubAccountRef{
         Objects.requireNonNull(githubId);
+        Objects.requireNonNull(githubGraphqlNodeId);
         Objects.requireNonNull(githubLoginUsername);
     }
 }

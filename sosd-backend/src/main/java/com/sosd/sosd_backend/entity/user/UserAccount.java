@@ -60,7 +60,7 @@ public class UserAccount {
     private int absence;
 
     @Column(name = "is_active")
-    private boolean isActive;
+    private boolean active;
 
     // 생성자
     @Builder
@@ -75,7 +75,7 @@ public class UserAccount {
             String introduction,
             String portfolio,
             int absence,
-            boolean isActive
+            boolean active
     ) {
         this.studentId = studentId;
         this.name = name;
@@ -87,7 +87,7 @@ public class UserAccount {
         this.introduction = introduction;
         this.portfolio = portfolio;
         this.absence = absence;
-        this.isActive = isActive;
+        this.active = active;
         this.lastLogin = null; // 로그인 시 업데이트
     }
 
