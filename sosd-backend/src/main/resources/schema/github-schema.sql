@@ -2,7 +2,8 @@
 
 -- GitHub 계정 테이블
 CREATE TABLE IF NOT EXISTS github_account (
-    github_id BIGINT NOT NULL PRIMARY KEY COMMENT 'GitHub ID(Github 내부적으로 사용하는 고유 id)',
+    github_id BIGINT NOT NULL PRIMARY KEY COMMENT 'GitHub ID(Github REST API 내부적으로 사용하는 고유 id)',
+    github_graphql_node_id VARCHAR(64) NOT NULL COMMENT 'Github node id (Github GraphQL API에서 사용되는 고유 node id)',
     github_login_username VARCHAR(255) NOT NULL COMMENT 'GitHub 로그인명 (username)',
     github_name VARCHAR(255) COMMENT 'GitHub 표시명',
     github_token VARCHAR(255) COMMENT 'GitHub 액세스 토큰(private 레포까지 수집 원하는 유저만 추가)',
@@ -12,6 +13,7 @@ CREATE TABLE IF NOT EXISTS github_account (
 
     -- 인덱스
     INDEX idx_github_account_login (github_login_username) COMMENT 'username을 통한 조회용',
+    UNIQUE INDEX idx_github_graphql_node_id (github_graphql_node_id) COMMENT 'node id를 통한 조회용',
     INDEX idx_github_account_last_crawling (last_crawling) COMMENT '스케쥴링할 때 기간 쿼리용',
     INDEX idx_github_account_student_id (student_id) COMMENT '학번을 통한 조회'
 

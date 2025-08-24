@@ -24,6 +24,9 @@ public class GithubAccount {
     private Long githubId;
 
     // 일반 컬럼
+    @Column(name = "github_graphql_node_id", nullable = false)
+    private String githubGraphqlNodeId;
+
     @Column(name = "github_login_username", nullable = false)
     private String githubLoginUsername;
 
@@ -52,6 +55,7 @@ public class GithubAccount {
     @Builder
     public GithubAccount(
             Long githubId,
+            String githubGraphqlNodeId,
             String githubLoginUsername,
             String githubName,
             String githubToken,
@@ -59,6 +63,7 @@ public class GithubAccount {
             UserAccount userAccount
     ) {
         this.githubId = githubId;
+        this.githubGraphqlNodeId = githubGraphqlNodeId;
         this.githubLoginUsername = githubLoginUsername;
         this.githubName = githubName;
         this.githubToken = githubToken;
@@ -76,6 +81,7 @@ public class GithubAccount {
     public GithubAccountRef toGithubAccountRef(){
         return new GithubAccountRef(
                 this.githubId,
+                this.githubGraphqlNodeId,
                 this.githubLoginUsername,
                 this.githubName,
                 this.githubToken,
