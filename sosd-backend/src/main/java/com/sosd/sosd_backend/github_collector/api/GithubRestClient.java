@@ -1,7 +1,6 @@
 package com.sosd.sosd_backend.github_collector.api;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
@@ -17,30 +16,33 @@ import java.util.Map;
 public class GithubRestClient {
 
     private static final String GITHUB_BASE_URL = "https://api.github.com";
-    private final RestClient restClient;
+    private final GithubTokenManager tokenManager;
+    private final RestClient baseClient;
 
-    public GithubRestClient(@Value("${github.token}") String githubToken) {
-        log.debug("GithubRestClient: githubToken={}", githubToken);
-        this.restClient = RestClient.builder()
+    public GithubRestClient(GithubTokenManager tokenManager) {
+        this.tokenManager = tokenManager;
+        this.baseClient = RestClient.builder()
                 .baseUrl(GITHUB_BASE_URL)
-                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + githubToken)
                 .defaultHeader(HttpHeaders.ACCEPT, "application/vnd.github+json")
                 .defaultHeader(HttpHeaders.USER_AGENT, "sosd-collector")
                 .build();
+        log.debug("GithubRestClient initialized with TokenManager");
     }
 
     public RequestBuilder request(){
-        return new RequestBuilder(restClient);
+        return new RequestBuilder(baseClient, tokenManager);
     }
 
     public static class RequestBuilder{
         private final RestClient restClient;
+        private final GithubTokenManager tokenManager;
         private String endpoint;
         private final Map<String, String> queryParams = new HashMap<>();
         private final Map<String, String> headers = new HashMap<>();
 
-        private RequestBuilder(RestClient restClient){
+        private RequestBuilder(RestClient restClient, GithubTokenManager tokenManager){
             this.restClient = restClient;
+            this.tokenManager = tokenManager;
         }
 
         public RequestBuilder endpoint(String endpoint){
@@ -95,8 +97,6 @@ public class GithubRestClient {
 
             while(true){
                 try {
-
-
                     queryParams.put("page", String.valueOf(page));
                     queryParams.put("per_page", String.valueOf(perPage));
 
@@ -121,16 +121,21 @@ public class GithubRestClient {
         }
 
         private RestClient.RequestHeadersSpec<?> buildGetRequest(){
+            // 요청 시점에 토큰을 동적으로 가져와서 설정
+            String currentToken = tokenManager.getAvailableToken();
+
             RestClient.RequestHeadersSpec<?> spec = restClient.get()
                     .uri(uriBuilder -> {
                         uriBuilder.path(endpoint);
                         queryParams.forEach(uriBuilder::queryParam);
                         return uriBuilder.build();
-                    });
+                    })
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + currentToken);
 
+            // 추가 헤더 설정
             headers.forEach(spec::header);
+
             return spec;
         }
     }
-
 }
