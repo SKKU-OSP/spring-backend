@@ -38,12 +38,13 @@ public class AuthService {
                 .dept(request.getDept())
                 .pluralMajor(request.getPluralMajor())
                 .absence(request.getAbsence())
-                .isActive(true)
+                .active(true)
                 .build();
         UserAccount savedUser = userAccountRepository.save(user);
 
         GithubAccount github = GithubAccount.builder()
                 .githubId(request.getGithubId())
+                .githubGraphqlNodeId(request.getGithubGraphqlNodeId())
                 .githubLoginUsername(request.getGithubLoginUsername())
                 .githubName(request.getGithubName())
                 .githubEmail(request.getGithubEmail())
@@ -59,6 +60,7 @@ public class AuthService {
                 .pluralMajor(savedUser.getPluralMajor())
                 .absence(savedUser.getAbsence())
                 .githubId(github.getGithubId())
+                .githubGraphqlNodeId(github.getGithubGraphqlNodeId())
                 .githubLoginUsername(github.getGithubLoginUsername())
                 .githubName(github.getGithubName())
                 .githubEmail(github.getGithubEmail())

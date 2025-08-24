@@ -38,6 +38,7 @@ public class AuthControllerTest {
         r.setPluralMajor(0);
         r.setAbsence(0);
         r.setGithubId(123456L);
+        r.setGithubGraphqlNodeId("abc123");
         r.setGithubLoginUsername("githubloginusername");
         r.setGithubName("githubname");
         r.setGithubEmail("githubemail@example.com");
