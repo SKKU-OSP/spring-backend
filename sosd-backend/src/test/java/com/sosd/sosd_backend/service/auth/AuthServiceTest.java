@@ -41,6 +41,7 @@ class AuthServiceTest {
         r.setPluralMajor(0);
         r.setAbsence(0);
         r.setGithubId(ghId);
+        r.setGithubGraphqlNodeId("abc123");
         r.setGithubLoginUsername("honggit");
         r.setGithubName("Hong");
         r.setGithubEmail("hong@example.com");
