@@ -38,7 +38,7 @@ public class AuthService {
                 .dept(request.getDept())
                 .pluralMajor(request.getPluralMajor())
                 .absence(request.getAbsence())
-                .active(true)
+                .isActive(true)
                 .build();
         UserAccount savedUser = userAccountRepository.save(user);
 
