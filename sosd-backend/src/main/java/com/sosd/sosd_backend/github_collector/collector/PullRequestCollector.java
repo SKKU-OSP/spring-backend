@@ -6,8 +6,8 @@ import com.sosd.sosd_backend.github_collector.dto.collect.result.CollectResult;
 import com.sosd.sosd_backend.github_collector.dto.collect.result.TimeCursor;
 import com.sosd.sosd_backend.github_collector.dto.response.GithubPullRequestResponseDto;
 import com.sosd.sosd_backend.github_collector.dto.response.graphql.GithubPageInfo;
-import com.sosd.sosd_backend.github_collector.dto.response.graphql.PrSearchResult;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.sosd.sosd_backend.github_collector.dto.response.graphql.GithubPullRequestGraphQLResult;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
@@ -17,11 +17,11 @@ import java.util.List;
 import java.util.Map;
 
 @Component
+@RequiredArgsConstructor
 public class PullRequestCollector implements GithubResourceCollector
 <PullRequestCollectContext, GithubPullRequestResponseDto, TimeCursor>{
 
-    @Autowired
-    private GithubGraphQLClient graphQLClient;
+    private final GithubGraphQLClient graphQLClient;
 
     private static final String QUERY = """
         query PRsByAuthorAndDate($q: String!, $first: Int = 50, $after: String) {
@@ -68,9 +68,9 @@ public class PullRequestCollector implements GithubResourceCollector
 
             var res = graphQLClient.query(QUERY)
                     .variables(vars)
-                    .execute(PrSearchResult.class);
+                    .execute(GithubPullRequestGraphQLResult.class);
 
-            PrSearchResult result = res.getData();
+            GithubPullRequestGraphQLResult result = res.getData();
             if (result.search() == null || result.search().nodes() == null || result.search().nodes().isEmpty()) break;
 
             // PR 리스트
@@ -99,8 +99,8 @@ public class PullRequestCollector implements GithubResourceCollector
         return new CollectResult<>(
                 pullRequests,
                 newCursor,
-                fetchedCount,
-                fetchedCount,
+                fetchedCount, // fetchedCount
+                fetchedCount, // fetchedCount
                 elapsedTimeMs,
                 source());
     }

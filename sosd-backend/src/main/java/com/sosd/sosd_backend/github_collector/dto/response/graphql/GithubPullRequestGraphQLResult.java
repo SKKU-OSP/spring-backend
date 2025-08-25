@@ -6,7 +6,7 @@ import com.sosd.sosd_backend.github_collector.dto.response.GithubPullRequestResp
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record PrSearchResult(
+public record GithubPullRequestGraphQLResult(
         Search search,
         GithubRateLimit rateLimit
 ) {
