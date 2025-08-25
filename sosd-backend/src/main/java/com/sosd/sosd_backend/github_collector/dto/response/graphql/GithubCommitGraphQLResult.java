@@ -41,16 +41,16 @@ public record GithubCommitGraphQLResult(
 
     public List<GithubCommitResponseDto> commitsOrEmpty() {
         if (isInvalidCommits()) return List.of();
-        return repository.defaultBranchRef().target().history().nodes();
+        return repository.defaultBranchRef.target.history.nodes;
     }
 
     public GithubPageInfo pageInfo() {
-        if (repository.defaultBranchRef().target().history().pageInfo() == null) return new GithubPageInfo(false, false, null, null);
-        return repository.defaultBranchRef().target().history().pageInfo();
+        if (repository.defaultBranchRef.target.history.pageInfo == null) return new GithubPageInfo(false, false, null, null);
+        return repository.defaultBranchRef.target.history.pageInfo;
     }
 
     public String headSha() {
-        return repository.defaultBranchRef().target().headSha();
+        return repository.defaultBranchRef.target.headSha;
     }
 }
 
