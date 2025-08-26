@@ -10,6 +10,7 @@ import com.sosd.sosd_backend.github_collector.dto.response.graphql.GithubPageInf
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,7 +29,8 @@ public class CommitCollector implements GithubResourceCollector
           $name: String!,
           $authorId: ID!,
           $first: Int = 100,
-          $after: String
+          $after: String,
+          $since: GitTimestamp
         ) {
           repository(owner: $owner, name: $name) {
             defaultBranchRef {
@@ -39,7 +41,8 @@ public class CommitCollector implements GithubResourceCollector
                   history(
                     first: $first,
                     after: $after,
-                    author: { id: $authorId }
+                    author: { id: $authorId },
+                    since: $since,
                   ) {
                     pageInfo { hasNextPage endCursor }
                     totalCount
@@ -86,6 +89,9 @@ public class CommitCollector implements GithubResourceCollector
         final String owner = ctx.repoRef().ownerName();
         final String name = ctx.repoRef().repoName();
         final String authorId = ctx.githubAccountRef().githubGraphqlNodeId();
+        final String since = OffsetDateTime.parse("2019-01-01T00:00:00Z") // 서비스 시작일인 2019년부터 수집
+                .toInstant()
+                .toString();
         int pageSize = 100;
 
         List<GithubCommitResponseDto> commitResults = new ArrayList<>();
@@ -98,6 +104,7 @@ public class CommitCollector implements GithubResourceCollector
             vars.put("name", name);
             vars.put("authorId", authorId);
             vars.put("first", pageSize);
+            vars.put("since", since);
             if (after != null) vars.put("after", after);
             var res = githubGraphQLClient.query(QUERY)
                     .variables(vars)
@@ -143,6 +150,10 @@ public class CommitCollector implements GithubResourceCollector
         final String name = ctx.repoRef().repoName();
         final String authorId = ctx.githubAccountRef().githubGraphqlNodeId();
         final String lastSha = ctx.lastCommitSha();
+        final String since = OffsetDateTime.now() // lastSha가 삭제된 경우를 대비해 1년의 여유 마진
+                .minusYears(1)
+                .toInstant()
+                .toString();
         int pageSize = 30;
 
         List<GithubCommitResponseDto> commitResults = new ArrayList<>();
@@ -156,6 +167,7 @@ public class CommitCollector implements GithubResourceCollector
             vars.put("name", name);
             vars.put("authorId", authorId);
             vars.put("first", pageSize);
+            vars.put("since", since);
             if (after != null) vars.put("after", after);
             var res = githubGraphQLClient.query(QUERY)
                     .variables(vars)
