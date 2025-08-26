@@ -51,10 +51,10 @@ public class PullRequestCollector implements GithubResourceCollector
         final String repoFullName = ctx.repoRef().fullName();               // e.g. "SKKU-OSP/spring-backend"
         final String author = ctx.githubAccountRef().githubLoginUsername(); // e.g. "byungKHee"
         final OffsetDateTime since = ctx.lastPrDate() == null
-                ? OffsetDateTime.parse("2018-12-31T59:59:59Z")
+                ? OffsetDateTime.parse("2018-12-31T23:59:59Z")
                 : ctx.lastPrDate();                   // 시작 시간, null이면 2019년부터 수집
 
-        String q = "repo:%s is:pr author:%s created:>%s".formatted(repoFullName,author,since.toString());
+        String q = "repo:%s is:pr author:%s created:>%s".formatted(repoFullName,author,since.toInstant().toString());
         int pageSize = 100;
 
         List<GithubPullRequestResponseDto> pullRequests = new ArrayList<>();
