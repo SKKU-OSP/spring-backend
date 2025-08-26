@@ -85,7 +85,11 @@ public class CommitCollector implements GithubResourceCollector
      * @return
      */
     private CollectResult<GithubCommitResponseDto, ShaCursor> collectAll(CommitCollectContext ctx) {
+
+        // 0. 시간 측정 시작
         long startedNs = System.nanoTime();
+
+        // 1. Context에서 필요한 정보 추출 & GraphQL variables 설정
         final String owner = ctx.repoRef().ownerName();
         final String name = ctx.repoRef().repoName();
         final String authorId = ctx.githubAccountRef().githubGraphqlNodeId();
@@ -93,12 +97,14 @@ public class CommitCollector implements GithubResourceCollector
                 .toInstant()
                 .toString();
         int pageSize = 100;
-
-        List<GithubCommitResponseDto> commitResults = new ArrayList<>();
         String after = null;
         String updateLastSha = null; // HEAD SHA
 
+        // 2. 페이지 처리하며 commit 수집
+        List<GithubCommitResponseDto> commitResults = new ArrayList<>();
         while (true) {
+
+            // 2-1. GraphQL 쿼리 변수 설정
             Map<String, Object> vars = new HashMap<>();
             vars.put("owner", owner);
             vars.put("name", name);
@@ -106,30 +112,40 @@ public class CommitCollector implements GithubResourceCollector
             vars.put("first", pageSize);
             vars.put("since", since);
             if (after != null) vars.put("after", after);
+
+            // 2-2. GraphQL 쿼리 실행
             var res = githubGraphQLClient.query(QUERY)
                     .variables(vars)
                     .execute(GithubCommitGraphQLResult.class);
 
+            // 2-3. 에러 처리 및 결과 핸들링
+            if (res.getErrors() != null && !res.getErrors().isEmpty()) {
+                System.err.println("GraphQL Errors: " + res.getErrors());
+                break;
+            }
             GithubCommitGraphQLResult result = res.getData();
             if (result.isInvalidCommits()) break;
+            List<GithubCommitResponseDto> pageItems = result.commitsOrEmpty(); // commit 리스트
+            GithubPageInfo pageInfo = result.pageInfo();                       // 페이지 정보
 
-            // commit 리스트
-            List<GithubCommitResponseDto> pageItems = result.commitsOrEmpty();
-            // 페이지 정보
-            GithubPageInfo pageInfo = result.pageInfo();
-            // HEAD SHA 갱신 - 첫 페이지일 때
-            if (!pageInfo.hasPreviousPage()) updateLastSha = result.headSha();
-
+            // 2-4. 수집한 commit 저장
             commitResults.addAll(pageItems);
 
-            // 마지막 페이지
+            // 2-5. 첫번째 페이지에서 가장 최신 커밋 SHA 갱신
+            if (!pageInfo.hasPreviousPage()) updateLastSha = result.headSha();
+
+            // 2-6. 종료 조건 검사
             if (!pageInfo.hasNextPage()) break;
             after = pageInfo.endCursor();
+            if (after == null) break; // 방어적 탈출
         }
 
+        // 3. 결과값 구성
         ShaCursor newCursor = new ShaCursor(updateLastSha);
         long elapsedTimeMs = Math.round((System.nanoTime() - startedNs) / 1_000_000.0);
         int fetchedCount = commitResults.size();
+
+        // 4. 결과 반환
         return new CollectResult<>(
                 commitResults,
                 newCursor,
@@ -145,7 +161,11 @@ public class CommitCollector implements GithubResourceCollector
      * @return
      */
     private CollectResult<GithubCommitResponseDto, ShaCursor> collectHeadToLastCommit(CommitCollectContext ctx) {
+
+        // 0. 시간 측정 시작
         long startedNs = System.nanoTime();
+
+        // 1. Context에서 필요한 정보 추출 & GraphQL variables 설정
         final String owner = ctx.repoRef().ownerName();
         final String name = ctx.repoRef().repoName();
         final String authorId = ctx.githubAccountRef().githubGraphqlNodeId();
@@ -154,14 +174,15 @@ public class CommitCollector implements GithubResourceCollector
                 .minusYears(1)
                 .toInstant()
                 .toString();
-        int pageSize = 30;
-
-        List<GithubCommitResponseDto> commitResults = new ArrayList<>();
+        int pageSize = 30; // 증분형 수집은 페이지 크기를 줄여서 자주 수집
         String after = null;
         String updateLastSha = lastSha; // HEAD SHA 후보
 
+        // 2. 페이지 처리하며 commit 수집
+        List<GithubCommitResponseDto> commitResults = new ArrayList<>();
         while (true) {
 
+            // 2-1. GraphQL 쿼리 변수 설정
             Map<String, Object> vars = new HashMap<>();
             vars.put("owner", owner);
             vars.put("name", name);
@@ -169,20 +190,26 @@ public class CommitCollector implements GithubResourceCollector
             vars.put("first", pageSize);
             vars.put("since", since);
             if (after != null) vars.put("after", after);
+
+            // 2-2. GraphQL 쿼리 실행
             var res = githubGraphQLClient.query(QUERY)
                     .variables(vars)
                     .execute(GithubCommitGraphQLResult.class);
 
+            // 2-3. 에러 처리 및 결과 핸들링
+            if (res.getErrors() != null && !res.getErrors().isEmpty()) {
+                System.err.println("GraphQL Errors: " + res.getErrors());
+                break;
+            }
             GithubCommitGraphQLResult result = res.getData();
             if (result.isInvalidCommits()) break;
-            // commit 리스트
-            List<GithubCommitResponseDto> pageItems = result.commitsOrEmpty();
-            // 페이지 정보
-            GithubPageInfo pageInfo = result.pageInfo();
-            // HEAD SHA 갱신 - 첫 페이지일 때
+            List<GithubCommitResponseDto> pageItems = result.commitsOrEmpty(); // commit 리스트
+            GithubPageInfo pageInfo = result.pageInfo();                       // 페이지 정보
+
+            // 2-4. 첫번째 페이지에서 가장 최신 커밋 SHA 갱신
             if (!pageInfo.hasPreviousPage()) updateLastSha = result.headSha();
 
-            // 마지막 수집 커밋 sha 전까지 수집
+            // 2-5. 마지막 수집 커밋 sha 전까지 순회하며 저장
             boolean foundLastSha = false;
             for (var commit : pageItems) {
                 if (commit.sha().equals(lastSha)){
@@ -191,12 +218,19 @@ public class CommitCollector implements GithubResourceCollector
                 }
                 commitResults.add(commit);
             }
+
+            // 2-6. 종료 조건 검사
             if (foundLastSha || !pageInfo.hasNextPage()) break;
             after = pageInfo.endCursor();
+            if (after == null) break; // 방어적 탈출
         }
+
+        // 3. 결과값 구성
         ShaCursor newCursor = new ShaCursor(updateLastSha);
         long elapsedTimeMs = Math.round((System.nanoTime() - startedNs) / 1_000_000.0);
         int fetchedCount = commitResults.size();
+
+        // 4. 결과 반환
         return new CollectResult<>(
                 commitResults,
                 newCursor,

@@ -50,42 +50,50 @@ public class StarCollector implements GithubResourceCollector
 
     @Override
     public CollectResult<GithubStarResponseDto, TimeCursor> collect(StarCollectContext ctx) {
+
+        // 0. 시간 측정 시작
         long startedNs = System.nanoTime();
 
+        // 1. Context에서 필요한 정보 추출 & GraphQL variables 설정
         final String owner = ctx.repoRef().ownerName();               // e.g. "SKKU-OSP"
         final String name = ctx.repoRef().repoName();                 // e.g. "spring-back
         final OffsetDateTime since = ctx.lastStarredAt() == null
                 ? OffsetDateTime.parse("2018-12-31T23:59:59Z")
                 : ctx.lastStarredAt();                   // 시작 시간, null이면 2019년부터 수집
         int pageSize = 100;
-
-        List<GithubStarResponseDto> starResults = new java.util.ArrayList<>();
         String after = null;
         OffsetDateTime lastCollectedStarredAt = since; // update 후보
 
+        // 2. 페이지 처리하며 star 수집
+        List<GithubStarResponseDto> starResults = new java.util.ArrayList<>();
         while (true) {
+
+            // 2-1. GraphQL 쿼리 변수 설정
             Map<String, Object> vars = new HashMap<>();
             vars.put("owner", owner);
             vars.put("name", name);
             vars.put("first", pageSize);
             if (after != null) vars.put("after", after);
+
+            // 2-2. GraphQL 쿼리 실행
             var res = githubGraphQLClient.query(QUERY)
                     .variables(vars)
                     .execute(GithubStarGraphQLResult.class);
 
+            // 2-3. 에러 처리 및 결과 핸들링
+            if (res.getErrors() != null && !res.getErrors().isEmpty()) {
+                System.err.println("GraphQL Errors: " + res.getErrors());
+                break;
+            }
             GithubStarGraphQLResult result = res.getData();
-
             if (result.isInvalidStargazer()) break;
+            List<GithubStarResponseDto> pageItems = result.getStars(); // star 리스트
+            GithubPageInfo pageInfo = result.getPageInfo();            // 페이지 정보
 
-            // stargazer 리스트
-            List<GithubStarResponseDto> pageItems = result.getStars();
-            // 페이지 정보
-            GithubPageInfo pageInfo = result.getPageInfo();
-
-            // 가장 최신 starredAt 갱신 - 첫 페이지일 때
+            // 2-4. 첫번째 페이지에서 가장 최신 starredAt 갱신
             if (!pageInfo.hasPreviousPage()) lastCollectedStarredAt = pageItems.getFirst().starredAt();
 
-            // 최신부터 since까지 증분 수집
+            // 2-5. 마지막 수집 starredAt 전까지 순회하며 저장
             boolean reachedSince = false;
             for (var star : pageItems) {
                 if (star.starredAt().isBefore(since) || star.starredAt().isEqual(since)) {
@@ -95,14 +103,18 @@ public class StarCollector implements GithubResourceCollector
                 starResults.add(star);
             }
 
+            // 2-6 종료 조건 검사
             if (reachedSince || !pageInfo.hasNextPage()) break;
             after = pageInfo.endCursor();
+            if (after == null) break; // 방어적 탈출
         }
 
+        // 3. 결과값 구성
         TimeCursor newCursor = new TimeCursor(lastCollectedStarredAt);
         long elapsedTimeMs = Math.round((System.nanoTime() - startedNs) / 1_000_000.0);
         int fetchedCount = starResults.size();
 
+        // 4. 결과 반환
         return new CollectResult<>(
                 starResults,
                 newCursor,
