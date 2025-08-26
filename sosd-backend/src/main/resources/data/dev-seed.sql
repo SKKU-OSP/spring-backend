@@ -25,12 +25,13 @@ VALUES (
 
 -- GitHub 계정 데이터 (연결된 유저)
 INSERT INTO github_account (
-    github_id, github_login_username, github_name, github_token, github_email, last_crawling, student_id
+    github_id, github_graphql_node_id, github_login_username, github_name, github_token, github_email, last_crawling, student_id
 )
 VALUES (
            80045655,              -- GitHub ID
+           'MDQ6VXNlcjgwMDQ1NjU1',
            'byungKHee',             -- GitHub username
-           NULL,         -- GitHub 표시명
+           'Byunghee Kang',         -- GitHub 표시명
            NULL,                   -- GitHub 토큰
            'byungheekang@g.skku.edu', -- 이메일
            NULL,                   -- 마지막 크롤링

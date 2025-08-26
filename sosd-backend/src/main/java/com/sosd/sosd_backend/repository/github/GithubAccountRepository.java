@@ -2,8 +2,11 @@ package com.sosd.sosd_backend.repository.github;
 
 import com.sosd.sosd_backend.entity.github.GithubAccount;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,4 +24,8 @@ public interface GithubAccountRepository extends JpaRepository<GithubAccount, Lo
     // FK - 학번 기준 조회
     List<GithubAccount> findAllByUserAccount_StudentId(String studentId);
 
+    // 증분형 처리 업데이트 - 마지막 레포 수집 시각 저장
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update GithubAccount a set a.lastCrawling = :ts where a.githubId = :githubId")
+    int updateLastCrawlingByGithubId(Long githubId, LocalDateTime ts);
 }

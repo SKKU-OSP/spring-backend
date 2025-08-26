@@ -1,10 +1,10 @@
-package com.sosd.sosd_backend.dto;
+package com.sosd.sosd_backend.github_collector.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.OffsetDateTime;
 
-public record RepositoryDetailDto(
+public record GithubRepositoryResponseDto(
         long id,
         @JsonProperty("full_name") String fullName,
         @JsonProperty("private") boolean isPrivate, //

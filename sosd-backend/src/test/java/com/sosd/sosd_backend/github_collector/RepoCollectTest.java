@@ -1,6 +1,6 @@
 package com.sosd.sosd_backend.github_collector;
 
-import com.sosd.sosd_backend.dto.RepositoryDetailDto;
+import com.sosd.sosd_backend.github_collector.dto.response.GithubRepositoryResponseDto;
 import com.sosd.sosd_backend.github_collector.collector.RepoCollector;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,7 @@ public class RepoCollectTest {
 
     @Test
     void testGetRepoInfo(){
-        RepositoryDetailDto testRepoDto = repoCollector.getRepoInfo("SKKU-OSP", "SKKU-OSP");
+        GithubRepositoryResponseDto testRepoDto = repoCollector.getRepoInfo("SKKU-OSP", "SKKU-OSP");
 
         assertEquals(503242724L, testRepoDto.id(), "Repo ID가 일치하지 않습니다");
         assertEquals(107451259L, testRepoDto.owner().id(), "Owner ID가 일치하지 않습니다");
@@ -29,8 +29,8 @@ public class RepoCollectTest {
 
     @Test
     void testGetAllReposFromUser(){
-        List<RepositoryDetailDto> repoLists = repoCollector.getAllContributedRepos("ki011127");
-        for(RepositoryDetailDto repo : repoLists){
+        List<GithubRepositoryResponseDto> repoLists = repoCollector.getAllContributedRepos("ki011127");
+        for(GithubRepositoryResponseDto repo : repoLists){
             System.out.println(repo.fullName());
         }
     }

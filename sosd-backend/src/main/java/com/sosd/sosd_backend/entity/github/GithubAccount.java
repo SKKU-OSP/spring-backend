@@ -1,6 +1,7 @@
 package com.sosd.sosd_backend.entity.github;
 
 import com.sosd.sosd_backend.entity.user.UserAccount;
+import com.sosd.sosd_backend.github_collector.dto.ref.GithubAccountRef;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -8,6 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -21,6 +24,9 @@ public class GithubAccount {
     private Long githubId;
 
     // 일반 컬럼
+    @Column(name = "github_graphql_node_id", nullable = false)
+    private String githubGraphqlNodeId;
+
     @Column(name = "github_login_username", nullable = false)
     private String githubLoginUsername;
 
@@ -41,10 +47,15 @@ public class GithubAccount {
     @JoinColumn(name = "student_id", nullable = false)
     private UserAccount userAccount;
 
+    // 계정 - 조인테이블 - 레포지토리
+    @OneToMany(mappedBy = "githubAccount", cascade = CascadeType.PERSIST, orphanRemoval = false)
+    private Set<GithubAccountRepositoryEntity> accountRepositories = new HashSet<>();
+
     // 생성자
     @Builder
     public GithubAccount(
             Long githubId,
+            String githubGraphqlNodeId,
             String githubLoginUsername,
             String githubName,
             String githubToken,
@@ -52,6 +63,7 @@ public class GithubAccount {
             UserAccount userAccount
     ) {
         this.githubId = githubId;
+        this.githubGraphqlNodeId = githubGraphqlNodeId;
         this.githubLoginUsername = githubLoginUsername;
         this.githubName = githubName;
         this.githubToken = githubToken;
@@ -63,6 +75,18 @@ public class GithubAccount {
     // 수집기 작동 시 호출 메소드
     public void updateLastCrawling() {
         this.lastCrawling = LocalDateTime.now();
+    }
+
+    // 엔티티 -> githubAccountRef 변환 메서드
+    public GithubAccountRef toGithubAccountRef(){
+        return new GithubAccountRef(
+                this.githubId,
+                this.githubGraphqlNodeId,
+                this.githubLoginUsername,
+                this.githubName,
+                this.githubToken,
+                this.githubEmail
+        );
     }
 
 }
