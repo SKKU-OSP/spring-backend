@@ -82,8 +82,10 @@ CREATE TABLE IF NOT EXISTS github_commit (
 
     -- 인덱스
     UNIQUE INDEX uq_commit_sha (repo_id, sha) COMMENT '레포당 commit 고유 sha 값 유니크 키',
-    INDEX idx_commit_github_id_date (github_id, author_date) COMMENT '작성자별 커밋 조회용',
-    INDEX idx_commit_repo_id (repo_id) COMMENT '레포지토리 기준 커밋 조회용'
+    INDEX idx_commit_github_id_repo_date (github_id, repo_id, author_date) COMMENT '특정 계정의 특정 레포에 대한 날짜별 커밋 조회',
+    INDEX idx_commit_github_id_date (github_id, author_date) COMMENT '작성자별 날짜 범위 커밋 조회용',
+    INDEX idx_commit_repo_id (repo_id) COMMENT '레포지토리 기준 커밋 조회용',
+    INDEX idx_commit_author_date (author_date) COMMENT '날짜 범위 기준 커밋 조회용'
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Github 커밋 테이블';
 
@@ -100,11 +102,13 @@ CREATE TABLE IF NOT EXISTS github_pull_request (
     github_id BIGINT NOT NULL COMMENT 'PR 작성자 id(외례키)',
 
     -- 인덱스
-    UNIQUE uq_pull_request_github_pr_id (github_pr_id) COMMENT 'pr id 유니크 키 (깃허브 api에서 제공)',
+    UNIQUE INDEX uq_pull_request_github_pr_id (github_pr_id) COMMENT 'pr id 유니크 키 (깃허브 api에서 제공)',
     INDEX idx_repo_id_pr_number (repo_id, pr_number) COMMENT 'pr 조회용',
-    INDEX idx_merged (is_open) COMMENT 'pr 상태 조회용',
+    INDEX idx_repo_id (repo_id) COMMENT '레포지토리 기준 PR 조회용',
+    INDEX idx_github_id_repo_date (github_id, repo_id, pr_date) COMMENT '특정 계정의 특정 레포에 대한 날짜별 PR 조회',
+    INDEX idx_github_id_date (github_id, pr_date) COMMENT '작성자별 날짜 범위 PR 조회용',
     INDEX idx_pr_date (pr_date) COMMENT 'pr 생성 날짜 필터용',
-    INDEX idx_github_id_date (github_id, pr_date) COMMENT '작성자별 pr 조회용'
+    INDEX idx_is_open (is_open) COMMENT 'pr 상태 조회용'
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Pull Request 테이블';
 
@@ -120,10 +124,12 @@ CREATE TABLE IF NOT EXISTS github_issue (
     github_id BIGINT NOT NULL COMMENT 'issue 작성자 id (외례키)',
 
     -- 인덱스
-    UNIQUE uq_issue_github_issue_id (github_issue_id) COMMENT 'issue id 유니크 키 (깃허브 api에서 제공)',
+    UNIQUE INDEX uq_issue_github_issue_id (github_issue_id) COMMENT 'issue id 유니크 키 (깃허브 api에서 제공)',
     INDEX idx_repo_id_issue_number (repo_id, issue_number) COMMENT 'issue 조회용',
-    INDEX idx_issue_date (issue_date) COMMENT 'issue 생성 날짜 조회용',
-    INDEX idx_github_id_date (github_id, issue_date) COMMENT '작성자별 issue 조회용'
+    INDEX idx_repo_id (repo_id) COMMENT '레포지토리 기준 issue 조회용',
+    INDEX idx_github_id_repo_date (github_id, repo_id, issue_date) COMMENT '특정 계정의 특정 레포에 대한 날짜별 issue 조회',
+    INDEX idx_github_id_date (github_id, issue_date) COMMENT '작성자별 날짜 범위 issue 조회용',
+    INDEX idx_issue_date (issue_date) COMMENT 'issue 생성 날짜 조회용'
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Issue 테이블';
 
@@ -135,6 +141,7 @@ CREATE TABLE IF NOT EXISTS github_star (
     repo_id BIGINT NOT NULL COMMENT '저장소 ID (외래키)',
 
     -- 인덱스
+    UNIQUE INDEX uq_star_user_repo (star_user_id, repo_id) COMMENT '사용자당 레포별 star 중복 방지',
     INDEX idx_star_repo_id (repo_id) COMMENT '해당 레포의 star 조회용',
     INDEX idx_star_date (star_date) COMMENT 'star 날짜 필터용'
 
