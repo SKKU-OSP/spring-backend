@@ -15,6 +15,7 @@ public class SignupResponse {
     private int pluralMajor;
     private int absence;
     private Long githubId;
+    private String githubGraphqlNodeId;
     private String githubLoginUsername;
     private String githubName;
     private String githubEmail;
