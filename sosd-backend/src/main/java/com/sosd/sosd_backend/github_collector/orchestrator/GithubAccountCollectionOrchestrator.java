@@ -2,12 +2,16 @@ package com.sosd.sosd_backend.github_collector.orchestrator;
 
 import com.sosd.sosd_backend.dto.github.GithubRepositoryUpsertDto;
 import com.sosd.sosd_backend.github_collector.collector.RepoCollector;
+import com.sosd.sosd_backend.github_collector.dto.collect.context.RepoListCollectContext;
+import com.sosd.sosd_backend.github_collector.dto.collect.result.CollectResult;
+import com.sosd.sosd_backend.github_collector.dto.collect.result.TimeCursor;
 import com.sosd.sosd_backend.github_collector.dto.ref.GithubAccountRef;
 import com.sosd.sosd_backend.github_collector.dto.ref.RepoRef;
 import com.sosd.sosd_backend.github_collector.dto.response.GithubRepositoryResponseDto;
 import com.sosd.sosd_backend.service.github.RepoUpsertService;
 import org.springframework.stereotype.Component;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Component
@@ -24,7 +28,15 @@ public class GithubAccountCollectionOrchestrator {
      */
     public void collectByGithubAccount(GithubAccountRef githubAccountRef){
         // 1) 해당 유저가 기여한 모든 레포 수집
-        List<GithubRepositoryResponseDto> repoResponseDtos = repoCollector.getAllContributedRepos(githubAccountRef.githubLoginUsername());
+
+        RepoListCollectContext ctx = new RepoListCollectContext(
+                githubAccountRef,
+                OffsetDateTime.parse("2010-01-01T00:00:00Z") // TODO: DB의 마지막 수집 시점으로 변경
+        );
+        CollectResult<GithubRepositoryResponseDto, TimeCursor> collectedRepos =
+                repoCollector.collect(ctx);
+
+        List<GithubRepositoryResponseDto> repoResponseDtos = collectedRepos.results();
 
         // 2) 도메인 모델 뱐환
         List<GithubRepositoryUpsertDto> repoUpsertDtos = repoResponseDtos.stream()

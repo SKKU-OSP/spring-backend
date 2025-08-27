@@ -1,11 +1,16 @@
 package com.sosd.sosd_backend.service.github;
 
 import com.sosd.sosd_backend.dto.github.GithubRepositoryUpsertDto;
+import com.sosd.sosd_backend.github_collector.dto.collect.context.RepoListCollectContext;
+import com.sosd.sosd_backend.github_collector.dto.collect.result.CollectResult;
+import com.sosd.sosd_backend.github_collector.dto.collect.result.TimeCursor;
+import com.sosd.sosd_backend.github_collector.dto.ref.GithubAccountRef;
 import com.sosd.sosd_backend.github_collector.dto.response.GithubRepositoryResponseDto;
 import com.sosd.sosd_backend.github_collector.collector.RepoCollector;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Service
@@ -30,10 +35,27 @@ public class RepoIngestionService {
 
     public void ingestGithubAccount(String githubLoginUsername){
         // 1) 깃허브 api를 통해 수집
-        List<GithubRepositoryResponseDto> collectedDto = repoCollector.getAllContributedRepos(githubLoginUsername);
+        // 임시용 처리용
+        GithubAccountRef githubAccountRef = new GithubAccountRef(
+                null,
+                null,
+                githubLoginUsername,
+                null,
+                null,
+                null
+        );
+
+        RepoListCollectContext ctx = new RepoListCollectContext(
+                githubAccountRef,
+                OffsetDateTime.parse("2010-01-01T00:00:00Z") // TODO: DB의 마지막 수집 시점으로 변경
+        );
+        CollectResult<GithubRepositoryResponseDto, TimeCursor> collectedRepos =
+                repoCollector.collect(ctx);
+
+        List<GithubRepositoryResponseDto> repoResponseDtos = collectedRepos.results();
 
         // 2) GithubRepositoryUpsertDto로 변환
-        List<GithubRepositoryUpsertDto> upsertDtos = collectedDto.stream()
+        List<GithubRepositoryUpsertDto> upsertDtos = repoResponseDtos.stream()
                 .map(GithubRepositoryUpsertDto::from)
                         .toList();
 
