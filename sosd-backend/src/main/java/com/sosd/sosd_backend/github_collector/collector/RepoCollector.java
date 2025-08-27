@@ -1,10 +1,12 @@
 package com.sosd.sosd_backend.github_collector.collector;
 
+import com.sosd.sosd_backend.github_collector.api.GithubGraphQLClient;
 import com.sosd.sosd_backend.github_collector.dto.response.GithubRepositoryResponseDto;
 import com.sosd.sosd_backend.github_collector.dto.RepoCollectorDtos.EventRepoDto;
 import com.sosd.sosd_backend.github_collector.dto.RepoCollectorDtos.SearchIssuesDto;
 import com.sosd.sosd_backend.github_collector.dto.RepoCollectorDtos.UserRepoDto;
 import com.sosd.sosd_backend.github_collector.api.GithubRestClient;
+import com.sosd.sosd_backend.github_collector.dto.response.graphql.GithubRepositoryGraphQLResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
@@ -16,6 +18,7 @@ import java.util.*;
 public class RepoCollector {
 
     private final GithubRestClient githubRestClient;
+    private final GithubGraphQLClient githubGraphQLClient;
 
     /**
      * username이 기여한 모든 repo의 상세 정보를 반환
@@ -27,36 +30,97 @@ public class RepoCollector {
         fullNames.addAll(fetchReposFromSearchIssues(username));
         fullNames.addAll(fetchReposFromEvents(username));
 
-//        for(String fullName : fullNames){
-//            System.out.println(fullName);
-//        }
+        List<GithubRepositoryGraphQLResult> results = new ArrayList<>();
+        for (String fullName : fullNames) {
+            String[] parts = fullName.split("/");
+            if (parts.length == 2) {
+                var res = getRepoInfoGraphQL(parts[0], parts[1]);
+                if (res != null) {
+                    results.add(res);
+                }
+            }
+        }
 
-        return fullNames.stream()
-                .map(fullName -> {
-                    String[] parts = fullName.split("/");
-                    if (parts.length == 2) {
-                        return getRepoInfo(parts[0], parts[1]);
-                    }
-                    return null;
-                })
-                .filter(dto -> dto != null)
+        return results.stream()
+                .map(GithubRepositoryResponseDto::from)
                 .toList();
     }
 
+//    /**
+//     * 단일 repo 정보 조회
+//     */
+//    public GithubRepositoryResponseDto getRepoInfo(String owner, String name){
+//        try {
+//            return githubRestClient.request()
+//                    .endpoint("/repos/" + owner + "/" + name)
+//                    .get(GithubRepositoryResponseDto.class);
+//        } catch (org.springframework.web.client.HttpClientErrorException.NotFound e) {
+//            // 404 에러 발생 시 null 반환
+//            return null;
+//        }
+//    }
+
+
     /**
-     * 단일 repo 정보 조회
+     * 단일 repo 정보 조회 - GraphQL
      */
-    public GithubRepositoryResponseDto getRepoInfo(String owner, String name){
-        try {
-            return githubRestClient.request()
-                    .endpoint("/repos/" + owner + "/" + name)
-                    .get(GithubRepositoryResponseDto.class);
-        } catch (org.springframework.web.client.HttpClientErrorException.NotFound e) {
-            // 404 에러 발생 시 null 반환
+    public GithubRepositoryGraphQLResult getRepoInfoGraphQL(String owner, String name) {
+        final String query = """
+                query RepoOverview($owner: String!, $name: String!) {
+                  repository(owner: $owner, name: $name) {
+                    databaseId
+                    nameWithOwner                       # full_name 대체 가능
+                    isPrivate                           # is_private
+                    defaultBranchRef { name }           # default_branch
+                    description                         # description
+                    stargazerCount                      # star
+                    watchers { totalCount }             # watcher (구독자 수)
+                    forkCount                           # fork
+                    licenseInfo { name }                # license
+                    createdAt                           # github_repository_created_at
+                    updatedAt                           # github_repository_updated_at
+                    pushedAt                            # github_pushed_at
+                
+                    # README 내용 (루트의 README.md 기준)
+                    object(expression: "HEAD:README.md") {
+                      ... on Blob { text }              # readme
+                    }
+                
+                    # 사용 언어 분포 (상위 5개)
+                    languages(first: 5, orderBy: {field: SIZE, direction: DESC}) {
+                      totalSize
+                      edges {
+                        size
+                        node { name }
+                      }
+                    }
+                    # Dependency
+                    dependencyGraphManifests(first: 1) {
+                      totalCount
+                    }
+                    # contributor 수 집계용 (협업자 수)
+                    # 정확한 협업자 수와는 조금 다르기에 추후 직접 집계 필요
+                    mentionableUsers(first: 0) { totalCount }
+                  }
+                  rateLimit { cost used remaining limit resetAt }
+                }
+                """;
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("owner", owner);
+        variables.put("name", name);
+
+        var res = githubGraphQLClient.query(query)
+                .variables(variables)
+                .execute(GithubRepositoryGraphQLResult.class);
+
+        if (res.getErrors() != null && !res.getErrors().isEmpty()) {
+            // 에러가 발생한 경우 로그 출력 후 null 반환
+            System.err.println("GraphQL Errors: " + res.getErrors());
             return null;
         }
+        return res.getData();
     }
-
 
     /**
      * 1. username의 모든 공개 repo의 full_name 목록 수집
