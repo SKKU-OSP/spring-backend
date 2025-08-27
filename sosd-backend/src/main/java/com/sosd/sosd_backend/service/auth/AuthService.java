@@ -44,6 +44,7 @@ public class AuthService {
 
         GithubAccount github = GithubAccount.builder()
                 .githubId(request.getGithubId())
+                .githubGraphqlNodeId(request.getGithubGraphqlNodeId())
                 .githubLoginUsername(request.getGithubLoginUsername())
                 .githubName(request.getGithubName())
                 .githubEmail(request.getGithubEmail())
@@ -59,6 +60,7 @@ public class AuthService {
                 .pluralMajor(savedUser.getPluralMajor())
                 .absence(savedUser.getAbsence())
                 .githubId(github.getGithubId())
+                .githubGraphqlNodeId(github.getGithubGraphqlNodeId())
                 .githubLoginUsername(github.getGithubLoginUsername())
                 .githubName(github.getGithubName())
                 .githubEmail(github.getGithubEmail())

@@ -27,6 +27,9 @@ public class SignupRequest {
     @NotNull
     private Long githubId;
 
+    @NotNull
+    private String githubGraphqlNodeId;
+
     @NotBlank
     private String githubLoginUsername;
 
