@@ -5,19 +5,17 @@ import com.sosd.sosd_backend.github_collector.dto.RepoCollectorDtos.EventRepoDto
 import com.sosd.sosd_backend.github_collector.dto.RepoCollectorDtos.SearchIssuesDto;
 import com.sosd.sosd_backend.github_collector.dto.RepoCollectorDtos.UserRepoDto;
 import com.sosd.sosd_backend.github_collector.api.GithubRestClient;
+import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 
 @Component
+@RequiredArgsConstructor
 public class RepoCollector {
 
     private final GithubRestClient githubRestClient;
-
-    public RepoCollector(GithubRestClient githubRestClient) {
-        this.githubRestClient = githubRestClient;
-    }
 
     /**
      * username이 기여한 모든 repo의 상세 정보를 반환
