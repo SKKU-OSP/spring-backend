@@ -35,12 +35,15 @@ public class RepoCollector implements GithubResourceCollector
 
         // 1. 기여한 레포 full name 목록 수집
         Set<String> fullNames = new HashSet<>();
-
-        // 1-1. 사용자의 모든 공개 repo
-        fullNames.addAll(fetchReposFromUserRepos(context.githubAccountRef().githubLoginUsername()));
-        // 1-2. 사용자가 최근에 기여한 이슈/PR에서 repo 추출
-        fullNames.addAll(fetchReposFromSearchIssues(context.githubAccountRef().githubLoginUsername(), context.lastCrawling()));
-        // 1-3. 사용자의 이벤트에서 기여한 repo 추출
+        // 1-1. 사용자의 모든 공개 repo 목록에서 추출 - 수집기록이 없으면 실행
+        if (context.lastCrawling() == null) {
+            fullNames.addAll(fetchReposFromUserRepos(context.githubAccountRef().githubLoginUsername()));
+        }
+        // 1-2. 사용자가 최근에 기여한 이슈/PR에서 repo 추출 - 수집기록이 없거나 2일 이상 지난 경우 실행
+        if (context.lastCrawling() == null || context.lastCrawling().isBefore(OffsetDateTime.now().minusDays(2))) {
+            fullNames.addAll(fetchReposFromSearchIssues(context.githubAccountRef().githubLoginUsername(), context.lastCrawling()));
+        }
+        // 1-3. 사용자의 이벤트에서 기여한 repo 추출 - 항상 실행
         fullNames.addAll(fetchReposFromEvents(context.githubAccountRef().githubLoginUsername()));
 
         // 2. 각 repo의 상세 정보 수집
@@ -163,6 +166,10 @@ public class RepoCollector implements GithubResourceCollector
         // 쿼리 파라미터 설정
         int page = 1;
         int perPage = 100;
+        if (since == null) {
+            // 수집 기록이 없으면 최근 1년치로 제한
+            since = OffsetDateTime.parse("2019-01-01T00:00:00Z");
+        }
         String query = "author:" + username + " created:>=" + since.toInstant().toString();
 
         Set<String> result = new HashSet<>();
@@ -207,10 +214,19 @@ public class RepoCollector implements GithubResourceCollector
      * 3. username의 이벤트에서 기여한 repo의 full_name 추출
      */
     private Set<String> fetchReposFromEvents(String username) {
-        List<EventRepoDto> events = githubRestClient.request()
-                .endpoint("/users/" + username + "/events/public")
-                .getAllPages(new ParameterizedTypeReference<>() {}, 100);
-
+        List<EventRepoDto> events = new ArrayList<>();
+        // event API는 최대 300개 이벤트까지만 제공
+        for(int page = 1; page <= 3; page++){
+            List<EventRepoDto> pageEvents = githubRestClient.request()
+                    .endpoint("/users/" + username + "/events/public")
+                    .queryParam("page", String.valueOf(page))
+                    .queryParam("per_page", "100")
+                    .getList(new ParameterizedTypeReference<>() {});
+            if(pageEvents == null || pageEvents.isEmpty()){
+                break;
+            }
+            events.addAll(pageEvents);
+        }
         Set<String> result = new HashSet<>();
         events.stream()
                 .map(EventRepoDto::repo)
