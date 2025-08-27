@@ -29,31 +29,27 @@ public record GithubRepositoryUpsertDto(
     /** GithubRepositoryResponseDto → UpsertDto 변환 */
     public static GithubRepositoryUpsertDto from(GithubRepositoryResponseDto dto) {
         return new GithubRepositoryUpsertDto(
-                dto.id(),
-                dto.ownerNameOnly(),
-                dto.repoNameOnly(),
-                nvl(dto.defaultBranch(), "main"),
-                dto.watchers(),
-                dto.stargazersCount(),
-                dto.forks(),
-                null, // dependency → hydrate 단계에서
+                dto.githubRepoId(),
+                dto.ownerName(),
+                dto.repoName(),
+                dto.defaultBranch(),
+                dto.watcher(),
+                dto.star(),
+                dto.fork(),
+                dto.dependency(),
                 dto.description(),
-                null, // readme → hydrate 단계에서
-                dto.license() != null ? dto.license().name() : null,
-                toUtcLocal(dto.createdAt()),
-                toUtcLocal(dto.updatedAt()),
-                toUtcLocal(dto.pushedAt()),
-                null, // additionalData → hydrate 단계에서
-                null, // contributor → hydrate 단계에서
+                dto.readme(),
+                dto.license(),
+                toUtcLocal(dto.githubRepositoryCreatedAt()),
+                toUtcLocal(dto.githubRepositoryUpdatedAt()),
+                toUtcLocal(dto.githubPushedAt()),
+                dto.additionalData(),
+                dto.contributor(),
                 dto.isPrivate()
         );
     }
 
     // ---- private helpers ----
-    private static String nvl(String v, String def) {
-        return (v == null || v.isBlank()) ? def : v;
-    }
-
     private static LocalDateTime toUtcLocal(OffsetDateTime odt) {
         return odt != null ? odt.withOffsetSameInstant(ZoneOffset.UTC).toLocalDateTime() : null;
     }
