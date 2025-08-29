@@ -1,11 +1,17 @@
 package com.sosd.sosd_backend.github_collector;
 
+import com.sosd.sosd_backend.github_collector.dto.collect.context.RepoListCollectContext;
+import com.sosd.sosd_backend.github_collector.dto.collect.result.CollectResult;
+import com.sosd.sosd_backend.github_collector.dto.collect.result.TimeCursor;
+import com.sosd.sosd_backend.github_collector.dto.ref.GithubAccountRef;
 import com.sosd.sosd_backend.github_collector.dto.response.GithubRepositoryResponseDto;
 import com.sosd.sosd_backend.github_collector.collector.RepoCollector;
+import com.sosd.sosd_backend.github_collector.dto.response.graphql.GithubRepositoryGraphQLResult;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -15,23 +21,38 @@ public class RepoCollectTest {
 
     @Autowired
     private RepoCollector repoCollector;
-
-    @Test
-    void testGetRepoInfo(){
-        GithubRepositoryResponseDto testRepoDto = repoCollector.getRepoInfo("SKKU-OSP", "SKKU-OSP");
-
-        assertEquals(503242724L, testRepoDto.id(), "Repo ID가 일치하지 않습니다");
-        assertEquals(107451259L, testRepoDto.owner().id(), "Owner ID가 일치하지 않습니다");
-
-        // 디버깅용 출력
-        System.out.println(testRepoDto);
-    }
-
     @Test
     void testGetAllReposFromUser(){
-        List<GithubRepositoryResponseDto> repoLists = repoCollector.getAllContributedRepos("ki011127");
-        for(GithubRepositoryResponseDto repo : repoLists){
-            System.out.println(repo.fullName());
+        GithubAccountRef testAccountRef = new GithubAccountRef(
+                80045655L,
+                "MDQ6VXNlcjgwMDQ1NjU1",
+                "byungKHee",
+                null,
+                null,
+                null
+        );
+
+        RepoListCollectContext ctx = new RepoListCollectContext(
+                testAccountRef,
+                OffsetDateTime.parse("2025-08-26T00:00:00Z")
+        );
+
+        CollectResult<GithubRepositoryResponseDto, TimeCursor> result =
+                repoCollector.collect(ctx);
+
+        System.out.println("=== Collect Result ===");
+        System.out.println("Fetched count: " + result.fetchedCount());
+        System.out.println("Total count: " + result.totalCount());
+        System.out.println("Elapsed time (ms): " + result.elapsedTimeMs());
+        System.out.println("Next cursor: " + result.cursor().lastCollectedTime());
+        List<GithubRepositoryResponseDto> repos = result.results();
+        for (GithubRepositoryResponseDto repo : repos) {
+            System.out.printf("Repo #%d [%s] (createdAt=%s)%n",
+                    repo.githubRepoId(),
+                    repo.fullName(),
+                    repo.githubRepositoryCreatedAt()
+            );
         }
+
     }
 }
