@@ -31,7 +31,7 @@ public class IssueCollector implements GithubResourceCollector
             pageInfo { hasNextPage hasPreviousPage startCursor endCursor }
             nodes {
               ... on Issue {
-                id
+                databaseId
                 number
                 title
                 body

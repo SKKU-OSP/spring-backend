@@ -30,7 +30,7 @@ public class PullRequestCollector implements GithubResourceCollector
             pageInfo { hasNextPage hasPreviousPage startCursor endCursor }
             nodes {
               ... on PullRequest {
-                id
+                databaseId
                 number
                 title
                 body
