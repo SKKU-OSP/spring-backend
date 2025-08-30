@@ -38,3 +38,9 @@ out/
 
 ### macOS ###
 .DS_Store
+
+# MapStruct & annotation processors (생성 코드)
+/src/target/generated-sources/
+/src/build/generated/
+/src/build/tmp/
+src/main/generated/
