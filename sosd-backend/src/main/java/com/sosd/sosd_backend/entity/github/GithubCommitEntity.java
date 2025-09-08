@@ -1,5 +1,6 @@
 package com.sosd.sosd_backend.entity.github;
 
+import com.sosd.sosd_backend.dto.github.GithubCommitUpsertDto;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -75,7 +76,7 @@ public class GithubCommitEntity {
 
     // 신규 엔티티 생성 정적 팩토리 메서드
     public static GithubCommitEntity create(
-            com.sosd.sosd_backend.dto.github.GithubCommitUpsertDto d,
+            GithubCommitUpsertDto d,
             GithubRepositoryEntity repository,
             GithubAccount account
     ) {
@@ -99,7 +100,7 @@ public class GithubCommitEntity {
     }
 
     // ---- 업서트 Update: 허용된 범위만 부분 갱신 ----
-    public void applyUpsert(com.sosd.sosd_backend.dto.github.GithubCommitUpsertDto d) {
+    public void applyUpsert(GithubCommitUpsertDto d) {
         if (d == null) return;
 
         // 커밋은 보통 불변이므로 sha/repo/account는 변경하지 않음
