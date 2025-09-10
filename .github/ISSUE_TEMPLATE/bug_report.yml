@@ -1,0 +1,35 @@
+name: "🐛 Bug"
+description: "버그 제보 또는 오류 리포트"
+labels: ["bug"]
+title: "[Bug]: "
+body:
+  - type: textarea
+    attributes:
+      label: 🐞 버그 설명
+      description: 어떤 문제가 발생했는지 구체적으로 작성해주세요.
+      placeholder: 예) 로그인 버튼을 눌러도 아무 반응이 없습니다.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: ✅ 재현 방법
+      description: 어떤 과정을 거쳤을 때 문제가 발생했는지 순서대로 적어주세요.
+      placeholder: |
+        1. 로그인 페이지로 이동
+        2. 이메일과 비밀번호 입력
+        3. 로그인 버튼 클릭
+        4. 오류 발생
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: 🖥 환경 정보
+      description: 브라우저, OS 등의 환경 정보를 적어주세요
+      placeholder: 예) macOS 14.3, Chrome 122.0
+
+  - type: textarea
+    attributes:
+      label: 🙋🏻 추가 정보
+      description: 스크린샷, 콘솔 로그, 참고 링크 등을 자유롭게 작성해주세요.
