@@ -52,10 +52,10 @@ public class GithubAccountCollectionOrchestrator {
             System.out.println(repoRef.fullName());
         }
 
-//        // 4) 하위 orchestrator 수집
-//        for(RepoRef repoRef : repoRefs){
-//            githubRepositoryOrchestrator.collectByRepository(githubAccountRef, repoRef);
-//        }
+        // 4) 하위 orchestrator 수집
+        for(RepoRef repoRef : repoRefs){
+            githubRepositoryOrchestrator.collectByRepository(githubAccountRef, repoRef);
+        }
 
         // TODO
         // 5) 결과 및 로그
