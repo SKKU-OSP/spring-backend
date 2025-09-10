@@ -9,17 +9,19 @@ import com.sosd.sosd_backend.github_collector.dto.ref.GithubAccountRef;
 import com.sosd.sosd_backend.github_collector.dto.ref.RepoRef;
 import com.sosd.sosd_backend.github_collector.dto.response.GithubRepositoryResponseDto;
 import com.sosd.sosd_backend.service.github.RepoUpsertService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class GithubAccountCollectionOrchestrator {
 
-    GithubRepositoryOrchestrator githubRepositoryOrchestrator;
-    RepoCollector repoCollector;
-    RepoUpsertService repoUpsertService;
+    private final GithubRepositoryOrchestrator githubRepositoryOrchestrator;
+    private final RepoCollector repoCollector;
+    private final RepoUpsertService repoUpsertService;
 
     /**
      * 단일 깃허브 계정에 대한 수집 수행
@@ -31,7 +33,7 @@ public class GithubAccountCollectionOrchestrator {
 
         RepoListCollectContext ctx = new RepoListCollectContext(
                 githubAccountRef,
-                OffsetDateTime.parse("2010-01-01T00:00:00Z") // TODO: DB의 마지막 수집 시점으로 변경
+                null // TODO: DB의 마지막 수집 시점으로 변경
         );
         CollectResult<GithubRepositoryResponseDto, TimeCursor> collectedRepos =
                 repoCollector.collect(ctx);
@@ -46,10 +48,14 @@ public class GithubAccountCollectionOrchestrator {
         // 3) DB 저장
         List<RepoRef> repoRefs = repoUpsertService.upsertRepos(repoUpsertDtos);
 
-        // 4) 하위 orchestrator 수집
-        for(RepoRef repoRef : repoRefs){
-            githubRepositoryOrchestrator.collectByRepository(githubAccountRef, repoRef);
+        for (RepoRef repoRef : repoRefs) {
+            System.out.println(repoRef.fullName());
         }
+
+//        // 4) 하위 orchestrator 수집
+//        for(RepoRef repoRef : repoRefs){
+//            githubRepositoryOrchestrator.collectByRepository(githubAccountRef, repoRef);
+//        }
 
         // TODO
         // 5) 결과 및 로그
