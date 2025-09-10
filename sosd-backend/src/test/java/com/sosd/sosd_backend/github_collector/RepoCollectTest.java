@@ -34,7 +34,7 @@ public class RepoCollectTest {
 
         RepoListCollectContext ctx = new RepoListCollectContext(
                 testAccountRef,
-                OffsetDateTime.parse("2025-08-26T00:00:00Z")
+                null
         );
 
         CollectResult<GithubRepositoryResponseDto, TimeCursor> result =
