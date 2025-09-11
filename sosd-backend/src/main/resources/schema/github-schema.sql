@@ -120,6 +120,7 @@ CREATE TABLE IF NOT EXISTS github_issue (
     issue_title VARCHAR(255) NOT NULL COMMENT 'Issue 제목',
     issue_body TEXT COMMENT 'Issue 본문',
     issue_date DATETIME NOT NULL COMMENT 'Issue 생성일시',
+    is_open BOOLEAN NOT NULL COMMENT 'issue 상태 open/close',
     repo_id BIGINT NOT NULL COMMENT '저장소 ID (외래키)',
     github_id BIGINT NOT NULL COMMENT 'issue 작성자 id (외례키)',
 

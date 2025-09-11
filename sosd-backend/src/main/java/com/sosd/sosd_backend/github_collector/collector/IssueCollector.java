@@ -35,6 +35,7 @@ public class IssueCollector implements GithubResourceCollector
                 number
                 title
                 body
+                state
                 createdAt
               }
             }
