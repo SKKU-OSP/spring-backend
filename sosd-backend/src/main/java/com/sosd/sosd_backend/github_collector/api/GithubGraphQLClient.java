@@ -72,7 +72,7 @@ public class GithubGraphQLClient {
         }
 
         public <T> GraphQLResponse<T> execute(Class<T> responseType) {
-            String currentToken = tokenManager.getAvailableToken();
+            String currentToken = tokenManager.getToken();
 
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("query", query);

@@ -122,7 +122,7 @@ public class GithubRestClient {
 
         private RestClient.RequestHeadersSpec<?> buildGetRequest(){
             // 요청 시점에 토큰을 동적으로 가져와서 설정
-            String currentToken = tokenManager.getAvailableToken();
+            String currentToken = tokenManager.getToken();
 
             RestClient.RequestHeadersSpec<?> spec = restClient.get()
                     .uri(uriBuilder -> {
