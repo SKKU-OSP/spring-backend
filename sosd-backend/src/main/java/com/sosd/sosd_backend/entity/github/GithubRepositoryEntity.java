@@ -50,7 +50,8 @@ public class GithubRepositoryEntity {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "readme", columnDefinition = "TEXT")
+    @Lob
+    @Column(name = "readme", columnDefinition = "MEDIUMTEXT")
     private String readme;
 
     @Column(name = "license")
