@@ -9,6 +9,7 @@ public record GithubIssueUpsertDto(
         String issueTitle,
         String issueBody,
         LocalDateTime issueDateUtc,
+        Boolean isOpen,
         Long repositoryId,     // github_repository.id
         Long accountGithubId   // github_account.github_id
 ) {}

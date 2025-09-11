@@ -2,7 +2,6 @@ package com.sosd.sosd_backend.github_collector.mapper;
 
 import com.sosd.sosd_backend.dto.github.GithubPullRequestUpsertDto;
 import com.sosd.sosd_backend.github_collector.dto.response.GithubPullRequestResponseDto;
-import org.mapstruct.Context;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

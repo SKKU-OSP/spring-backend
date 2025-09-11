@@ -10,6 +10,7 @@ public record GithubIssueResponseDto(
         Integer number,
         String title,
         String body,
+        String state,
         OffsetDateTime createdAt
 ) {
 }

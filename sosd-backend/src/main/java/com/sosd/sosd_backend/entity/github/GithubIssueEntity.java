@@ -39,6 +39,9 @@ public class GithubIssueEntity {
     @Column(name = "issue_date", nullable = false)
     private LocalDateTime issueDate;
 
+    @Column(name = "is_open", nullable = false)
+    private Boolean isOpen;
+
     // ===== 연관관계 =====
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "repo_id", nullable = false)
@@ -55,6 +58,7 @@ public class GithubIssueEntity {
             String issueTitle,
             String issueBody,
             LocalDateTime issueDate,
+            boolean isOpen,
             GithubRepositoryEntity repository,
             GithubAccount account
     ) {
@@ -63,6 +67,7 @@ public class GithubIssueEntity {
         this.issueTitle = issueTitle;
         this.issueBody = issueBody;
         this.issueDate = issueDate;
+        this.isOpen = isOpen;
         this.repository = repository;
         this.account = account;
     }
@@ -81,6 +86,7 @@ public class GithubIssueEntity {
         Assert.notNull(d.issueNumber(), "issueNumber is null");
         Assert.hasText(d.issueTitle(), "issueTitle is empty");
         requireNonNull(d.issueDateUtc(), "issueDateUtc is null");
+        requireNonNull(d.isOpen(), "isOpen is null");
 
         return GithubIssueEntity.builder()
                 .githubIssueId(d.githubIssueId())
@@ -88,6 +94,7 @@ public class GithubIssueEntity {
                 .issueTitle(d.issueTitle())
                 .issueBody(d.issueBody())
                 .issueDate(d.issueDateUtc())   // UTC로 정규화된 값
+                .isOpen(d.isOpen())
                 .repository(repository)
                 .account(account)
                 .build();
@@ -112,6 +119,10 @@ public class GithubIssueEntity {
 
         if (d.issueDateUtc() != null && !d.issueDateUtc().equals(this.issueDate)) {
             this.issueDate = d.issueDateUtc();
+        }
+
+        if (d.isOpen() != null && !d.isOpen().equals(this.isOpen)) {
+            this.isOpen = d.isOpen();
         }
     }
 
