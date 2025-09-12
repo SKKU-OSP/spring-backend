@@ -18,6 +18,7 @@ import java.util.Map;
 public class GithubGraphQLClient {
 
     private static final String GITHUB_GRAPHQL_URL = "https://api.github.com/graphql";
+    private static final int MAXIMUM_RETRIES = 3;
     private final GithubTokenManager tokenManager;
     private final RestClient baseClient;
     private final ObjectMapper objectMapper;
@@ -72,7 +73,7 @@ public class GithubGraphQLClient {
         }
 
         public <T> GraphQLResponse<T> execute(Class<T> responseType) {
-            String currentToken = tokenManager.getAvailableToken();
+            String currentToken = tokenManager.getToken();
 
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("query", query);
@@ -90,13 +91,58 @@ public class GithubGraphQLClient {
             return parseGraphQLResponse(jsonResponse, responseType);
         }
 
-        public <T> T executeWithCursor(Class<T> responseType, String after) {
-            if (after != null) {
-                variable("after", after); // 기본 변수명 'after'로 고정
+
+        /** 레이트리밋 시 토큰을 자동 회전하며 재시도 (최대 회전 횟수 지정) */
+        public <T> GraphQLResponse<T> executeWithAutoRotate(Class<T> responseType) {
+            int rotations = 0;
+            String token = tokenManager.getToken();
+
+            while (true) {
+                Map<String, Object> requestBody = new HashMap<>();
+                requestBody.put("query", query);
+                if (!variables.isEmpty()) {
+                    requestBody.put("variables", variables);
+                }
+                RestClient.RequestBodySpec spec = restClient.post()
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .body(requestBody);
+                headers.forEach(spec::header);
+
+                // GraphQL은 200 OK여도 errors에 들어오므로 항상 바디로 판별
+                JsonNode json = spec.retrieve().body(JsonNode.class);
+                GraphQLResponse<T> parsed = parseGraphQLResponse(json, responseType);
+
+                if (isGraphqlRateLimited(parsed.getErrors())) {
+                    if (rotations++ < MAXIMUM_RETRIES) {
+                        log.warn("[rateLimit] GraphQL rate-limited. Rotating token ({}/{})", rotations, MAXIMUM_RETRIES);
+                        token = tokenManager.getNextToken();
+                        continue;
+                    }
+                    log.warn("[rateLimit] GraphQL rate-limited and max rotations reached ({}). Returning last response.", MAXIMUM_RETRIES);
+                }
+                return parsed; // 정상 or 회전 소진 후 반환
             }
-            GraphQLResponse<T> response = execute(responseType);
-            return response.getData();
         }
+
+        private boolean isGraphqlRateLimited(List<GraphQLError> errors) {
+            if (errors == null || errors.isEmpty()) return false;
+            for (GraphQLError err : errors) {
+                String msg = err.getMessage() == null ? "" : err.getMessage().toLowerCase();
+                Object code = err.getExtensions() != null ? err.getExtensions().get("code") : null;
+                Object type = err.getExtensions() != null ? err.getExtensions().get("type") : null;
+
+                // GitHub는 errors에 code/type/messsage 조합으로 올 수 있으니 모두 체크
+                if ("RATE_LIMITED".equalsIgnoreCase(String.valueOf(code))
+                        || "RATE_LIMITED".equalsIgnoreCase(String.valueOf(type))
+                        || msg.contains("rate limit exceeded")
+                        || msg.contains("api rate limit exceeded")){
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
 
         private <T> GraphQLResponse<T> parseGraphQLResponse(JsonNode jsonNode, Class<T> responseType) {
             GraphQLResponse<T> response = new GraphQLResponse<>();
@@ -126,6 +172,7 @@ public class GithubGraphQLClient {
 
     @Data
     public static class GraphQLError {
+        private String type;
         private String message;
         private List<Location> locations;
         private List<String> path;

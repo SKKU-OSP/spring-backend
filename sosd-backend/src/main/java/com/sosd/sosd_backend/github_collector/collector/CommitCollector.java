@@ -116,7 +116,7 @@ public class CommitCollector implements GithubResourceCollector
             // 2-2. GraphQL 쿼리 실행
             var res = githubGraphQLClient.query(QUERY)
                     .variables(vars)
-                    .execute(GithubCommitGraphQLResult.class);
+                    .executeWithAutoRotate(GithubCommitGraphQLResult.class);
 
             // 2-3. 에러 처리 및 결과 핸들링
             if (res.getErrors() != null && !res.getErrors().isEmpty()) {
@@ -194,7 +194,7 @@ public class CommitCollector implements GithubResourceCollector
             // 2-2. GraphQL 쿼리 실행
             var res = githubGraphQLClient.query(QUERY)
                     .variables(vars)
-                    .execute(GithubCommitGraphQLResult.class);
+                    .executeWithAutoRotate(GithubCommitGraphQLResult.class);
 
             // 2-3. 에러 처리 및 결과 핸들링
             if (res.getErrors() != null && !res.getErrors().isEmpty()) {

@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS github_repository (
     fork INT DEFAULT 0 COMMENT '포크 수',
     dependency INT DEFAULT 0 COMMENT '의존성 수',
     description VARCHAR(255) COMMENT '저장소 설명',
-    readme TEXT COMMENT 'README 내용',
+    readme MEDIUMINT COMMENT 'README 내용',
     license VARCHAR(255) COMMENT '라이선스 이름',
     github_repository_created_at DATETIME NOT NULL COMMENT '생성 일시',
     github_repository_updated_at DATETIME NOT NULL COMMENT '수정 일시',
@@ -120,6 +120,7 @@ CREATE TABLE IF NOT EXISTS github_issue (
     issue_title VARCHAR(255) NOT NULL COMMENT 'Issue 제목',
     issue_body TEXT COMMENT 'Issue 본문',
     issue_date DATETIME NOT NULL COMMENT 'Issue 생성일시',
+    is_open BOOLEAN NOT NULL COMMENT 'issue 상태 open/close',
     repo_id BIGINT NOT NULL COMMENT '저장소 ID (외래키)',
     github_id BIGINT NOT NULL COMMENT 'issue 작성자 id (외례키)',
 

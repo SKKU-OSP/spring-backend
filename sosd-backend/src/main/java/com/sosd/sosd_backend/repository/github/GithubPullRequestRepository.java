@@ -6,6 +6,7 @@ import com.sosd.sosd_backend.entity.github.GithubRepositoryEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +14,8 @@ public interface GithubPullRequestRepository extends JpaRepository<GithubPullReq
 
     // PR id로 단건 조회
     Optional<GithubPullRequestEntity> findByGithubPrId(Long githubPrId);
+
+    List<GithubPullRequestEntity> findAllByRepository_IdAndGithubPrIdIn(Long repositoryId, Collection<Long> githubPrIds);
 
     ////// 통계 관련 쿼리 //////
     // 특정 레포의 모든 PR 개수

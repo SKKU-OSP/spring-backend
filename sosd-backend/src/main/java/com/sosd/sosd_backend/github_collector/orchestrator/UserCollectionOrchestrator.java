@@ -4,16 +4,17 @@ import com.sosd.sosd_backend.entity.github.GithubAccount;
 import com.sosd.sosd_backend.github_collector.dto.ref.GithubAccountRef;
 import com.sosd.sosd_backend.github_collector.dto.ref.UserAccountRef;
 import com.sosd.sosd_backend.repository.github.GithubAccountRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class UserCollectionOrchestrator {
 
-    List<GithubAccount> githubAccounts;
-    GithubAccountRepository githubAccountRepository;
-    GithubAccountCollectionOrchestrator githubAccountCollectionOrchestrator;
+    private final GithubAccountRepository githubAccountRepository;
+    private final GithubAccountCollectionOrchestrator githubAccountCollectionOrchestrator;
 
     /**
      * 단일 유저에 대한 수집 수행
@@ -22,7 +23,7 @@ public class UserCollectionOrchestrator {
      */
     public void collectByUser(UserAccountRef userAccountRef){
         // 1. 각 유저별 깃허브 계정 조회
-        githubAccounts = githubAccountRepository.findAllByUserAccount_StudentId(userAccountRef.studentId());
+        List<GithubAccount> githubAccounts = githubAccountRepository.findAllByUserAccount_StudentId(userAccountRef.studentId());
 
         // 2. 각 github 계정별 수집 실행
         for (GithubAccount githubAccount : githubAccounts){

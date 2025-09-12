@@ -6,14 +6,17 @@ import com.sosd.sosd_backend.entity.github.GithubRepositoryEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface GithubCommitRepository extends JpaRepository<GithubCommitEntity, Long> {
 
     // repo + sha (복합 UK)로 단건 조회
     Optional<GithubCommitEntity> findByRepositoryAndSha(GithubRepositoryEntity repository, String sha);
 
+    List<GithubCommitEntity> findAllByRepository_IdAndShaIn(Long repositoryId, Collection<String> shas);
 
     ////// 통계 관련 쿼리 //////
     // 특정 레포의 모든 커밋 개수
@@ -32,7 +35,7 @@ public interface GithubCommitRepository extends JpaRepository<GithubCommitEntity
             LocalDateTime end);
 
     // 특정 사용자의 특정 레포에 대한 연도별 커밋 개수
-    Long countByAccount_GithubIdAndRepository_idAndAuthorDateBetween(
+    Long countByAccount_GithubIdAndRepository_IdAndAuthorDateBetween(
             Long accountGithubId,
             Long repositoryId,
             LocalDateTime start,

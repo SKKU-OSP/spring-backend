@@ -57,8 +57,8 @@ public class IssueCollectTest {
 
         List<GithubIssueResponseDto> issues = result.results();
         for (GithubIssueResponseDto issue : issues) {
-            System.out.printf("Issue #%d %s (createdAt=%s)%n",
-                    issue.number(), issue.title(), issue.createdAt());
+            System.out.printf("Issue #%d %s (createdAt=%s) : %d%n",
+                    issue.number(), issue.title(), issue.createdAt(), issue.databaseId());
         }
     }
 }

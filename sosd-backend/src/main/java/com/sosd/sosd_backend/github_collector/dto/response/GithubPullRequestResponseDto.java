@@ -5,7 +5,7 @@ import java.time.OffsetDateTime;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record GithubPullRequestResponseDto(
-        String id,
+        Long databaseId,
         Integer number,
         String title,
         String body,

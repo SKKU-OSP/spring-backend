@@ -57,8 +57,8 @@ class PRCollectTest {
 
         List<GithubPullRequestResponseDto> prs = result.results();
         for (GithubPullRequestResponseDto pr : prs) {
-            System.out.printf("PR #%d [%s] %s (createdAt=%s)%n",
-                    pr.number(), pr.state(), pr.title(), pr.createdAt());
+            System.out.printf("PR #%d [%s] %s (createdAt=%s) : %d%n",
+                    pr.number(), pr.state(), pr.title(), pr.createdAt(), pr.databaseId());
         }
     }
 }
