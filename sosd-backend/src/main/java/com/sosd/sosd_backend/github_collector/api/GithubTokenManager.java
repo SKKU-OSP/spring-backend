@@ -18,7 +18,7 @@ public class GithubTokenManager {
     private final int size;
     private final AtomicInteger idx = new AtomicInteger(0);
 
-    public GithubTokenManager(@Value("${github.tokens}") List<String> tokens) {
+    public GithubTokenManager(@Value("${github.token}") List<String> tokens) {
         if (tokens == null || tokens.isEmpty()) {
             throw new IllegalArgumentException("No GitHub tokens configured");
         }
