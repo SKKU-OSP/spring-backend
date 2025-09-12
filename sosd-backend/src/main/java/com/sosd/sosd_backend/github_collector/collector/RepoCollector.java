@@ -140,7 +140,7 @@ public class RepoCollector implements GithubResourceCollector
 
         var res = githubGraphQLClient.query(query)
                 .variables(variables)
-                .execute(GithubRepositoryGraphQLResult.class);
+                .executeWithAutoRotate(GithubRepositoryGraphQLResult.class);
 
         if (res.getErrors() != null && !res.getErrors().isEmpty()) {
             // 에러가 발생한 경우 로그 출력 후 null 반환
