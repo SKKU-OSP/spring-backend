@@ -3,19 +3,27 @@ package com.sosd.sosd_backend.github_collector.api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Component
 public class GithubRestClient {
 
     private static final String GITHUB_BASE_URL = "https://api.github.com";
+    private static final int MAXIMUM_RETRIES = 3;
+    private static final Pattern RATE_LIMIT_PATTERN =
+            Pattern.compile("api\\s+rate\\s+limit\\s+exceeded", Pattern.CASE_INSENSITIVE);
+
     private final GithubTokenManager tokenManager;
     private final RestClient baseClient;
 
@@ -78,14 +86,65 @@ public class GithubRestClient {
 
         // GET 요청 - 단일 객체
         public <T> T get(Class<T> responseType) {
-            RestClient.RequestHeadersSpec<?> request = buildGetRequest();
-            return request.retrieve().body(responseType);
+            int rotations = 0;
+            String token = tokenManager.getToken();
+
+            while (true) {
+                try {
+                    ResponseEntity<T> entity = buildGetRequest(token)
+                            .retrieve()
+                            .toEntity(responseType);
+
+                    if (isPrimaryRateLimited(entity.getHeaders())) {
+                        if (rotations++ < MAXIMUM_RETRIES) {
+                            log.warn("[rateLimit] REST rate-limited (header). Rotating token {}/{}", rotations, MAXIMUM_RETRIES);
+                            token = tokenManager.getNextToken();
+                            continue;
+                        }
+                    }
+                    return entity.getBody();
+
+                } catch (HttpClientErrorException.Forbidden e) {
+                    if (bodyIndicatesRateLimit(e) && rotations++ < MAXIMUM_RETRIES) {
+                        log.warn("[rateLimit] REST rate-limited (403 body). Rotating token {}/{}", rotations, MAXIMUM_RETRIES);
+                        token = tokenManager.getNextToken();
+                        continue;
+                    }
+                    throw e;
+                }
+            }
         }
 
         // GET 요청 - List
         public <T> List<T> getList(ParameterizedTypeReference<List<T>> responseType) {
-            RestClient.RequestHeadersSpec<?> request = buildGetRequest();
-            return request.retrieve().body(responseType);
+            int rotations = 0;
+            String token = tokenManager.getToken();
+
+            while (true) {
+                try {
+                    ResponseEntity<List<T>> entity = buildGetRequest(token)
+                            .retrieve()
+                            .toEntity(responseType);
+
+                    if (isPrimaryRateLimited(entity.getHeaders())) {
+                        if (rotations++ < MAXIMUM_RETRIES) {
+                            log.warn("[rateLimit] REST rate-limited (header, list). Rotating token {}/{}", rotations, MAXIMUM_RETRIES);
+                            token = tokenManager.getNextToken();
+                            continue;
+                        }
+                    }
+                    List<T> body = entity.getBody();
+                    return (body != null) ? body : List.of();
+
+                } catch (HttpClientErrorException.Forbidden e) {
+                    if (bodyIndicatesRateLimit(e) && rotations++ < MAXIMUM_RETRIES) {
+                        log.warn("[rateLimit] REST rate-limited (403 body, list). Rotating token {}/{}", rotations, MAXIMUM_RETRIES);
+                        token = tokenManager.getNextToken();
+                        continue;
+                    }
+                    throw e;
+                }
+            }
         }
 
         // GET 요청 - 페이지네이션
@@ -120,9 +179,8 @@ public class GithubRestClient {
             return results;
         }
 
-        private RestClient.RequestHeadersSpec<?> buildGetRequest(){
+        private RestClient.RequestHeadersSpec<?> buildGetRequest(String token){
             // 요청 시점에 토큰을 동적으로 가져와서 설정
-            String currentToken = tokenManager.getAvailableToken();
 
             RestClient.RequestHeadersSpec<?> spec = restClient.get()
                     .uri(uriBuilder -> {
@@ -130,12 +188,21 @@ public class GithubRestClient {
                         queryParams.forEach(uriBuilder::queryParam);
                         return uriBuilder.build();
                     })
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + currentToken);
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token);
 
             // 추가 헤더 설정
             headers.forEach(spec::header);
-
             return spec;
+        }
+
+        private boolean isPrimaryRateLimited(HttpHeaders headers) {
+            String remaining = headers != null ? headers.getFirst("X-RateLimit-Remaining") : null;
+            return remaining != null && "0".equals(remaining);
+        }
+
+        private boolean bodyIndicatesRateLimit(HttpClientErrorException.Forbidden e) {
+            String body = e.getResponseBodyAsString(StandardCharsets.UTF_8);
+            return body != null && RATE_LIMIT_PATTERN.matcher(body).find();
         }
     }
 }
