@@ -103,8 +103,6 @@ public class GithubGraphQLClient {
                 if (!variables.isEmpty()) {
                     requestBody.put("variables", variables);
                 }
-                System.out.println(token);
-
                 RestClient.RequestBodySpec spec = restClient.post()
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                         .body(requestBody);
@@ -116,11 +114,11 @@ public class GithubGraphQLClient {
 
                 if (isGraphqlRateLimited(parsed.getErrors())) {
                     if (rotations++ < MAXIMUM_RETRIES) {
-                        log.warn("GraphQL rate-limited. Rotating token ({}/{})", rotations, MAXIMUM_RETRIES);
+                        log.warn("[rateLimit] GraphQL rate-limited. Rotating token ({}/{})", rotations, MAXIMUM_RETRIES);
                         token = tokenManager.getNextToken();
                         continue;
                     }
-                    log.warn("GraphQL rate-limited and max rotations reached ({}). Returning last response.", MAXIMUM_RETRIES);
+                    log.warn("[rateLimit] GraphQL rate-limited and max rotations reached ({}). Returning last response.", MAXIMUM_RETRIES);
                 }
                 return parsed; // 정상 or 회전 소진 후 반환
             }
