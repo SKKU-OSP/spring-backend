@@ -39,17 +39,19 @@ class IssueUpsertServiceTest {
 
         var now = OffsetDateTime.now(ZoneOffset.UTC);
 
-        var resp1 = new GithubIssueResponseDto(9001L, 101, "issue-1", "body-1", now.minusDays(3));
-        var resp2 = new GithubIssueResponseDto(9002L, 102, "issue-2", "body-2", now.minusDays(2));
+        var resp1 = new GithubIssueResponseDto(9001L, 101, "issue-1", "body-1", "open", now.minusDays(3));
+        var resp2 = new GithubIssueResponseDto(9002L, 102, "issue-2", "body-2", "open", now.minusDays(2));
 
         var dto1 = new GithubIssueUpsertDto(
                 9001L, 101, "issue-1", "body-1",
                 now.minusDays(3).toLocalDateTime(),
+                true,
                 repoId, accountId
         );
         var dto2 = new GithubIssueUpsertDto(
                 9002L, 102, "issue-2", "body-2",
                 now.minusDays(2).toLocalDateTime(),
+                true,
                 repoId, accountId
         );
 
