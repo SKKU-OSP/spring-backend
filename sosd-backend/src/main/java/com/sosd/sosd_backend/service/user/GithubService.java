@@ -21,6 +21,7 @@ public class GithubService {
     private final GithubRepositoryRepository repositoryRepository;
     private final GithubPullRequestRepository pullRequestRepository;
 
+    // 가장 최근 레포지토리 4개 수집 api
     public List<RecentRepoResponse> getRecentRepos(Long githubId){
         List<RepoIdWithDate> recentRepoIds = commitRepository.findRecentRepoIds(githubId);
         List<RecentRepoResponse> recentRepoResponses = new ArrayList<>();
