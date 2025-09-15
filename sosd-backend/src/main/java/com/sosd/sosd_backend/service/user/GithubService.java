@@ -2,6 +2,7 @@ package com.sosd.sosd_backend.service.user;
 
 
 import com.sosd.sosd_backend.dto.user.RecentRepoResponse;
+import com.sosd.sosd_backend.dto.user.RepoGuidelineResponse;
 import com.sosd.sosd_backend.dto.user.RepoIdWithDate;
 import com.sosd.sosd_backend.entity.github.GithubRepositoryEntity;
 import com.sosd.sosd_backend.exception.CustomException;
@@ -51,5 +52,14 @@ public class GithubService {
             ));
         }
         return recentRepoResponses;
+    }
+
+    // 사용자가 기여한 전체 레포 정보 조회
+    public List<RepoGuidelineResponse> getRepoGuidelines(Long githubId){
+        if(githubId == null || githubId <= 0){
+            throw new InvalidInputValueException();
+        }
+        return repositoryRepository.findRepoGuidelinesByGithubId(githubId);
+
     }
 }
