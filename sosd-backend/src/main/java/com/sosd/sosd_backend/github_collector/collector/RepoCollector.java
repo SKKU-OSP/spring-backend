@@ -11,13 +11,19 @@ import com.sosd.sosd_backend.github_collector.dto.RepoCollectorDtos.UserRepoDto;
 import com.sosd.sosd_backend.github_collector.api.GithubRestClient;
 import com.sosd.sosd_backend.github_collector.dto.response.graphql.GithubRepositoryGraphQLResult;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 
 import java.sql.Time;
 import java.time.OffsetDateTime;
 import java.util.*;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class RepoCollector implements GithubResourceCollector
@@ -154,15 +160,40 @@ public class RepoCollector implements GithubResourceCollector
      * 1. username의 모든 공개 repo의 full_name 목록 수집
      */
     private Set<String> fetchReposFromUserRepos(String username) {
-        List<UserRepoDto> repos = githubRestClient.request()
-                .endpoint("/users/" + username + "/repos")
-                .queryParam("type", "all")
-                .getList(new ParameterizedTypeReference<>() {});
-
         Set<String> result = new HashSet<>();
-        repos.stream()
-                .map(UserRepoDto::fullName)
-                .forEach(result::add);
+
+        try {
+            List<UserRepoDto> repos = githubRestClient.request()
+                    .endpoint("/users/" + username + "/repos")
+                    .queryParam("type", "all")
+                    .getList(new ParameterizedTypeReference<>() {});
+            if  (repos != null && !repos.isEmpty()) {
+                repos.stream()
+                        .map(UserRepoDto::fullName)
+                        .filter(Objects::nonNull)
+                        .forEach(result::add);
+            }
+        }
+        catch (HttpClientErrorException e) {
+            int sc = e.getStatusCode().value();
+
+            // 계정 단위 스킵
+            if (sc == 400 || sc == 404 || sc == 410 || sc == 422 || sc == 451) {
+                log.warn("[userRepos] {} for user={}, skipping. body={}",
+                        sc, username, e.getResponseBodyAsString());
+                return result; // 빈 결과 리턴
+            }
+            // 토큰/환경 문제 → 위로
+            if (sc == 401 || sc == 403) {
+                log.error("[userRepos] {} for user={}, escalating. body={}",
+                        sc, username, e.getResponseBodyAsString());
+            }
+            throw e; // 나머지는 그대로 위로
+        }
+        catch (ResourceAccessException | HttpServerErrorException e) {
+            // 네트워크/서버 에러는 위로 → 상위에서 재시도/알람
+            throw e;
+        }
         return result;
     }
 
@@ -182,39 +213,59 @@ public class RepoCollector implements GithubResourceCollector
         String query = "author:" + username + " created:>=" + since.toInstant().toString();
 
         Set<String> result = new HashSet<>();
-        while (true) {
-            SearchIssuesResponse response = githubRestClient.request()
-                    .endpoint("/search/issues")
-                    .queryParam("q", query)
-                    .queryParam("page", String.valueOf(page))
-                    .queryParam("per_page", String.valueOf(perPage))
-                    .get(SearchIssuesResponse.class);
 
-            if (response.items() == null || response.items().isEmpty()) {
-                break;
+        try{
+            while (true) {
+                SearchIssuesResponse response = githubRestClient.request()
+                        .endpoint("/search/issues")
+                        .queryParam("q", query)
+                        .queryParam("page", String.valueOf(page))
+                        .queryParam("per_page", String.valueOf(perPage))
+                        .get(SearchIssuesResponse.class);
+
+                if (response.items() == null || response.items().isEmpty()) {
+                    break;
+                }
+
+                response.items().stream()
+                        .map(SearchIssuesDto::repositoryUrl)
+                        .map(url -> {
+                            // repository_url 예: https://api.github.com/repos/{owner}/{repo}
+                            String[] parts = url.split("/repos/");
+                            return parts.length == 2 ? parts[1] : null;
+                        })
+                        .filter(name -> name != null)
+                        .forEach(result::add);
+
+                // 반환된 결과가 per_page보다 적으면 마지막 페이지
+                if (response.items().size() < perPage) {
+                    break;
+                }
+
+                page++;
+
+                // GitHub Search API는 최대 1000개의 결과만 반환
+                if (page * perPage >= 1000) {
+                    break;
+                }
             }
+        }
+        catch (HttpClientErrorException e) {
+            int sc = e.getStatusCode().value();
 
-            response.items().stream()
-                    .map(SearchIssuesDto::repositoryUrl)
-                    .map(url -> {
-                        // repository_url 예: https://api.github.com/repos/{owner}/{repo}
-                        String[] parts = url.split("/repos/");
-                        return parts.length == 2 ? parts[1] : null;
-                    })
-                    .filter(name -> name != null)
-                    .forEach(result::add);
-
-            // 반환된 결과가 per_page보다 적으면 마지막 페이지
-            if (response.items().size() < perPage) {
-                break;
+            if (sc == 400 || sc == 404 || sc == 410 || sc == 422 || sc == 451) {
+                log.warn("[searchIssues] {} for user={}, skipping. body={}",
+                        sc, username, e.getResponseBodyAsString());
+                return result;
             }
-
-            page++;
-
-            // GitHub Search API는 최대 1000개의 결과만 반환
-            if (page * perPage >= 1000) {
-                break;
+            if (sc == 401 || sc == 403) {
+                log.error("[searchIssues] {} for user={}, escalating. body={}",
+                        sc, username, e.getResponseBodyAsString());
             }
+            throw e;
+        }
+        catch (ResourceAccessException | HttpServerErrorException e) {
+            throw e;
         }
         return result;
     }
@@ -225,17 +276,39 @@ public class RepoCollector implements GithubResourceCollector
     private Set<String> fetchReposFromEvents(String username) {
         List<EventRepoDto> events = new ArrayList<>();
         // event API는 최대 300개 이벤트까지만 제공
-        for(int page = 1; page <= 3; page++){
-            List<EventRepoDto> pageEvents = githubRestClient.request()
-                    .endpoint("/users/" + username + "/events/public")
-                    .queryParam("page", String.valueOf(page))
-                    .queryParam("per_page", "100")
-                    .getList(new ParameterizedTypeReference<>() {});
-            if(pageEvents == null || pageEvents.isEmpty()){
-                break;
+
+        try {
+            for (int page = 1; page <= 3; page++) {
+                List<EventRepoDto> pageEvents = githubRestClient.request()
+                        .endpoint("/users/" + username + "/events/public")
+                        .queryParam("page", String.valueOf(page))
+                        .queryParam("per_page", "100")
+                        .getList(new ParameterizedTypeReference<>() {
+                        });
+                if (pageEvents == null || pageEvents.isEmpty()) {
+                    break;
+                }
+                events.addAll(pageEvents);
             }
-            events.addAll(pageEvents);
         }
+        catch (HttpClientErrorException e) {
+            int sc = e.getStatusCode().value();
+
+            if (sc == 400 || sc == 404 || sc == 410 || sc == 422 || sc == 451) {
+                log.warn("[events] {} for user={}, skipping. body={}",
+                        sc, username, e.getResponseBodyAsString());
+                return Set.of(); // 빈 결과
+            }
+            if (sc == 401 || sc == 403) {
+                log.error("[events] {} for user={}, escalating. body={}",
+                        sc, username, e.getResponseBodyAsString());
+            }
+            throw e;
+        }
+        catch (ResourceAccessException | HttpServerErrorException e) {
+            throw e;
+        }
+
         Set<String> result = new HashSet<>();
         events.stream()
                 .map(EventRepoDto::repo)

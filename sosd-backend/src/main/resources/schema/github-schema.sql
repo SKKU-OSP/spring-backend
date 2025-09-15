@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS github_repository (
     star INT DEFAULT 0 COMMENT '스타 수',
     fork INT DEFAULT 0 COMMENT '포크 수',
     dependency INT DEFAULT 0 COMMENT '의존성 수',
-    description VARCHAR(255) COMMENT '저장소 설명',
+    description TEXT COMMENT '저장소 설명',
     readme MEDIUMTEXT COMMENT 'README 내용',
     license VARCHAR(255) COMMENT '라이선스 이름',
     github_repository_created_at DATETIME NOT NULL COMMENT '생성 일시',
