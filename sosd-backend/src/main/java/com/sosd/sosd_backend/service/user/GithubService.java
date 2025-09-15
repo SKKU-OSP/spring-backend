@@ -4,6 +4,10 @@ package com.sosd.sosd_backend.service.user;
 import com.sosd.sosd_backend.dto.user.RecentRepoResponse;
 import com.sosd.sosd_backend.dto.user.RepoIdWithDate;
 import com.sosd.sosd_backend.entity.github.GithubRepositoryEntity;
+import com.sosd.sosd_backend.exception.CustomException;
+import com.sosd.sosd_backend.exception.ErrorCode;
+import com.sosd.sosd_backend.exception.common.InvalidInputValueException;
+import com.sosd.sosd_backend.exception.github.RepositoryNotFoundException;
 import com.sosd.sosd_backend.repository.github.GithubCommitRepository;
 import com.sosd.sosd_backend.repository.github.GithubPullRequestRepository;
 import com.sosd.sosd_backend.repository.github.GithubRepositoryRepository;
@@ -23,12 +27,16 @@ public class GithubService {
 
     // 가장 최근 레포지토리 4개 수집 api
     public List<RecentRepoResponse> getRecentRepos(Long githubId){
+        if(githubId == null || githubId <= 0){
+            throw new InvalidInputValueException();
+        }
+
         List<RepoIdWithDate> recentRepoIds = commitRepository.findRecentRepoIds(githubId);
         List<RecentRepoResponse> recentRepoResponses = new ArrayList<>();
 
         for(RepoIdWithDate repoData : recentRepoIds){
             Long repoId = repoData.getRepoId();
-            GithubRepositoryEntity repo = repositoryRepository.findById(repoId).orElseThrow(() -> new IllegalArgumentException("Repo not found: " + repoId));
+            GithubRepositoryEntity repo = repositoryRepository.findById(repoId).orElseThrow(RepositoryNotFoundException::new);
             Long commitsCount = commitRepository.countByRepoId(repoId);
             Long prsCount = pullRequestRepository.countByRepoId(repoId);
 
