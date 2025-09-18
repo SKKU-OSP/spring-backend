@@ -103,24 +103,31 @@ public class RepoCollector implements GithubResourceCollector
                 query RepoOverview($owner: String!, $name: String!) {
                   repository(owner: $owner, name: $name) {
                     databaseId
-                    nameWithOwner                       # full_name 대체 가능
-                    isPrivate                           # is_private
-                    defaultBranchRef { name }           # default_branch
-                    description                         # description
-                    stargazerCount                      # star
-                    watchers { totalCount }             # watcher (구독자 수)
-                    forkCount                           # fork
-                    licenseInfo { name }                # license
-                    createdAt                           # github_repository_created_at
-                    updatedAt                           # github_repository_updated_at
-                    pushedAt                            # github_pushed_at
+                    nameWithOwner
+                    isPrivate
+                    defaultBranchRef {\s
+                        name
+                        target {
+                        ... on Commit {
+                          history {
+                            totalCount
+                          }
+                        }
+                      }   \s
+                    }
+                    description
+                    stargazerCount
+                    watchers { totalCount }
+                    forkCount
+                    licenseInfo { name }
+                    createdAt
+                    updatedAt
+                    pushedAt
                 
-                    # README 내용 (루트의 README.md 기준)
                     object(expression: "HEAD:README.md") {
-                      ... on Blob { text }              # readme
+                      ... on Blob { text }
                     }
                 
-                    # 사용 언어 분포 (상위 5개)
                     languages(first: 5, orderBy: {field: SIZE, direction: DESC}) {
                       totalSize
                       edges {
@@ -128,15 +135,40 @@ public class RepoCollector implements GithubResourceCollector
                         node { name }
                       }
                     }
-                    # Dependency
+                
                     dependencyGraphManifests(first: 1) {
                       totalCount
                     }
-                    # contributor 수 집계용 (협업자 수)
-                    # 정확한 협업자 수와는 조금 다르기에 추후 직접 집계 필요
                     mentionableUsers(first: 0) { totalCount }
+                
+                
+                    # Pull Request 수 (alias 사용)
+                    openPRs: pullRequests(states: OPEN) {
+                      totalCount
+                    }
+                    closedPRs: pullRequests(states: CLOSED) {
+                      totalCount
+                    }
+                    mergedPRs: pullRequests(states: MERGED) {
+                      totalCount
+                    }
+                
+                    # Issue 수 (alias 사용)
+                    openIssues: issues(states: OPEN) {
+                      totalCount
+                    }
+                    closedIssues: issues(states: CLOSED) {
+                      totalCount
+                    }
                   }
-                  rateLimit { cost used remaining limit resetAt }
+                
+                  rateLimit {
+                    cost
+                    used
+                    remaining
+                    limit
+                    resetAt
+                  }
                 }
                 """;
 
