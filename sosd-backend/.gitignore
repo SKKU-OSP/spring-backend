@@ -47,4 +47,5 @@ src/main/generated/
 
 # logs
 *.log
+*.log.*
 *.gz
