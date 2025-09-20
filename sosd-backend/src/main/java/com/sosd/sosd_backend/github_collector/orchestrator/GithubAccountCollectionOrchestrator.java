@@ -8,6 +8,7 @@ import com.sosd.sosd_backend.github_collector.dto.collect.result.TimeCursor;
 import com.sosd.sosd_backend.github_collector.dto.ref.GithubAccountRef;
 import com.sosd.sosd_backend.github_collector.dto.ref.RepoRef;
 import com.sosd.sosd_backend.github_collector.dto.response.GithubRepositoryResponseDto;
+import com.sosd.sosd_backend.service.github.GithubAccountRepositoryLinkService;
 import com.sosd.sosd_backend.service.github.RepoUpsertService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,8 @@ public class GithubAccountCollectionOrchestrator {
     private final GithubRepositoryOrchestrator githubRepositoryOrchestrator;
     private final RepoCollector repoCollector;
     private final RepoUpsertService repoUpsertService;
+    private final GithubAccountRepositoryLinkService linkService;
+
 
     /**
      * 단일 깃허브 계정에 대한 수집 수행
@@ -58,12 +61,11 @@ public class GithubAccountCollectionOrchestrator {
                         collectedRepos.source(),
                         repo.fullName()
                 );
-                }
-
-            List<GithubRepositoryResponseDto> repoResponseDtos = collectedRepos.results();
+            }
 
             // 2) 도메인 모델 뱐환
-            List<GithubRepositoryUpsertDto> repoUpsertDtos = repoResponseDtos.stream()
+            List<GithubRepositoryUpsertDto> repoUpsertDtos = collectedRepos.results()
+                    .stream()
                     .map(GithubRepositoryUpsertDto::from)
                     .toList();
             try{
@@ -74,6 +76,22 @@ public class GithubAccountCollectionOrchestrator {
                         githubAccountRef.githubLoginUsername(),
                         repoRefs.size()
                 );
+
+                int linkSuccess = 0;
+                for (RepoRef repoRef : repoRefs) {
+                    try {
+                        linkService.linkIfAbsent(githubAccountRef.githubId(), repoRef.repoId());
+                        linkSuccess++;
+                        log.debug("[link][acc={}] linked repoName={}",
+                                githubAccountRef.githubLoginUsername(), repoRef.fullName());
+                    } catch (Exception e) {
+                        log.warn("[link][acc={}] link failed for repoId={}",
+                                githubAccountRef.githubLoginUsername(), repoRef.fullName(), e);
+                    }
+                }
+                log.info("[link][acc={}] link ensured count={}/{}",
+                        githubAccountRef.githubLoginUsername(), linkSuccess, repoRefs.size());
+
             } catch (Exception e) {
                 log.error("[upsert][acc={}] repo upsert failed", githubAccountRef.githubLoginUsername(), e);
             }
@@ -82,10 +100,10 @@ public class GithubAccountCollectionOrchestrator {
             log.error("[collect][acc={}] repo collect failed", githubAccountRef.githubLoginUsername(), e);
         }
 
-        // 4) 하위 orchestrator 수집
-        for(RepoRef repoRef : repoRefs){
-            githubRepositoryOrchestrator.collectByRepository(githubAccountRef, repoRef);
-        }
+//        // 4) 하위 orchestrator 수집
+//        for(RepoRef repoRef : repoRefs){
+//            githubRepositoryOrchestrator.collectByRepository(githubAccountRef, repoRef);
+//        }
     }
 
 
