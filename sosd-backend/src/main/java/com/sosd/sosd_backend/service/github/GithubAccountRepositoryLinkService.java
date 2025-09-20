@@ -22,7 +22,7 @@ public class GithubAccountRepositoryLinkService {
     private final GithubAccountRepository accountRepo;
     private final GithubRepositoryRepository repoRepo;
 
-    /** 1) accountId-repoId 링크 없으면 생성(Upsert 느낌) */
+    /** 1) accountId-repoId 링크 없으면 생성 (Upsert) */
     @Transactional
     public GithubAccountRepositoryEntity linkIfAbsent(Long accountId, Long repoId) {
         var id = new GithubAccountRepositoryId(accountId, repoId);
@@ -51,7 +51,7 @@ public class GithubAccountRepositoryLinkService {
         return linkRepo.findAllByAccountIdsJoinRepo(accountIds);
     }
 
-    /** 3) 커서 갱신들 — 지금은 싱글 스케줄러라 단순 갱신으로 충분 */
+    /** 3) 커서 갱신들 */
     @Transactional
     public void updateCommitCursor(Long accountId, Long repoId, String sha) {
         linkIfAbsent(accountId, repoId); // 없으면 만들어두고
