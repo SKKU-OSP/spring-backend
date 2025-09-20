@@ -3,11 +3,17 @@
 -- GitHub 계정 테이블
 CREATE TABLE IF NOT EXISTS github_account (
     github_id BIGINT NOT NULL PRIMARY KEY COMMENT 'GitHub ID(Github REST API 내부적으로 사용하는 고유 id)',
-    github_graphql_node_id VARCHAR(64) NOT NULL COMMENT 'Github node id (Github GraphQL API에서 사용되는 고유 node id)',
+    github_graphql_node_id VARCHAR(64)
+        CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL
+        COMMENT 'Github node id (Github GraphQL API에서 사용되는 고유 node id)',
     github_login_username VARCHAR(255) NOT NULL COMMENT 'GitHub 로그인명 (username)',
     github_name VARCHAR(255) COMMENT 'GitHub 표시명',
-    github_token VARCHAR(255) COMMENT 'GitHub 액세스 토큰(private 레포까지 수집 원하는 유저만 추가)',
-    github_email VARCHAR(255) NOT NULL COMMENT 'GitHub 이메일',
+    github_token VARCHAR(255)
+        CHARACTER SET utf8mb4 COLLATE utf8mb4_bin
+        COMMENT 'GitHub 액세스 토큰(private 레포까지 수집 원하는 유저만 추가)',
+    github_email VARCHAR(255)
+        CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL
+        NOT NULL COMMENT 'GitHub 이메일',
     last_crawling TIMESTAMP NULL COMMENT '마지막 크롤링 일시',
     student_id VARCHAR(20) NOT NULL COMMENT '연결된 학번 (외래키)',
 
@@ -30,9 +36,15 @@ CREATE TABLE IF NOT EXISTS github_repository (
     watcher INT DEFAULT 0 COMMENT '구독자 수',
     star INT DEFAULT 0 COMMENT '스타 수',
     fork INT DEFAULT 0 COMMENT '포크 수',
+    open_pr INT DEFAULT 0 COMMENT 'open PR 개수',
+    closed_pr INT DEFAULT 0 COMMENT 'closed PR 개수',
+    merged_pr INT DEFAULT 0 COMMENT 'merged PR 개수',
+    open_issue INT DEFAULT 0 COMMENT 'open Issue 개수',
+    closed_issue INT DEFAULT 0 COMMENT 'closed Issue 개수',
+    `commit` INT DEFAULT 0 COMMENT 'commit 개수',
     dependency INT DEFAULT 0 COMMENT '의존성 수',
-    description VARCHAR(255) COMMENT '저장소 설명',
-    readme MEDIUMINT COMMENT 'README 내용',
+    description TEXT COMMENT '저장소 설명',
+    readme MEDIUMTEXT COMMENT 'README 내용',
     license VARCHAR(255) COMMENT '라이선스 이름',
     github_repository_created_at DATETIME NOT NULL COMMENT '생성 일시',
     github_repository_updated_at DATETIME NOT NULL COMMENT '수정 일시',
