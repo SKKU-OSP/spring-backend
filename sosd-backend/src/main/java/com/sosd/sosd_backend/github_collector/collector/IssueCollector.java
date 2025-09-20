@@ -31,10 +31,11 @@ public class IssueCollector implements GithubResourceCollector
             pageInfo { hasNextPage hasPreviousPage startCursor endCursor }
             nodes {
               ... on Issue {
-                id
+                databaseId
                 number
                 title
                 body
+                state
                 createdAt
               }
             }
@@ -74,7 +75,7 @@ public class IssueCollector implements GithubResourceCollector
             // 3-2. GraphQL 쿼리 실행
             var res = githubGraphQLClient.query(QUERY)
                     .variables(vars)
-                    .execute(GithubIssueGraphQLResult.class);
+                    .executeWithAutoRotate(GithubIssueGraphQLResult.class);
 
             // 3-3. 에러 처리 및 결과 핸들링
             if (res.getErrors() != null && !res.getErrors().isEmpty()) {

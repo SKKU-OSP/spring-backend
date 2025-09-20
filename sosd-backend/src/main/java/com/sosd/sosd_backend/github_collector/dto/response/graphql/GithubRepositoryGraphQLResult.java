@@ -28,11 +28,31 @@ public record GithubRepositoryGraphQLResult(
             ReadmeObject object,
             Languages languages,
             DependencyGraphManifests dependencyGraphManifests,
-            MentionableUsers mentionableUsers
+            MentionableUsers mentionableUsers,
+            Count openPRs,
+            Count closedPRs,
+            Count mergedPRs,
+            Count openIssues,
+            Count closedIssues
     ) {}
 
     public record DefaultBranchRef(
-            String name
+            String name,
+            Target target
+
+    ) {}
+
+
+    public record Target(
+            History history
+    ) {}
+
+    public record History(
+            Integer totalCount
+    ) {}
+
+    public record Count(
+            Integer totalCount
     ) {}
 
     public record Watchers(

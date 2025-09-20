@@ -44,13 +44,32 @@ public class GithubRepositoryEntity {
     @Column(name = "fork")
     private Integer fork;
 
+    @Column(name = "open_pr")
+    private Integer openPr;
+
+    @Column(name = "closed_pr")
+    private Integer closedPr;
+
+    @Column(name = "merged_pr")
+    private Integer mergedPr;
+
+    @Column(name = "open_issue")
+    private Integer openIssue;
+
+    @Column(name = "closed_issue")
+    private Integer closedIssue;
+
+    @Column(name = "`commit`")
+    private Integer commit;
+
     @Column(name = "dependency")
     private Integer dependency;
 
     @Column(name = "description")
     private String description;
 
-    @Column(name = "readme", columnDefinition = "TEXT")
+    @Lob
+    @Column(name = "readme", columnDefinition = "MEDIUMTEXT")
     private String readme;
 
     @Column(name = "license")
@@ -131,6 +150,12 @@ public class GithubRepositoryEntity {
         if (dto.watcher() != null) this.watcher = dto.watcher();
         if (dto.star() != null) this.star = dto.star();
         if (dto.fork() != null) this.fork = dto.fork();
+        if (dto.openPr() != null) this.openPr = dto.openPr();
+        if (dto.closedPr() != null) this.closedPr = dto.closedPr();
+        if (dto.mergedPr() != null) this.mergedPr = dto.mergedPr();
+        if (dto.openIssue() != null) this.openIssue = dto.openIssue();
+        if (dto.closedIssue() != null) this.closedIssue = dto.closedIssue();
+        if (dto.commit() != null) this.commit = dto.commit();
         if (dto.dependency() != null) this.dependency = dto.dependency();
         if (dto.description() != null) this.description = dto.description();
         if (dto.readme() != null) this.readme = dto.readme();
