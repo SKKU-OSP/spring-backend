@@ -20,8 +20,8 @@ import com.sosd.sosd_backend.service.github.PullRequestUpsertService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
 import java.time.OffsetDateTime;
+import org.slf4j.MDC;
 
 @Slf4j
 @Component
@@ -39,6 +39,8 @@ public class GithubRepositoryOrchestrator {
     private final IssueUpsertService issueUpsertService;
 
     public void collectByRepository(GithubAccountRef githubAccountRef, RepoRef repoRef){
+
+        log.info("> Start collection for repository: {}", repoRef.fullName());
 
         // TODO: DB에서 마지막 수집 시점 가져오는걸로 변경
         CommitCollectContext commitCollectContext = new CommitCollectContext(
@@ -64,29 +66,21 @@ public class GithubRepositoryOrchestrator {
                     commitCollector.collect(commitCollectContext);
 
             // 로그 출력
-            log.info("[collect][{}] source={} fetched={}/{}(total) elapsed={}ms",
-                    repoRef.fullName(),
+            log.info("[collect][commit] source={} fetched={}/{}(total) elapsed={}ms",
                     commitResults.source(),
                     commitResults.fetchedCount(),
                     commitResults.totalCount(),
                     commitResults.elapsedTimeMs()
             );
             // update
-            try{
-                commitUpsertService.upsertSingleTargetFromResponses(
-                        repoRef.repoId(),
-                        githubAccountRef.githubId(),
-                        commitResults.results()
-                );
-                log.info("[upsert][{}] commits upsert success",
-                        repoRef.fullName()
-                );
-            }
-            catch (Exception e){
-                log.error("[upsert][{}] commit collect failed", repoRef.fullName(), e);
+            try {
+                commitUpsertService.upsertSingleTargetFromResponses(repoRef.repoId(), githubAccountRef.githubId(), commitResults.results());
+                log.info("[upsert][commit] success");
+            } catch (Exception e){
+                log.error("[upsert][commit] failed", e);
             }
         } catch (Exception e){
-            log.error("[collect][{}] commit collect failed", repoRef.fullName(), e);
+            log.error("[collect][commit] failed", e);
         }
 
         // pull request
@@ -95,8 +89,7 @@ public class GithubRepositoryOrchestrator {
             CollectResult<GithubPullRequestResponseDto, TimeCursor> prResults =
                     pullRequestCollector.collect(pullRequestCollectContext);
 
-            log.info("[collect][{}] source={} fetched={}/{}(total) elapsed={}ms",
-                    repoRef.fullName(),
+            log.info("[collect][pr] source={} fetched={}/{}(total) elapsed={}ms",
                     prResults.source(),
                     prResults.fetchedCount(),
                     prResults.totalCount(),
@@ -104,17 +97,13 @@ public class GithubRepositoryOrchestrator {
             );
             // update
             try {
-                pullRequestUpsertService.upsertSingleTargetFromResponses(
-                        repoRef.repoId(),
-                        githubAccountRef.githubId(),
-                        prResults.results()
-                );
-                log.info("[upsert][{}] prs upsert success", repoRef.fullName());
+                pullRequestUpsertService.upsertSingleTargetFromResponses(repoRef.repoId(), githubAccountRef.githubId(), prResults.results());
+                log.info("[upsert][pr] success");
             } catch (Exception e) {
-                log.error("[upsert][{}] pr upsert failed", repoRef.fullName(), e);
+                log.error("[upsert][pr] failed", e);
             }
         } catch (Exception e) {
-            log.error("[collect][{}] pr collect failed", repoRef.fullName(), e);
+            log.error("[collect][pr] failed", e);
         }
 
         // issue
@@ -123,8 +112,7 @@ public class GithubRepositoryOrchestrator {
             CollectResult<GithubIssueResponseDto, TimeCursor> issueResults =
                     issueCollector.collect(issueCollectContext);
 
-            log.info("[collect][{}] source={} fetched={}/{}(total) elapsed={}ms",
-                    repoRef.fullName(),
+            log.info("[collect][issue] source={} fetched={}/{}(total) elapsed={}ms",
                     issueResults.source(),
                     issueResults.fetchedCount(),
                     issueResults.totalCount(),
@@ -132,17 +120,16 @@ public class GithubRepositoryOrchestrator {
             );
             // update
             try {
-                issueUpsertService.upsertSingleTargetFromResponses(
-                        repoRef.repoId(),
-                        githubAccountRef.githubId(),
-                        issueResults.results()
-                );
-                log.info("[upsert][{}] issues upsert success", repoRef.fullName());
+                issueUpsertService.upsertSingleTargetFromResponses(repoRef.repoId(), githubAccountRef.githubId(), issueResults.results());
+                log.info("[upsert][issue] success");
             } catch (Exception e) {
-                log.error("[upsert][{}] issue upsert failed", repoRef.fullName(), e);
+                log.error("[upsert][issue] failed", e);
             }
         } catch (Exception e) {
-            log.error("[collect][{}] issue collect failed", repoRef.fullName(), e);
+            log.error("[collect][issue] failed", e);
         }
+
+        log.info("< End collection for repository: {}", repoRef.fullName());
+
     }
 }

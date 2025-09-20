@@ -7,6 +7,7 @@ import com.sosd.sosd_backend.repository.user.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.slf4j.MDC;
 
 import java.util.List;
 
@@ -27,8 +28,13 @@ public class GithubSimpleScheduler {
 
         // 2. 각 계정별로 수집 로직 실행
         for(UserAccount userAccount : userAccounts){
-            UserAccountRef userAccountRef = userAccount.toUserRef();
-            userCollectionOrchestrator.collectByUser(userAccountRef);
+            MDC.put("userCtx", "User:" + userAccount.getStudentId());
+            try{
+                UserAccountRef userAccountRef = userAccount.toUserRef();
+                userCollectionOrchestrator.collectByUser(userAccountRef);
+            } finally {
+                MDC.remove("userCtx");
+            }
         }
         log.info("End Github Simple Scheduler");
     }
