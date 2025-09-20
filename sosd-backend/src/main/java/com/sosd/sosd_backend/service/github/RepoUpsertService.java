@@ -26,32 +26,26 @@ public class RepoUpsertService {
         }
 
         // 1) 입력 검증 + 키 수집
-        List<Long> ids = dtos.stream()
-                .map(GithubRepositoryUpsertDto::githubRepoId)
-                .filter(Objects::nonNull)
-                .toList();
-
-        if (ids.isEmpty()) return List.of();
-
-        // 2) 기존 엔티티 벌크 로딩
-        List<GithubRepositoryEntity> existing = githubRepositoryRepository.findAllByGithubRepoIdIn(ids);
-        Map<Long, GithubRepositoryEntity> byRepoId = new HashMap<>(existing.size());
-        for (GithubRepositoryEntity entity : existing) {
-            byRepoId.put(entity.getGithubRepoId(), entity);
+        Map<Long, GithubRepositoryUpsertDto> byId = new LinkedHashMap<>();
+        for (var dto : dtos) {
+            if (dto.githubRepoId() != null) byId.put(dto.githubRepoId(), dto);
         }
 
+        if (byId.isEmpty()) return List.of();
+
+        // 2) 기존 엔티티 벌크 로딩
+        List<GithubRepositoryEntity> existing =
+                githubRepositoryRepository.findAllByGithubRepoIdIn(new ArrayList<>(byId.keySet()));
+        Map<Long, GithubRepositoryEntity> loaded = new HashMap<>(existing.size() * 2);
+        for (var e : existing) loaded.put(e.getGithubRepoId(), e);
+
         // 3) 머지/신규 생성
-        List<GithubRepositoryEntity> toSave = new ArrayList<>(dtos.size());
-        for (GithubRepositoryUpsertDto dto : dtos) {
-            GithubRepositoryEntity entity = byRepoId.get(dto.githubRepoId());
-            if (entity == null) {
-                // 신규
-                entity = GithubRepositoryEntity.from(dto);
-            } else {
-                // 업데이트
-                entity.merge(dto);
-            }
-            toSave.add(entity);
+        List<GithubRepositoryEntity> toSave = new ArrayList<>(byId.size());
+        for (var dto : byId.values()) {
+            var e = loaded.get(dto.githubRepoId());
+            if (e == null) e = GithubRepositoryEntity.from(dto);
+            else e.merge(dto);
+            toSave.add(e);
         }
 
         // 4) 저장

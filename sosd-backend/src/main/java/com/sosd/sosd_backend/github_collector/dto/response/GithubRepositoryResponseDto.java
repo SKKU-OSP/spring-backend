@@ -26,7 +26,13 @@ public record GithubRepositoryResponseDto(
         OffsetDateTime githubPushedAt,
         String additionalData,
         Integer contributor,
-        Boolean isPrivate
+        Boolean isPrivate,
+        Integer openPr,
+        Integer closedPr,
+        Integer mergedPr,
+        Integer openIssue,
+        Integer closedIssue,
+        Integer commit
 ) {
     /** GraphQL 응답 → 평탄화 DTO */
     public static GithubRepositoryResponseDto from(GithubRepositoryGraphQLResult gql) {
@@ -48,6 +54,19 @@ public record GithubRepositoryResponseDto(
         String additionalJson = buildLanguagesJson(repo.languages());
         Integer contributor = repo.mentionableUsers() != null ? repo.mentionableUsers().totalCount() : null;
 
+        Integer openPr = repo.openPRs() != null ? nz(repo.openPRs().totalCount()) : 0;
+        Integer closedPr = repo.closedPRs() != null ? nz(repo.closedPRs().totalCount()) : 0;
+        Integer mergedPr = repo.mergedPRs() != null ? nz(repo.mergedPRs().totalCount()) : 0;
+        Integer openIssue = repo.openIssues() != null ? nz(repo.openIssues().totalCount()) : 0;
+        Integer closedIssue = repo.closedIssues() != null ? nz(repo.closedIssues().totalCount()) : 0;
+        Integer commit =
+                repo.defaultBranchRef() != null
+                        && repo.defaultBranchRef().target() != null
+                        && repo.defaultBranchRef().target().history() != null
+                        && repo.defaultBranchRef().target().history().totalCount() != null
+                        ? repo.defaultBranchRef().target().history().totalCount()
+                        : 0;
+
         return new GithubRepositoryResponseDto(
                 repoId,
                 owner,
@@ -66,11 +85,19 @@ public record GithubRepositoryResponseDto(
                 repo.pushedAt(),
                 additionalJson,
                 contributor,
-                repo.isPrivate()
+                repo.isPrivate(),
+                openPr,
+                closedPr,
+                mergedPr,
+                openIssue,
+                closedIssue,
+                commit
         );
     }
 
     // ===== helpers =====
+    private static int nz(Integer v) { return v == null ? 0 : v; }
+
     private static String splitOwner(String nameWithOwner) {
         if (nameWithOwner == null) return null;
         int idx = nameWithOwner.indexOf('/');

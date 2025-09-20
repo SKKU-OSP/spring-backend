@@ -30,7 +30,7 @@ public class PullRequestCollector implements GithubResourceCollector
             pageInfo { hasNextPage hasPreviousPage startCursor endCursor }
             nodes {
               ... on PullRequest {
-                id
+                databaseId
                 number
                 title
                 body
@@ -75,7 +75,7 @@ public class PullRequestCollector implements GithubResourceCollector
             // 3-2. GraphQL 쿼리 실행
             var res = graphQLClient.query(QUERY)
                     .variables(vars)
-                    .execute(GithubPullRequestGraphQLResult.class);
+                    .executeWithAutoRotate(GithubPullRequestGraphQLResult.class);
 
             // 3-3. 에러 처리 및 결과 핸들링
             if (res.getErrors() != null && !res.getErrors().isEmpty()) {

@@ -24,7 +24,13 @@ public record GithubRepositoryUpsertDto(
         LocalDateTime githubPushedAt,
         String additionalData,
         Integer contributor,
-        Boolean isPrivate
+        Boolean isPrivate,
+        Integer openPr,
+        Integer closedPr,
+        Integer mergedPr,
+        Integer openIssue,
+        Integer closedIssue,
+        Integer commit
 ) {
     /** GithubRepositoryResponseDto → UpsertDto 변환 */
     public static GithubRepositoryUpsertDto from(GithubRepositoryResponseDto dto) {
@@ -45,7 +51,13 @@ public record GithubRepositoryUpsertDto(
                 toUtcLocal(dto.githubPushedAt()),
                 dto.additionalData(),
                 dto.contributor(),
-                dto.isPrivate()
+                dto.isPrivate(),
+                dto.openPr(),
+                dto.closedPr(),
+                dto.mergedPr(),
+                dto.openIssue(),
+                dto.closedIssue(),
+                dto.commit()
         );
     }
 
