@@ -44,3 +44,7 @@ out/
 /src/build/generated/
 /src/build/tmp/
 src/main/generated/
+
+# logs
+*.log
+*.gz
