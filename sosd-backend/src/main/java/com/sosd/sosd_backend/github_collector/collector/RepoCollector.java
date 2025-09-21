@@ -193,17 +193,33 @@ public class RepoCollector implements GithubResourceCollector
      */
     private Set<String> fetchReposFromUserRepos(String username) {
         Set<String> result = new HashSet<>();
+        int page = 1;
+        int perPage = 10;
+
 
         try {
-            List<UserRepoDto> repos = githubRestClient.request()
-                    .endpoint("/users/" + username + "/repos")
-                    .queryParam("type", "all")
-                    .getList(new ParameterizedTypeReference<>() {});
-            if  (repos != null && !repos.isEmpty()) {
+            while (true) {
+                List<UserRepoDto> repos = githubRestClient.request()
+                        .endpoint("/users/" + username + "/repos")
+                        .queryParam("type", "all")                 // forks 포함
+                        .queryParam("per_page", String.valueOf(perPage))
+                        .queryParam("page", String.valueOf(page))
+                        .getList(new ParameterizedTypeReference<>() {});
+
+                if (repos == null || repos.isEmpty()) {
+                    break;
+                }
+
                 repos.stream()
                         .map(UserRepoDto::fullName)
                         .filter(Objects::nonNull)
                         .forEach(result::add);
+
+                // 현재 페이지의 항목 수가 perPage보다 작으면 마지막 페이지
+                if (repos.size() < perPage) {
+                    break;
+                }
+                page++;
             }
         }
         catch (HttpClientErrorException e) {
