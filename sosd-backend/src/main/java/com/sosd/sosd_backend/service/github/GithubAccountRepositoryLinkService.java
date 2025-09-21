@@ -3,6 +3,7 @@ package com.sosd.sosd_backend.service.github;
 import com.sosd.sosd_backend.entity.github.GithubAccountRepositoryEntity;
 import com.sosd.sosd_backend.entity.github.GithubAccountRepositoryId;
 import com.sosd.sosd_backend.entity.github.GithubRepositoryEntity;
+import com.sosd.sosd_backend.github_collector.dto.ref.RepoRef;
 import com.sosd.sosd_backend.repository.github.AccountRepoLinkRepository;
 import com.sosd.sosd_backend.repository.github.GithubAccountRepository;
 import com.sosd.sosd_backend.repository.github.GithubRepositoryRepository;
@@ -44,7 +45,21 @@ public class GithubAccountRepositoryLinkService {
         return linkRepo.findReposByAccountId(accountId);
     }
 
-    /** 2-1) 여러 계정의 링크+레포를 한 번에 (fetch join) */
+    /** 2-1) repoRef 반환 */
+    @Transactional(readOnly = true)
+    public List<RepoRef> listRepoRefs(Long accountId) {
+        return linkRepo.findReposByAccountId(accountId).stream()
+                .map(e -> new RepoRef(
+                        e.getId(),
+                        e.getGithubRepoId(),
+                        e.getOwnerName(),
+                        e.getRepoName(),
+                        e.getFullName()
+                ))
+                .toList();
+    }
+
+    /** 2-2) 여러 계정의 링크+레포를 한 번에 (fetch join) */
     @Transactional(readOnly = true)
     public List<GithubAccountRepositoryEntity> listLinksWithRepo(Collection<Long> accountIds) {
         if (accountIds == null || accountIds.isEmpty()) return List.of();
