@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,7 +34,6 @@ public class GithubAccountCollectionOrchestrator {
      * @param githubAccountRef
      */
     public void collectByGithubAccount(GithubAccountRef githubAccountRef){
-        List<RepoRef> repoRefs = new ArrayList<>();
 
         // 1) 해당 유저가 기여한 모든 레포 수집
         RepoListCollectContext ctx = new RepoListCollectContext(
@@ -68,29 +66,32 @@ public class GithubAccountCollectionOrchestrator {
                     .stream()
                     .map(GithubRepositoryUpsertDto::from)
                     .toList();
+
+            // 3) DB 저장
             try{
-                // 3) DB 저장
-                repoRefs = repoUpsertService.upsertRepos(repoUpsertDtos);
+                // 3-1) 레포 저장
+                List<RepoRef> upsertedRepos = repoUpsertService.upsertRepos(repoUpsertDtos);
 
                 log.info("[upsert][acc={}] repos upsert success count={}",
                         githubAccountRef.githubLoginUsername(),
-                        repoRefs.size()
+                        upsertedRepos.size()
                 );
 
+                // 3-2) 계정 - 레포 링크 테이블 저장
                 int linkSuccess = 0;
-                for (RepoRef repoRef : repoRefs) {
+                for (RepoRef repoRef : upsertedRepos) {
                     try {
                         linkService.linkIfAbsent(githubAccountRef.githubId(), repoRef.repoId());
                         linkSuccess++;
                         log.debug("[link][acc={}] linked repoName={}",
                                 githubAccountRef.githubLoginUsername(), repoRef.fullName());
                     } catch (Exception e) {
-                        log.warn("[link][acc={}] link failed for repoId={}",
+                        log.warn("[link][acc={}] link failed for repo={}",
                                 githubAccountRef.githubLoginUsername(), repoRef.fullName(), e);
                     }
                 }
                 log.info("[link][acc={}] link ensured count={}/{}",
-                        githubAccountRef.githubLoginUsername(), linkSuccess, repoRefs.size());
+                        githubAccountRef.githubLoginUsername(), linkSuccess, upsertedRepos.size());
 
             } catch (Exception e) {
                 log.error("[upsert][acc={}] repo upsert failed", githubAccountRef.githubLoginUsername(), e);
@@ -100,10 +101,19 @@ public class GithubAccountCollectionOrchestrator {
             log.error("[collect][acc={}] repo collect failed", githubAccountRef.githubLoginUsername(), e);
         }
 
-//        // 4) 하위 orchestrator 수집
-//        for(RepoRef repoRef : repoRefs){
-//            githubRepositoryOrchestrator.collectByRepository(githubAccountRef, repoRef);
-//        }
+        // 4) 이 계정과 연관된 모든 레포 가져오기
+        List<RepoRef> allLinkedRepoRefs = new ArrayList<>();
+        try {
+            allLinkedRepoRefs = linkService.listRepoRefs(githubAccountRef.githubId());
+            log.info("[link][acc={}] target repo count={}", githubAccountRef.githubLoginUsername(), allLinkedRepoRefs.size());
+        } catch (Exception e) {
+            log.error("[link][acc={}] link failed", githubAccountRef.githubLoginUsername(), e);
+        }
+
+        // 5) 하위 orchestrator 수집
+        for(RepoRef repoRef : allLinkedRepoRefs){
+            githubRepositoryOrchestrator.collectByRepository(githubAccountRef, repoRef);
+        }
     }
 
 
