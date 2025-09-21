@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -66,7 +67,23 @@ public class GithubAccountRepositoryLinkService {
         return linkRepo.findAllByAccountIdsJoinRepo(accountIds);
     }
 
-    /** 3) 커서 갱신들 */
+    /** 3) 커서 가져오기 */
+    @Transactional(readOnly = true)
+    public Optional<String> getLastCommitSha(Long accountId, Long repoId) {
+        return linkRepo.findLastCommitSha(accountId, repoId);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<LocalDateTime> getLastPrDate(Long accountId, Long repoId) {
+        return linkRepo.findLastPrDate(accountId, repoId);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<LocalDateTime> getLastIssueDate(Long accountId, Long repoId) {
+        return linkRepo.findLastIssueDate(accountId, repoId);
+    }
+
+    /** 4) 커서 갱신들 */
     @Transactional
     public void updateCommitCursor(Long accountId, Long repoId, String sha) {
         linkIfAbsent(accountId, repoId); // 없으면 만들어두고

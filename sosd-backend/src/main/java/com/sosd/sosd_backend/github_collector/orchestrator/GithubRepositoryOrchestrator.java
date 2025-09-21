@@ -15,13 +15,16 @@ import com.sosd.sosd_backend.github_collector.dto.response.GithubCommitResponseD
 import com.sosd.sosd_backend.github_collector.dto.response.GithubIssueResponseDto;
 import com.sosd.sosd_backend.github_collector.dto.response.GithubPullRequestResponseDto;
 import com.sosd.sosd_backend.service.github.CommitUpsertService;
+import com.sosd.sosd_backend.service.github.GithubAccountRepositoryLinkService;
 import com.sosd.sosd_backend.service.github.IssueUpsertService;
 import com.sosd.sosd_backend.service.github.PullRequestUpsertService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 @Slf4j
 @Component
@@ -38,111 +41,179 @@ public class GithubRepositoryOrchestrator {
     private final PullRequestUpsertService pullRequestUpsertService;
     private final IssueUpsertService issueUpsertService;
 
+    // link table
+    private final GithubAccountRepositoryLinkService linkService;
+
+    // util
+    private static final OffsetDateTime DEFAULT_SINCE =
+            OffsetDateTime.parse("2019-01-01T00:00:00Z");
+
+    // OffsetDateTime(커서) -> DB 저장용 LocalDateTime(UTC)
+    private static LocalDateTime toUtcLocal(OffsetDateTime odt) {
+        return LocalDateTime.ofInstant(odt.toInstant(), ZoneOffset.UTC);
+    }
+
     public void collectByRepository(GithubAccountRef githubAccountRef, RepoRef repoRef){
+        // commit 수집
+        collectCommits(githubAccountRef, repoRef);
+        // pr 수집
+        collectPullRequests(githubAccountRef, repoRef);
+        // issue 수집
+        collectIssues(githubAccountRef, repoRef);
+    }
 
-        // TODO: DB에서 마지막 수집 시점 가져오는걸로 변경
-        CommitCollectContext commitCollectContext = new CommitCollectContext(
-                githubAccountRef,
-                repoRef,
-                null
-        );
-        PullRequestCollectContext  pullRequestCollectContext = new PullRequestCollectContext(
-                githubAccountRef,
-                repoRef,
-                OffsetDateTime.parse("2019-01-01T00:00:00Z")
-        );
-        IssueCollectContext issueCollectContext = new IssueCollectContext(
-                githubAccountRef,
-                repoRef,
-                OffsetDateTime.parse("2019-01-01T00:00:00Z")
-        );
-
-        // commit
-        // 수집
+    private void collectCommits(GithubAccountRef acc, RepoRef repo) {
         try{
-            CollectResult<GithubCommitResponseDto, ShaCursor> commitResults =
-                    commitCollector.collect(commitCollectContext);
+            // 1) 커서 가져오기
+            String lastSha = linkService.getLastCommitSha(acc.githubId(), repo.repoId()).orElse(null);
 
-            // 로그 출력
+            // 2) 수집
+            CollectResult<GithubCommitResponseDto, ShaCursor> commitResults =
+                    commitCollector.collect(new CommitCollectContext(acc, repo, lastSha));
+
             log.info("[collect][{}] source={} fetched={}/{}(total) elapsed={}ms",
-                    repoRef.fullName(),
+                    repo.fullName(),
                     commitResults.source(),
                     commitResults.fetchedCount(),
                     commitResults.totalCount(),
                     commitResults.elapsedTimeMs()
             );
-            // update
+
+            // 3) 기여내역 upsert
             try{
                 commitUpsertService.upsertSingleTargetFromResponses(
-                        repoRef.repoId(),
-                        githubAccountRef.githubId(),
+                        repo.repoId(),
+                        acc.githubId(),
                         commitResults.results()
                 );
                 log.info("[upsert][{}] commits upsert success",
-                        repoRef.fullName()
+                        repo.fullName()
                 );
-            }
-            catch (Exception e){
-                log.error("[upsert][{}] commit collect failed", repoRef.fullName(), e);
-            }
-        } catch (Exception e){
-            log.error("[collect][{}] commit collect failed", repoRef.fullName(), e);
-        }
-
-        // pull request
-        try {
-            // collect
-            CollectResult<GithubPullRequestResponseDto, TimeCursor> prResults =
-                    pullRequestCollector.collect(pullRequestCollectContext);
-
-            log.info("[collect][{}] source={} fetched={}/{}(total) elapsed={}ms",
-                    repoRef.fullName(),
-                    prResults.source(),
-                    prResults.fetchedCount(),
-                    prResults.totalCount(),
-                    prResults.elapsedTimeMs()
-            );
-            // update
-            try {
-                pullRequestUpsertService.upsertSingleTargetFromResponses(
-                        repoRef.repoId(),
-                        githubAccountRef.githubId(),
-                        prResults.results()
-                );
-                log.info("[upsert][{}] prs upsert success", repoRef.fullName());
             } catch (Exception e) {
-                log.error("[upsert][{}] pr upsert failed", repoRef.fullName(), e);
+                log.error("[upsert][{}] commit upsert failed", repo.fullName(), e);
+                return; // 오류나면 커서 업데이트 x
             }
-        } catch (Exception e) {
-            log.error("[collect][{}] pr collect failed", repoRef.fullName(), e);
-        }
 
-        // issue
-        try {
-            // collect
-            CollectResult<GithubIssueResponseDto, TimeCursor> issueResults =
-                    issueCollector.collect(issueCollectContext);
+            // 4) 커서 update
+            // 4-1) 업데이트 유무 확인
+            if (commitResults.cursor() == null || commitResults.fetchedCount() == 0) return;
+
+            // 4-2) update
+            try {
+                linkService.updateCommitCursor(acc.githubId(), repo.repoId(),commitResults.cursor().sha());
+            } catch (Exception e) {
+                log.error("[update][{}] commit cursor update failed", repo.fullName(), e);
+            }
+
+        } catch (Exception e) {
+            log.error("[collect][{}] commit collect failed", repo.fullName(), e);
+        }
+    }
+
+    private void collectPullRequests(GithubAccountRef acc, RepoRef repo) {
+        try{
+            // 1) 커서 가져오기
+            OffsetDateTime since = linkService.getLastPrDate(acc.githubId(), repo.repoId())
+                    .map(dt -> dt.atOffset(ZoneOffset.UTC))
+                    .orElse(DEFAULT_SINCE);
+
+            // 2) 수집
+            CollectResult<GithubPullRequestResponseDto, TimeCursor> pullRequestResults =
+                    pullRequestCollector.collect(new PullRequestCollectContext(acc, repo, since));
 
             log.info("[collect][{}] source={} fetched={}/{}(total) elapsed={}ms",
-                    repoRef.fullName(),
+                    repo.fullName(),
+                    pullRequestResults.source(),
+                    pullRequestResults.fetchedCount(),
+                    pullRequestResults.totalCount(),
+                    pullRequestResults.elapsedTimeMs()
+            );
+
+            // 3) upsert
+            try{
+                pullRequestUpsertService.upsertSingleTargetFromResponses(
+                        repo.repoId(),
+                        acc.githubId(),
+                        pullRequestResults.results()
+                );
+                log.info("[upsert][{}] prs upsert success", repo.fullName());
+            } catch (Exception e) {
+                log.error("[upsert][{}] pr upsert failed", repo.fullName(), e);
+                return; // 오류나면 커서 업데이트 x
+            }
+
+            // 4) 커서 update
+            // 4-1) 업데이트 유무 확인
+            if  (pullRequestResults.cursor() == null || pullRequestResults.fetchedCount() == 0) return;
+
+            // 4-2) update
+            try {
+                linkService.updatePrCursor(
+                        acc.githubId(),
+                        repo.repoId(),
+                        toUtcLocal(pullRequestResults.cursor().lastCollectedTime())
+                );
+            } catch (Exception e) {
+                log.error("[update][{}] pr cursor update failed", repo.fullName(), e);
+            }
+
+        } catch (Exception e) {
+            log.error("[collect][{}] pr collect failed", repo.fullName(), e);
+        }
+
+    }
+
+    private void collectIssues(GithubAccountRef acc, RepoRef repo) {
+        try{
+            // 1) 커서 가져오기
+            OffsetDateTime since = linkService.getLastIssueDate(acc.githubId(), repo.repoId())
+                    .map(dt -> dt.atOffset(ZoneOffset.UTC))
+                    .orElse(DEFAULT_SINCE);
+
+            // 2) 수집
+            CollectResult<GithubIssueResponseDto, TimeCursor> issueResults =
+                    issueCollector.collect(new IssueCollectContext(acc, repo, since));
+
+            log.info("[collect][{}] source={} fetched={}/{}(total) elapsed={}ms",
+                    repo.fullName(),
                     issueResults.source(),
                     issueResults.fetchedCount(),
                     issueResults.totalCount(),
                     issueResults.elapsedTimeMs()
             );
-            // update
-            try {
+
+            // 3) upsert
+            try{
                 issueUpsertService.upsertSingleTargetFromResponses(
-                        repoRef.repoId(),
-                        githubAccountRef.githubId(),
+                        repo.repoId(),
+                        acc.githubId(),
                         issueResults.results()
                 );
-                log.info("[upsert][{}] issues upsert success", repoRef.fullName());
+                log.info("[upsert][{}] issues upsert success", repo.fullName());
             } catch (Exception e) {
-                log.error("[upsert][{}] issue upsert failed", repoRef.fullName(), e);
+                log.error("[upsert][{}] issue upsert failed", repo.fullName(), e);
+                return; // 오류나면 커서 업데이트 x
             }
+
+            // 4) 커서 update
+            // 4-1) 업데이트 유무 확인
+            if (issueResults.cursor() == null || issueResults.fetchedCount() == 0) return;
+
+            // 4-2) update
+            try {
+                linkService.updateIssueCursor(
+                        acc.githubId(),
+                        repo.repoId(),
+                        toUtcLocal(issueResults.cursor().lastCollectedTime())
+                );
+            } catch (Exception e) {
+                log.error("[update][{}] issue cursor update failed", repo.fullName(), e);
+            }
+
         } catch (Exception e) {
-            log.error("[collect][{}] issue collect failed", repoRef.fullName(), e);
+            log.error("[collect][{}] issue collect failed", repo.fullName(), e);
         }
+
     }
+
 }
