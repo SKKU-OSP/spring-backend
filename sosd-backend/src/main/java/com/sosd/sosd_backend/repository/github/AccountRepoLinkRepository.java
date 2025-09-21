@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface AccountRepoLinkRepository extends JpaRepository<GithubAccountRepositoryEntity, GithubAccountRepositoryId> {
 
@@ -31,6 +32,35 @@ public interface AccountRepoLinkRepository extends JpaRepository<GithubAccountRe
         where gar.id.githubAccountId = :accountId
     """)
     List<GithubRepositoryEntity> findReposByAccountId(@Param("accountId") Long accountId);
+
+    // === 커서 단건 조회 ===
+    @Query("""
+    select gar.lastCommitSha
+    from GithubAccountRepositoryEntity gar
+    where gar.id.githubAccountId = :accountId
+      and gar.id.githubRepoId    = :repoId
+""")
+    Optional<String> findLastCommitSha(@Param("accountId") Long accountId,
+                                       @Param("repoId") Long repoId);
+
+    @Query("""
+    select gar.lastPrDate
+    from GithubAccountRepositoryEntity gar
+    where gar.id.githubAccountId = :accountId
+      and gar.id.githubRepoId    = :repoId
+""")
+    Optional<LocalDateTime> findLastPrDate(@Param("accountId") Long accountId,
+                                           @Param("repoId") Long repoId);
+
+    @Query("""
+    select gar.lastIssueDate
+    from GithubAccountRepositoryEntity gar
+    where gar.id.githubAccountId = :accountId
+      and gar.id.githubRepoId    = :repoId
+""")
+    Optional<LocalDateTime> findLastIssueDate(@Param("accountId") Long accountId,
+                                              @Param("repoId") Long repoId);
+
 
     // === 커서/업데이트 계열 (DB 시간 사용) ===
     @Modifying(clearAutomatically = true, flushAutomatically = true)
