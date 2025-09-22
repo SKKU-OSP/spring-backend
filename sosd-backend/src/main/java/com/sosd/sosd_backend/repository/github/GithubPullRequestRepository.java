@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,8 +17,12 @@ public interface GithubPullRequestRepository extends JpaRepository<GithubPullReq
     // PR id로 단건 조회
     Optional<GithubPullRequestEntity> findByGithubPrId(Long githubPrId);
 
+    // 레포별 PR 개수 (네이티브 쿼리)
     @Query(value = "SELECT COUNT(*) FROM github_pull_request p WHERE p.repo_id = :repoId", nativeQuery = true)
     Long countByRepoId(@Param("repoId") Long repoId);
+
+    // 특정 repoId + 여러 githubPrId 로 PR 조회
+    List<GithubPullRequestEntity> findAllByRepository_IdAndGithubPrIdIn(Long repositoryId, Collection<Long> githubPrIds);
 
     ////// 통계 관련 쿼리 //////
     // 특정 레포의 모든 PR 개수

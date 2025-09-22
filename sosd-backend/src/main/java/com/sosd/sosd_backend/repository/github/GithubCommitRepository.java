@@ -9,14 +9,17 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface GithubCommitRepository extends JpaRepository<GithubCommitEntity, Long> {
 
     // repo + sha (복합 UK)로 단건 조회
     Optional<GithubCommitEntity> findByRepositoryAndSha(GithubRepositoryEntity repository, String sha);
 
+    // 최근 커밋한 레포 4개 가져오기
     @Query(value = """
         SELECT c.repo_id, MAX(c.author_date) AS lastCommitDate
         FROM github_commit c
@@ -27,8 +30,13 @@ public interface GithubCommitRepository extends JpaRepository<GithubCommitEntity
         """, nativeQuery = true)
     List<RepoIdWithDate> findRecentRepoIds(@Param("githubId") Long githubId);
 
+    // 레포별 커밋 수
     @Query(value = "SELECT COUNT(*) FROM github_commit c WHERE c.repo_id = :repoId", nativeQuery = true)
     Long countByRepoId(@Param("repoId") Long repoId);
+
+    // 특정 repoId + sha 리스트로 커밋 조회
+    List<GithubCommitEntity> findAllByRepository_IdAndShaIn(Long repositoryId, Collection<String> shas);
+
     ////// 통계 관련 쿼리 //////
     // 특정 레포의 모든 커밋 개수
     Long countByRepository_Id(Long repositoryId);
@@ -46,7 +54,7 @@ public interface GithubCommitRepository extends JpaRepository<GithubCommitEntity
             LocalDateTime end);
 
     // 특정 사용자의 특정 레포에 대한 연도별 커밋 개수
-    Long countByAccount_GithubIdAndRepository_idAndAuthorDateBetween(
+    Long countByAccount_GithubIdAndRepository_IdAndAuthorDateBetween(
             Long accountGithubId,
             Long repositoryId,
             LocalDateTime start,
