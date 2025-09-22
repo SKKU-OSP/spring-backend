@@ -11,13 +11,19 @@ import com.sosd.sosd_backend.github_collector.dto.RepoCollectorDtos.UserRepoDto;
 import com.sosd.sosd_backend.github_collector.api.GithubRestClient;
 import com.sosd.sosd_backend.github_collector.dto.response.graphql.GithubRepositoryGraphQLResult;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 
 import java.sql.Time;
 import java.time.OffsetDateTime;
 import java.util.*;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class RepoCollector implements GithubResourceCollector
@@ -35,16 +41,25 @@ public class RepoCollector implements GithubResourceCollector
 
         // 1. 기여한 레포 full name 목록 수집
         Set<String> fullNames = new HashSet<>();
-        // 1-1. 사용자의 모든 공개 repo 목록에서 추출 - 수집기록이 없으면 실행
-        if (context.lastCrawling() == null) {
-            fullNames.addAll(fetchReposFromUserRepos(context.githubAccountRef().githubLoginUsername()));
-        }
-        // 1-2. 사용자가 최근에 기여한 이슈/PR에서 repo 추출 - 수집기록이 없거나 2일 이상 지난 경우 실행
-        if (context.lastCrawling() == null || context.lastCrawling().isBefore(OffsetDateTime.now().minusDays(2))) {
-            fullNames.addAll(fetchReposFromSearchIssues(context.githubAccountRef().githubLoginUsername(), context.lastCrawling()));
-        }
-        // 1-3. 사용자의 이벤트에서 기여한 repo 추출 - 항상 실행
+        // TODO: 모든 레포를 다 가져오는건 코스트가 상당히 크기 때문에 적절한 정책 생각해볼 것
+//        // 1-1. 사용자의 모든 공개 repo 목록에서 추출 - 수집기록이 없으면 실행
+//        if (context.lastCrawling() == null || context.lastCrawling().isBefore(OffsetDateTime.now().minusDays(7))) {
+//            fullNames.addAll(fetchReposFromUserRepos(context.githubAccountRef().githubLoginUsername()));
+//        }
+//        // 1-2. 사용자가 최근에 기여한 이슈/PR에서 repo 추출 - 수집기록이 없거나 2일 이상 지난 경우 실행
+//        if (context.lastCrawling() == null || context.lastCrawling().isBefore(OffsetDateTime.now().minusDays(2))) {
+//            fullNames.addAll(fetchReposFromSearchIssues(context.githubAccountRef().githubLoginUsername(), context.lastCrawling()));
+//        }
+//        // 1-3. 사용자의 이벤트에서 기여한 repo 추출 - 항상 실행
+//        fullNames.addAll(fetchReposFromEvents(context.githubAccountRef().githubLoginUsername()));
+
+        // 1-1. 사용자의 모든 공개 repo 목록에서 추출
+        fullNames.addAll(fetchReposFromUserRepos(context.githubAccountRef().githubLoginUsername()));
+        // 1-2. 사용자가 최근에 기여한 이슈/PR에서 repo 추출
+        fullNames.addAll(fetchReposFromSearchIssues(context.githubAccountRef().githubLoginUsername(), context.lastCrawling()));
+        // 1-3. 사용자의 이벤트에서 기여한 repo 추출
         fullNames.addAll(fetchReposFromEvents(context.githubAccountRef().githubLoginUsername()));
+
 
         // 2. 각 repo의 상세 정보 수집
         List<GithubRepositoryGraphQLResult> results = new ArrayList<>();
@@ -88,24 +103,31 @@ public class RepoCollector implements GithubResourceCollector
                 query RepoOverview($owner: String!, $name: String!) {
                   repository(owner: $owner, name: $name) {
                     databaseId
-                    nameWithOwner                       # full_name 대체 가능
-                    isPrivate                           # is_private
-                    defaultBranchRef { name }           # default_branch
-                    description                         # description
-                    stargazerCount                      # star
-                    watchers { totalCount }             # watcher (구독자 수)
-                    forkCount                           # fork
-                    licenseInfo { name }                # license
-                    createdAt                           # github_repository_created_at
-                    updatedAt                           # github_repository_updated_at
-                    pushedAt                            # github_pushed_at
+                    nameWithOwner
+                    isPrivate
+                    defaultBranchRef {\s
+                        name
+                        target {
+                        ... on Commit {
+                          history {
+                            totalCount
+                          }
+                        }
+                      }   \s
+                    }
+                    description
+                    stargazerCount
+                    watchers { totalCount }
+                    forkCount
+                    licenseInfo { name }
+                    createdAt
+                    updatedAt
+                    pushedAt
                 
-                    # README 내용 (루트의 README.md 기준)
                     object(expression: "HEAD:README.md") {
-                      ... on Blob { text }              # readme
+                      ... on Blob { text }
                     }
                 
-                    # 사용 언어 분포 (상위 5개)
                     languages(first: 5, orderBy: {field: SIZE, direction: DESC}) {
                       totalSize
                       edges {
@@ -113,15 +135,40 @@ public class RepoCollector implements GithubResourceCollector
                         node { name }
                       }
                     }
-                    # Dependency
+                
                     dependencyGraphManifests(first: 1) {
                       totalCount
                     }
-                    # contributor 수 집계용 (협업자 수)
-                    # 정확한 협업자 수와는 조금 다르기에 추후 직접 집계 필요
                     mentionableUsers(first: 0) { totalCount }
+                
+                
+                    # Pull Request 수 (alias 사용)
+                    openPRs: pullRequests(states: OPEN) {
+                      totalCount
+                    }
+                    closedPRs: pullRequests(states: CLOSED) {
+                      totalCount
+                    }
+                    mergedPRs: pullRequests(states: MERGED) {
+                      totalCount
+                    }
+                
+                    # Issue 수 (alias 사용)
+                    openIssues: issues(states: OPEN) {
+                      totalCount
+                    }
+                    closedIssues: issues(states: CLOSED) {
+                      totalCount
+                    }
                   }
-                  rateLimit { cost used remaining limit resetAt }
+                
+                  rateLimit {
+                    cost
+                    used
+                    remaining
+                    limit
+                    resetAt
+                  }
                 }
                 """;
 
@@ -131,7 +178,7 @@ public class RepoCollector implements GithubResourceCollector
 
         var res = githubGraphQLClient.query(query)
                 .variables(variables)
-                .execute(GithubRepositoryGraphQLResult.class);
+                .executeWithAutoRotate(GithubRepositoryGraphQLResult.class);
 
         if (res.getErrors() != null && !res.getErrors().isEmpty()) {
             // 에러가 발생한 경우 로그 출력 후 null 반환
@@ -145,15 +192,40 @@ public class RepoCollector implements GithubResourceCollector
      * 1. username의 모든 공개 repo의 full_name 목록 수집
      */
     private Set<String> fetchReposFromUserRepos(String username) {
-        List<UserRepoDto> repos = githubRestClient.request()
-                .endpoint("/users/" + username + "/repos")
-                .queryParam("type", "all")
-                .getList(new ParameterizedTypeReference<>() {});
-
         Set<String> result = new HashSet<>();
-        repos.stream()
-                .map(UserRepoDto::fullName)
-                .forEach(result::add);
+
+        try {
+            List<UserRepoDto> repos = githubRestClient.request()
+                    .endpoint("/users/" + username + "/repos")
+                    .queryParam("type", "all")
+                    .getList(new ParameterizedTypeReference<>() {});
+            if  (repos != null && !repos.isEmpty()) {
+                repos.stream()
+                        .map(UserRepoDto::fullName)
+                        .filter(Objects::nonNull)
+                        .forEach(result::add);
+            }
+        }
+        catch (HttpClientErrorException e) {
+            int sc = e.getStatusCode().value();
+
+            // 계정 단위 스킵
+            if (sc == 400 || sc == 404 || sc == 410 || sc == 422 || sc == 451) {
+                log.warn("[userRepos] {} for user={}, skipping. body={}",
+                        sc, username, e.getResponseBodyAsString());
+                return result; // 빈 결과 리턴
+            }
+            // 토큰/환경 문제 → 위로
+            if (sc == 401 || sc == 403) {
+                log.error("[userRepos] {} for user={}, escalating. body={}",
+                        sc, username, e.getResponseBodyAsString());
+            }
+            throw e; // 나머지는 그대로 위로
+        }
+        catch (ResourceAccessException | HttpServerErrorException e) {
+            // 네트워크/서버 에러는 위로 → 상위에서 재시도/알람
+            throw e;
+        }
         return result;
     }
 
@@ -173,39 +245,59 @@ public class RepoCollector implements GithubResourceCollector
         String query = "author:" + username + " created:>=" + since.toInstant().toString();
 
         Set<String> result = new HashSet<>();
-        while (true) {
-            SearchIssuesResponse response = githubRestClient.request()
-                    .endpoint("/search/issues")
-                    .queryParam("q", query)
-                    .queryParam("page", String.valueOf(page))
-                    .queryParam("per_page", String.valueOf(perPage))
-                    .get(SearchIssuesResponse.class);
 
-            if (response.items() == null || response.items().isEmpty()) {
-                break;
+        try{
+            while (true) {
+                SearchIssuesResponse response = githubRestClient.request()
+                        .endpoint("/search/issues")
+                        .queryParam("q", query)
+                        .queryParam("page", String.valueOf(page))
+                        .queryParam("per_page", String.valueOf(perPage))
+                        .get(SearchIssuesResponse.class);
+
+                if (response.items() == null || response.items().isEmpty()) {
+                    break;
+                }
+
+                response.items().stream()
+                        .map(SearchIssuesDto::repositoryUrl)
+                        .map(url -> {
+                            // repository_url 예: https://api.github.com/repos/{owner}/{repo}
+                            String[] parts = url.split("/repos/");
+                            return parts.length == 2 ? parts[1] : null;
+                        })
+                        .filter(name -> name != null)
+                        .forEach(result::add);
+
+                // 반환된 결과가 per_page보다 적으면 마지막 페이지
+                if (response.items().size() < perPage) {
+                    break;
+                }
+
+                page++;
+
+                // GitHub Search API는 최대 1000개의 결과만 반환
+                if (page * perPage >= 1000) {
+                    break;
+                }
             }
+        }
+        catch (HttpClientErrorException e) {
+            int sc = e.getStatusCode().value();
 
-            response.items().stream()
-                    .map(SearchIssuesDto::repositoryUrl)
-                    .map(url -> {
-                        // repository_url 예: https://api.github.com/repos/{owner}/{repo}
-                        String[] parts = url.split("/repos/");
-                        return parts.length == 2 ? parts[1] : null;
-                    })
-                    .filter(name -> name != null)
-                    .forEach(result::add);
-
-            // 반환된 결과가 per_page보다 적으면 마지막 페이지
-            if (response.items().size() < perPage) {
-                break;
+            if (sc == 400 || sc == 404 || sc == 410 || sc == 422 || sc == 451) {
+                log.warn("[searchIssues] {} for user={}, skipping. body={}",
+                        sc, username, e.getResponseBodyAsString());
+                return result;
             }
-
-            page++;
-
-            // GitHub Search API는 최대 1000개의 결과만 반환
-            if (page * perPage >= 1000) {
-                break;
+            if (sc == 401 || sc == 403) {
+                log.error("[searchIssues] {} for user={}, escalating. body={}",
+                        sc, username, e.getResponseBodyAsString());
             }
+            throw e;
+        }
+        catch (ResourceAccessException | HttpServerErrorException e) {
+            throw e;
         }
         return result;
     }
@@ -216,17 +308,39 @@ public class RepoCollector implements GithubResourceCollector
     private Set<String> fetchReposFromEvents(String username) {
         List<EventRepoDto> events = new ArrayList<>();
         // event API는 최대 300개 이벤트까지만 제공
-        for(int page = 1; page <= 3; page++){
-            List<EventRepoDto> pageEvents = githubRestClient.request()
-                    .endpoint("/users/" + username + "/events/public")
-                    .queryParam("page", String.valueOf(page))
-                    .queryParam("per_page", "100")
-                    .getList(new ParameterizedTypeReference<>() {});
-            if(pageEvents == null || pageEvents.isEmpty()){
-                break;
+
+        try {
+            for (int page = 1; page <= 3; page++) {
+                List<EventRepoDto> pageEvents = githubRestClient.request()
+                        .endpoint("/users/" + username + "/events/public")
+                        .queryParam("page", String.valueOf(page))
+                        .queryParam("per_page", "100")
+                        .getList(new ParameterizedTypeReference<>() {
+                        });
+                if (pageEvents == null || pageEvents.isEmpty()) {
+                    break;
+                }
+                events.addAll(pageEvents);
             }
-            events.addAll(pageEvents);
         }
+        catch (HttpClientErrorException e) {
+            int sc = e.getStatusCode().value();
+
+            if (sc == 400 || sc == 404 || sc == 410 || sc == 422 || sc == 451) {
+                log.warn("[events] {} for user={}, skipping. body={}",
+                        sc, username, e.getResponseBodyAsString());
+                return Set.of(); // 빈 결과
+            }
+            if (sc == 401 || sc == 403) {
+                log.error("[events] {} for user={}, escalating. body={}",
+                        sc, username, e.getResponseBodyAsString());
+            }
+            throw e;
+        }
+        catch (ResourceAccessException | HttpServerErrorException e) {
+            throw e;
+        }
+
         Set<String> result = new HashSet<>();
         events.stream()
                 .map(EventRepoDto::repo)

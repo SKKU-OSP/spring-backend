@@ -34,7 +34,7 @@ public class RepoCollectTest {
 
         RepoListCollectContext ctx = new RepoListCollectContext(
                 testAccountRef,
-                OffsetDateTime.parse("2025-08-26T00:00:00Z")
+                null
         );
 
         CollectResult<GithubRepositoryResponseDto, TimeCursor> result =
@@ -47,10 +47,16 @@ public class RepoCollectTest {
         System.out.println("Next cursor: " + result.cursor().lastCollectedTime());
         List<GithubRepositoryResponseDto> repos = result.results();
         for (GithubRepositoryResponseDto repo : repos) {
-            System.out.printf("Repo #%d [%s] (createdAt=%s)%n",
+            System.out.printf("Repo #%d [%s] (createdAt=%s) PR(%d %d %d) Issue(%d %d) Commit (%d)\n",
                     repo.githubRepoId(),
                     repo.fullName(),
-                    repo.githubRepositoryCreatedAt()
+                    repo.githubRepositoryCreatedAt(),
+                    repo.openPr(),
+                    repo.mergedPr(),
+                    repo.closedPr(),
+                    repo.openIssue(),
+                    repo.closedIssue(),
+                    repo.commit()
             );
         }
 

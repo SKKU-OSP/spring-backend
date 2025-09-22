@@ -19,7 +19,7 @@ public class GithubAccountRepositoryEntity {
     private GithubAccountRepositoryId id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("githubAcountId")
+    @MapsId("githubAccountId")
     @JoinColumn(name = "github_account_id", referencedColumnName = "github_id")
     private GithubAccount githubAccount;
 
