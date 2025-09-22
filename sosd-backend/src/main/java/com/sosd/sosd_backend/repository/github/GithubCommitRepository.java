@@ -1,9 +1,12 @@
 package com.sosd.sosd_backend.repository.github;
 
+import com.sosd.sosd_backend.dto.user.RepoIdWithDate;
 import com.sosd.sosd_backend.entity.github.GithubAccount;
 import com.sosd.sosd_backend.entity.github.GithubCommitEntity;
 import com.sosd.sosd_backend.entity.github.GithubRepositoryEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -16,6 +19,22 @@ public interface GithubCommitRepository extends JpaRepository<GithubCommitEntity
     // repo + sha (복합 UK)로 단건 조회
     Optional<GithubCommitEntity> findByRepositoryAndSha(GithubRepositoryEntity repository, String sha);
 
+    // 최근 커밋한 레포 4개 가져오기
+    @Query(value = """
+        SELECT c.repo_id, MAX(c.author_date) AS lastCommitDate
+        FROM github_commit c
+        WHERE c.github_id = :githubId
+        GROUP BY c.repo_id
+        ORDER BY MAX(c.author_date) DESC
+        LIMIT 4
+        """, nativeQuery = true)
+    List<RepoIdWithDate> findRecentRepoIds(@Param("githubId") Long githubId);
+
+    // 레포별 커밋 수
+    @Query(value = "SELECT COUNT(*) FROM github_commit c WHERE c.repo_id = :repoId", nativeQuery = true)
+    Long countByRepoId(@Param("repoId") Long repoId);
+
+    // 특정 repoId + sha 리스트로 커밋 조회
     List<GithubCommitEntity> findAllByRepository_IdAndShaIn(Long repositoryId, Collection<String> shas);
 
     ////// 통계 관련 쿼리 //////

@@ -4,7 +4,7 @@ import com.sosd.sosd_backend.dto.auth.SignupRequest;
 import com.sosd.sosd_backend.dto.auth.SignupResponse;
 import com.sosd.sosd_backend.entity.github.GithubAccount;
 import com.sosd.sosd_backend.entity.user.UserAccount;
-import com.sosd.sosd_backend.exception.SignUpDuplicateUserException;
+import com.sosd.sosd_backend.exception.auth.SignUpDuplicateUserException;
 import com.sosd.sosd_backend.repository.github.GithubAccountRepository;
 import com.sosd.sosd_backend.repository.user.UserAccountRepository;
 import jakarta.transaction.Transactional;
