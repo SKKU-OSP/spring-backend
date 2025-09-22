@@ -4,13 +4,12 @@ import com.sosd.sosd_backend.dto.auth.SignupRequest;
 import com.sosd.sosd_backend.dto.auth.SignupResponse;
 import com.sosd.sosd_backend.entity.github.GithubAccount;
 import com.sosd.sosd_backend.entity.user.UserAccount;
-import com.sosd.sosd_backend.exception.SignUpDuplicateUserException;
+import com.sosd.sosd_backend.exception.auth.SignUpDuplicateUserException;
 import com.sosd.sosd_backend.repository.github.GithubAccountRepository;
 import com.sosd.sosd_backend.repository.user.UserAccountRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
