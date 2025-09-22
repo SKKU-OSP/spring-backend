@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.MDC;
 
 @Slf4j
 @Component
@@ -32,6 +33,9 @@ public class GithubAccountCollectionOrchestrator {
      * @param githubAccountRef
      */
     public void collectByGithubAccount(GithubAccountRef githubAccountRef){
+
+        log.info(">> Start collection for account: {}", githubAccountRef.githubLoginUsername());
+
         List<RepoRef> repoRefs = new ArrayList<>();
 
         // 1) 해당 유저가 기여한 모든 레포 수집
@@ -44,8 +48,7 @@ public class GithubAccountCollectionOrchestrator {
             CollectResult<GithubRepositoryResponseDto, TimeCursor> collectedRepos =
                     repoCollector.collect(ctx);
 
-            log.info("[collect][acc={}] source={} fetched={}/{}(total) elapsed={}ms",
-                    githubAccountRef.githubLoginUsername(),
+            log.info("[collect] source={} fetched={}/{}(total) elapsed={}ms",
                     collectedRepos.source(),
                     collectedRepos.fetchedCount(),
                     collectedRepos.totalCount(),
@@ -53,12 +56,8 @@ public class GithubAccountCollectionOrchestrator {
             );
 
             for (var repo : collectedRepos.results()) {
-                log.info("[collect][acc={}] source={} repository={}",
-                        githubAccountRef.githubLoginUsername(),
-                        collectedRepos.source(),
-                        repo.fullName()
-                );
-                }
+                log.info("[collect] found repository={}", repo.fullName());
+            }
 
             List<GithubRepositoryResponseDto> repoResponseDtos = collectedRepos.results();
 
@@ -69,23 +68,29 @@ public class GithubAccountCollectionOrchestrator {
             try{
                 // 3) DB 저장
                 repoRefs = repoUpsertService.upsertRepos(repoUpsertDtos);
+                log.info("[upsert] repos upsert success count={}", repoRefs.size());
 
-                log.info("[upsert][acc={}] repos upsert success count={}",
-                        githubAccountRef.githubLoginUsername(),
-                        repoRefs.size()
-                );
             } catch (Exception e) {
-                log.error("[upsert][acc={}] repo upsert failed", githubAccountRef.githubLoginUsername(), e);
+                log.error("[upsert] repo upsert failed", e);
             }
 
         } catch (Exception e) {
-            log.error("[collect][acc={}] repo collect failed", githubAccountRef.githubLoginUsername(), e);
+            log.error("[collect] repo collect failed", e);
         }
 
         // 4) 하위 orchestrator 수집
-        for(RepoRef repoRef : repoRefs){
-            githubRepositoryOrchestrator.collectByRepository(githubAccountRef, repoRef);
+        for(RepoRef repoRef : repoRefs) {
+            MDC.put("repoCtx", "Repo:" + repoRef.fullName());
+
+            try {
+                githubRepositoryOrchestrator.collectByRepository(githubAccountRef, repoRef);
+            } finally {
+                MDC.remove("repoCtx");
+            }
         }
+
+        log.info("<< End collection for account: {}", githubAccountRef.githubLoginUsername());
+
     }
 
 

@@ -5,10 +5,13 @@ import com.sosd.sosd_backend.github_collector.dto.ref.GithubAccountRef;
 import com.sosd.sosd_backend.github_collector.dto.ref.UserAccountRef;
 import com.sosd.sosd_backend.repository.github.GithubAccountRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import org.slf4j.MDC;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class UserCollectionOrchestrator {
@@ -22,14 +25,22 @@ public class UserCollectionOrchestrator {
      * @param userAccountRef
      */
     public void collectByUser(UserAccountRef userAccountRef){
+
+        log.info(">>>> Start collection for user: {}", userAccountRef.studentId());
+
         // 1. 각 유저별 깃허브 계정 조회
         List<GithubAccount> githubAccounts = githubAccountRepository.findAllByUserAccount_StudentId(userAccountRef.studentId());
 
         // 2. 각 github 계정별 수집 실행
         for (GithubAccount githubAccount : githubAccounts){
-            GithubAccountRef githubAccountRef = githubAccount.toGithubAccountRef();
-            githubAccountCollectionOrchestrator.collectByGithubAccount(githubAccountRef);
+            MDC.put("githubCtx", "Acc:" + githubAccount.getGithubLoginUsername());
+            try {
+                GithubAccountRef githubAccountRef = githubAccount.toGithubAccountRef();
+                githubAccountCollectionOrchestrator.collectByGithubAccount(githubAccountRef);
+            } finally {
+                MDC.remove("githubCtx");
+            }
         }
-
+        log.info("<<<< End collection for user: {}", userAccountRef.studentId());
     }
 }
