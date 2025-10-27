@@ -97,8 +97,8 @@ CREATE TABLE IF NOT EXISTS github_commit (
     INDEX idx_commit_github_id_repo_date (github_id, repo_id, author_date) COMMENT '특정 계정의 특정 레포에 대한 날짜별 커밋 조회',
     INDEX idx_commit_github_id_date (github_id, author_date) COMMENT '작성자별 날짜 범위 커밋 조회용',
     INDEX idx_commit_repo_id (repo_id) COMMENT '레포지토리 기준 커밋 조회용',
-    INDEX idx_commit_author_date (author_date) COMMENT '날짜 범위 기준 커밋 조회용'
-
+    INDEX idx_commit_author_date (author_date) COMMENT '날짜 범위 기준 커밋 조회용',
+    INDEX idx_commit_repo_id_github_id_author_date (repo_id, github_id, author_date DESC)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Github 커밋 테이블';
 
 -- Pull Request 테이블
@@ -120,8 +120,8 @@ CREATE TABLE IF NOT EXISTS github_pull_request (
     INDEX idx_github_id_repo_date (github_id, repo_id, pr_date) COMMENT '특정 계정의 특정 레포에 대한 날짜별 PR 조회',
     INDEX idx_github_id_date (github_id, pr_date) COMMENT '작성자별 날짜 범위 PR 조회용',
     INDEX idx_pr_date (pr_date) COMMENT 'pr 생성 날짜 필터용',
-    INDEX idx_is_open (is_open) COMMENT 'pr 상태 조회용'
-
+    INDEX idx_is_open (is_open) COMMENT 'pr 상태 조회용',
+    INDEX idx_pr_repo_id_github_id_date (repo_id, github_id, pr_date)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Pull Request 테이블';
 
 -- Issue 테이블
@@ -142,8 +142,8 @@ CREATE TABLE IF NOT EXISTS github_issue (
     INDEX idx_repo_id (repo_id) COMMENT '레포지토리 기준 issue 조회용',
     INDEX idx_github_id_repo_date (github_id, repo_id, issue_date) COMMENT '특정 계정의 특정 레포에 대한 날짜별 issue 조회',
     INDEX idx_github_id_date (github_id, issue_date) COMMENT '작성자별 날짜 범위 issue 조회용',
-    INDEX idx_issue_date (issue_date) COMMENT 'issue 생성 날짜 조회용'
-
+    INDEX idx_issue_date (issue_date) COMMENT 'issue 생성 날짜 조회용',
+    INDEX idx_issue_repo_id_github_id_date (repo_id, github_id, issue_date)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Issue 테이블';
 
 -- Star 테이블
