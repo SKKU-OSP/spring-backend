@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <property name="LOG_DIR" value="./logs"/>
+    <property name="DEFAULT_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+    <property name="COLLECTOR_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [%X{userCtx:-}][%X{githubCtx:-}][%X{repoCtx:-}] %msg%n"/>
+
+    <appender name="CONSOLE_DEFAULT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${DEFAULT_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+    <appender name="CONSOLE_COLLECTOR" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${COLLECTOR_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/sosd-backend.log</file>
+        <encoder>
+            <pattern>${COLLECTOR_LOG_PATTERN}</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/sosd-backend-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>500MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>512</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <appender-ref ref="FILE"/>
+    </appender>
+
+
+    <logger name="com.sosd.sosd_backend.github_collector" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE_COLLECTOR"/>
+        <appender-ref ref="ASYNC_FILE"/> </logger>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE_DEFAULT"/>
+        <appender-ref ref="ASYNC_FILE"/> </root>
+
+</configuration>

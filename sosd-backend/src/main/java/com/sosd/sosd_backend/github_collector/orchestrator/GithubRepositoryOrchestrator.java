@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import org.slf4j.MDC;
 import java.time.ZoneOffset;
 
 @Slf4j
@@ -54,6 +55,9 @@ public class GithubRepositoryOrchestrator {
     }
 
     public void collectByRepository(GithubAccountRef githubAccountRef, RepoRef repoRef){
+
+        log.info("> Start collection for repository");
+
         // commit 수집
         collectCommits(githubAccountRef, repoRef);
         // pr 수집
@@ -71,8 +75,7 @@ public class GithubRepositoryOrchestrator {
             CollectResult<GithubCommitResponseDto, ShaCursor> commitResults =
                     commitCollector.collect(new CommitCollectContext(acc, repo, lastSha));
 
-            log.info("[collect][{}] source={} fetched={}/{}(total) elapsed={}ms",
-                    repo.fullName(),
+            log.info("[collect] source={} fetched={}/{}(total) elapsed={}ms",
                     commitResults.source(),
                     commitResults.fetchedCount(),
                     commitResults.totalCount(),
@@ -86,11 +89,9 @@ public class GithubRepositoryOrchestrator {
                         acc.githubId(),
                         commitResults.results()
                 );
-                log.info("[upsert][{}] commits upsert success",
-                        repo.fullName()
-                );
+                log.info("[upsert] commits upsert success");
             } catch (Exception e) {
-                log.error("[upsert][{}] commit upsert failed", repo.fullName(), e);
+                log.error("[upsert] commit upsert failed", e);
                 return; // 오류나면 커서 업데이트 x
             }
 
@@ -102,11 +103,11 @@ public class GithubRepositoryOrchestrator {
             try {
                 linkService.updateCommitCursor(acc.githubId(), repo.repoId(),commitResults.cursor().sha());
             } catch (Exception e) {
-                log.error("[update][{}] commit cursor update failed", repo.fullName(), e);
+                log.error("[update] commit cursor update failed", e);
             }
 
         } catch (Exception e) {
-            log.error("[collect][{}] commit collect failed", repo.fullName(), e);
+            log.error("[collect] commit collect failed", e);
         }
     }
 
@@ -121,8 +122,7 @@ public class GithubRepositoryOrchestrator {
             CollectResult<GithubPullRequestResponseDto, TimeCursor> pullRequestResults =
                     pullRequestCollector.collect(new PullRequestCollectContext(acc, repo, since));
 
-            log.info("[collect][{}] source={} fetched={}/{}(total) elapsed={}ms",
-                    repo.fullName(),
+            log.info("[collect] source={} fetched={}/{}(total) elapsed={}ms",
                     pullRequestResults.source(),
                     pullRequestResults.fetchedCount(),
                     pullRequestResults.totalCount(),
@@ -136,9 +136,9 @@ public class GithubRepositoryOrchestrator {
                         acc.githubId(),
                         pullRequestResults.results()
                 );
-                log.info("[upsert][{}] prs upsert success", repo.fullName());
+                log.info("[upsert] pr upsert success");
             } catch (Exception e) {
-                log.error("[upsert][{}] pr upsert failed", repo.fullName(), e);
+                log.error("[upsert] pr upsert failed", e);
                 return; // 오류나면 커서 업데이트 x
             }
 
@@ -154,11 +154,11 @@ public class GithubRepositoryOrchestrator {
                         toUtcLocal(pullRequestResults.cursor().lastCollectedTime())
                 );
             } catch (Exception e) {
-                log.error("[update][{}] pr cursor update failed", repo.fullName(), e);
+                log.error("[update] pr cursor update failed", e);
             }
 
         } catch (Exception e) {
-            log.error("[collect][{}] pr collect failed", repo.fullName(), e);
+            log.error("[collect] pr collect failed", e);
         }
 
     }
@@ -174,8 +174,7 @@ public class GithubRepositoryOrchestrator {
             CollectResult<GithubIssueResponseDto, TimeCursor> issueResults =
                     issueCollector.collect(new IssueCollectContext(acc, repo, since));
 
-            log.info("[collect][{}] source={} fetched={}/{}(total) elapsed={}ms",
-                    repo.fullName(),
+            log.info("[collect] source={} fetched={}/{}(total) elapsed={}ms",
                     issueResults.source(),
                     issueResults.fetchedCount(),
                     issueResults.totalCount(),
@@ -189,9 +188,9 @@ public class GithubRepositoryOrchestrator {
                         acc.githubId(),
                         issueResults.results()
                 );
-                log.info("[upsert][{}] issues upsert success", repo.fullName());
+                log.info("[upsert] issues upsert success");
             } catch (Exception e) {
-                log.error("[upsert][{}] issue upsert failed", repo.fullName(), e);
+                log.error("[upsert] issue upsert failed", e);
                 return; // 오류나면 커서 업데이트 x
             }
 
@@ -207,13 +206,14 @@ public class GithubRepositoryOrchestrator {
                         toUtcLocal(issueResults.cursor().lastCollectedTime())
                 );
             } catch (Exception e) {
-                log.error("[update][{}] issue cursor update failed", repo.fullName(), e);
+                log.error("[update] issue cursor update failed", e);
             }
 
         } catch (Exception e) {
-            log.error("[collect][{}] issue collect failed", repo.fullName(), e);
+            log.error("[collect]issue collect failed", e);
         }
 
+        log.info("< End collection for repository");
     }
 
 }

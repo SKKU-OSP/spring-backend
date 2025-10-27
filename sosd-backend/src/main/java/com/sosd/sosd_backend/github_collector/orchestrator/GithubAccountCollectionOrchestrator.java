@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.MDC;
 
 @Slf4j
 @Component
@@ -35,6 +36,10 @@ public class GithubAccountCollectionOrchestrator {
      */
     public void collectByGithubAccount(GithubAccountRef githubAccountRef){
 
+        log.info(">> Start collection for account: {}", githubAccountRef.githubLoginUsername());
+
+        List<RepoRef> repoRefs = new ArrayList<>();
+
         // 1) 해당 유저가 기여한 모든 레포 수집
         RepoListCollectContext ctx = new RepoListCollectContext(
                 githubAccountRef,
@@ -45,8 +50,7 @@ public class GithubAccountCollectionOrchestrator {
             CollectResult<GithubRepositoryResponseDto, TimeCursor> collectedRepos =
                     repoCollector.collect(ctx);
 
-            log.info("[collect][acc={}] source={} fetched={}/{}(total) elapsed={}ms",
-                    githubAccountRef.githubLoginUsername(),
+            log.info("[collect] source={} fetched={}/{}(total) elapsed={}ms",
                     collectedRepos.source(),
                     collectedRepos.fetchedCount(),
                     collectedRepos.totalCount(),
@@ -54,11 +58,7 @@ public class GithubAccountCollectionOrchestrator {
             );
 
             for (var repo : collectedRepos.results()) {
-                log.info("[collect][acc={}] source={} repository={}",
-                        githubAccountRef.githubLoginUsername(),
-                        collectedRepos.source(),
-                        repo.fullName()
-                );
+                log.info("[collect] found repository={}", repo.fullName());
             }
 
             // 2) 도메인 모델 뱐환
@@ -94,28 +94,32 @@ public class GithubAccountCollectionOrchestrator {
                         githubAccountRef.githubLoginUsername(), linkSuccess, upsertedRepos.size());
 
             } catch (Exception e) {
-                log.error("[upsert][acc={}] repo upsert failed", githubAccountRef.githubLoginUsername(), e);
+                log.error("[upsert] repo upsert failed", e);
             }
 
         } catch (Exception e) {
-            log.error("[collect][acc={}] repo collect failed", githubAccountRef.githubLoginUsername(), e);
+            log.error("[collect] repo collect failed", e);
         }
 
         // 4) 이 계정과 연관된 모든 레포 가져오기
         List<RepoRef> allLinkedRepoRefs = new ArrayList<>();
         try {
             allLinkedRepoRefs = linkService.listRepoRefs(githubAccountRef.githubId());
-            log.info("[link][acc={}] target repo count={}", githubAccountRef.githubLoginUsername(), allLinkedRepoRefs.size());
+            log.info("[link] target repo count={}", allLinkedRepoRefs.size());
         } catch (Exception e) {
-            log.error("[link][acc={}] link failed", githubAccountRef.githubLoginUsername(), e);
+            log.error("[link] link failed", e);
         }
 
         // 5) 하위 orchestrator 수집
         for(RepoRef repoRef : allLinkedRepoRefs){
-            githubRepositoryOrchestrator.collectByRepository(githubAccountRef, repoRef);
+            MDC.put("repoCtx", "Repo:" + repoRef.fullName());
+            try {
+                githubRepositoryOrchestrator.collectByRepository(githubAccountRef, repoRef);
+            } finally {
+                MDC.remove("repoCtx");
+            }
         }
+        log.info("<< End collection for account: {}", githubAccountRef.githubLoginUsername());
     }
-
-
 
 }
