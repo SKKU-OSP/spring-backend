@@ -55,8 +55,8 @@ public class RepoCollector implements GithubResourceCollector
 
         // 1-1. 사용자의 모든 공개 repo 목록에서 추출
         fullNames.addAll(fetchReposFromUserRepos(context.githubAccountRef().githubLoginUsername()));
-        // 1-2. 사용자가 최근에 기여한 이슈/PR에서 repo 추출
-        fullNames.addAll(fetchReposFromSearchIssues(context.githubAccountRef().githubLoginUsername(), context.lastCrawling()));
+//        // 1-2. 사용자가 최근에 기여한 이슈/PR에서 repo 추출
+//        fullNames.addAll(fetchReposFromSearchIssues(context.githubAccountRef().githubLoginUsername(), context.lastCrawling()));
         // 1-3. 사용자의 이벤트에서 기여한 repo 추출
         fullNames.addAll(fetchReposFromEvents(context.githubAccountRef().githubLoginUsername()));
 
