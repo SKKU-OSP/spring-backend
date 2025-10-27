@@ -8,12 +8,12 @@ import com.sosd.sosd_backend.github_collector.dto.collect.result.TimeCursor;
 import com.sosd.sosd_backend.github_collector.dto.ref.GithubAccountRef;
 import com.sosd.sosd_backend.github_collector.dto.ref.RepoRef;
 import com.sosd.sosd_backend.github_collector.dto.response.GithubRepositoryResponseDto;
+import com.sosd.sosd_backend.service.github.GithubAccountRepositoryLinkService;
 import com.sosd.sosd_backend.service.github.RepoUpsertService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.MDC;
@@ -26,6 +26,8 @@ public class GithubAccountCollectionOrchestrator {
     private final GithubRepositoryOrchestrator githubRepositoryOrchestrator;
     private final RepoCollector repoCollector;
     private final RepoUpsertService repoUpsertService;
+    private final GithubAccountRepositoryLinkService linkService;
+
 
     /**
      * 단일 깃허브 계정에 대한 수집 수행
@@ -59,16 +61,37 @@ public class GithubAccountCollectionOrchestrator {
                 log.info("[collect] found repository={}", repo.fullName());
             }
 
-            List<GithubRepositoryResponseDto> repoResponseDtos = collectedRepos.results();
-
             // 2) 도메인 모델 뱐환
-            List<GithubRepositoryUpsertDto> repoUpsertDtos = repoResponseDtos.stream()
+            List<GithubRepositoryUpsertDto> repoUpsertDtos = collectedRepos.results()
+                    .stream()
                     .map(GithubRepositoryUpsertDto::from)
                     .toList();
+
+            // 3) DB 저장
             try{
-                // 3) DB 저장
-                repoRefs = repoUpsertService.upsertRepos(repoUpsertDtos);
-                log.info("[upsert] repos upsert success count={}", repoRefs.size());
+                // 3-1) 레포 저장
+                List<RepoRef> upsertedRepos = repoUpsertService.upsertRepos(repoUpsertDtos);
+
+                log.info("[upsert][acc={}] repos upsert success count={}",
+                        githubAccountRef.githubLoginUsername(),
+                        upsertedRepos.size()
+                );
+
+                // 3-2) 계정 - 레포 링크 테이블 저장
+                int linkSuccess = 0;
+                for (RepoRef repoRef : upsertedRepos) {
+                    try {
+                        linkService.linkIfAbsent(githubAccountRef.githubId(), repoRef.repoId());
+                        linkSuccess++;
+                        log.debug("[link][acc={}] linked repoName={}",
+                                githubAccountRef.githubLoginUsername(), repoRef.fullName());
+                    } catch (Exception e) {
+                        log.warn("[link][acc={}] link failed for repo={}",
+                                githubAccountRef.githubLoginUsername(), repoRef.fullName(), e);
+                    }
+                }
+                log.info("[link][acc={}] link ensured count={}/{}",
+                        githubAccountRef.githubLoginUsername(), linkSuccess, upsertedRepos.size());
 
             } catch (Exception e) {
                 log.error("[upsert] repo upsert failed", e);
@@ -78,21 +101,25 @@ public class GithubAccountCollectionOrchestrator {
             log.error("[collect] repo collect failed", e);
         }
 
-        // 4) 하위 orchestrator 수집
-        for(RepoRef repoRef : repoRefs) {
-            MDC.put("repoCtx", "Repo:" + repoRef.fullName());
+        // 4) 이 계정과 연관된 모든 레포 가져오기
+        List<RepoRef> allLinkedRepoRefs = new ArrayList<>();
+        try {
+            allLinkedRepoRefs = linkService.listRepoRefs(githubAccountRef.githubId());
+            log.info("[link] target repo count={}", allLinkedRepoRefs.size());
+        } catch (Exception e) {
+            log.error("[link] link failed", e);
+        }
 
+        // 5) 하위 orchestrator 수집
+        for(RepoRef repoRef : allLinkedRepoRefs){
+            MDC.put("repoCtx", "Repo:" + repoRef.fullName());
             try {
                 githubRepositoryOrchestrator.collectByRepository(githubAccountRef, repoRef);
             } finally {
                 MDC.remove("repoCtx");
             }
         }
-
         log.info("<< End collection for account: {}", githubAccountRef.githubLoginUsername());
-
     }
-
-
 
 }

@@ -55,8 +55,8 @@ public class RepoCollector implements GithubResourceCollector
 
         // 1-1. 사용자의 모든 공개 repo 목록에서 추출
         fullNames.addAll(fetchReposFromUserRepos(context.githubAccountRef().githubLoginUsername()));
-        // 1-2. 사용자가 최근에 기여한 이슈/PR에서 repo 추출
-        fullNames.addAll(fetchReposFromSearchIssues(context.githubAccountRef().githubLoginUsername(), context.lastCrawling()));
+//        // 1-2. 사용자가 최근에 기여한 이슈/PR에서 repo 추출
+//        fullNames.addAll(fetchReposFromSearchIssues(context.githubAccountRef().githubLoginUsername(), context.lastCrawling()));
         // 1-3. 사용자의 이벤트에서 기여한 repo 추출
         fullNames.addAll(fetchReposFromEvents(context.githubAccountRef().githubLoginUsername()));
 
@@ -193,17 +193,33 @@ public class RepoCollector implements GithubResourceCollector
      */
     private Set<String> fetchReposFromUserRepos(String username) {
         Set<String> result = new HashSet<>();
+        int page = 1;
+        int perPage = 10;
+
 
         try {
-            List<UserRepoDto> repos = githubRestClient.request()
-                    .endpoint("/users/" + username + "/repos")
-                    .queryParam("type", "all")
-                    .getList(new ParameterizedTypeReference<>() {});
-            if  (repos != null && !repos.isEmpty()) {
+            while (true) {
+                List<UserRepoDto> repos = githubRestClient.request()
+                        .endpoint("/users/" + username + "/repos")
+                        .queryParam("type", "all")                 // forks 포함
+                        .queryParam("per_page", String.valueOf(perPage))
+                        .queryParam("page", String.valueOf(page))
+                        .getList(new ParameterizedTypeReference<>() {});
+
+                if (repos == null || repos.isEmpty()) {
+                    break;
+                }
+
                 repos.stream()
                         .map(UserRepoDto::fullName)
                         .filter(Objects::nonNull)
                         .forEach(result::add);
+
+                // 현재 페이지의 항목 수가 perPage보다 작으면 마지막 페이지
+                if (repos.size() < perPage) {
+                    break;
+                }
+                page++;
             }
         }
         catch (HttpClientErrorException e) {

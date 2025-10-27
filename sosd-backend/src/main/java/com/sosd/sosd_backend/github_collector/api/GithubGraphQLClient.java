@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 import java.util.HashMap;
@@ -98,29 +99,47 @@ public class GithubGraphQLClient {
             String token = tokenManager.getToken();
 
             while (true) {
-                Map<String, Object> requestBody = new HashMap<>();
-                requestBody.put("query", query);
-                if (!variables.isEmpty()) {
-                    requestBody.put("variables", variables);
-                }
-                RestClient.RequestBodySpec spec = restClient.post()
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                        .body(requestBody);
-                headers.forEach(spec::header);
+                try {
+                    Map<String, Object> requestBody = new HashMap<>();
+                    requestBody.put("query", query);
+                    if (!variables.isEmpty()) {
+                        requestBody.put("variables", variables);
+                    }
 
-                // GraphQL은 200 OK여도 errors에 들어오므로 항상 바디로 판별
-                JsonNode json = spec.retrieve().body(JsonNode.class);
-                GraphQLResponse<T> parsed = parseGraphQLResponse(json, responseType);
+                    RestClient.RequestBodySpec spec = restClient.post()
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                            .body(requestBody);
 
-                if (isGraphqlRateLimited(parsed.getErrors())) {
-                    if (rotations++ < MAXIMUM_RETRIES) {
-                        log.warn("[rateLimit] GraphQL rate-limited. Rotating token ({}/{})", rotations, MAXIMUM_RETRIES);
+                    headers.forEach(spec::header);
+
+                    JsonNode json = spec.retrieve().body(JsonNode.class);
+
+                    GraphQLResponse<T> parsed = parseGraphQLResponse(json, responseType);
+
+                    // ----- (B) GraphQL 레벨 rate limit 처리 -----
+                    if (isGraphqlRateLimited(parsed.getErrors())) {
+                        if (rotations++ < MAXIMUM_RETRIES) {
+                            log.warn("[rateLimit] GraphQL rate-limited. Rotating token ({}/{})", rotations, MAXIMUM_RETRIES);
+                            token = tokenManager.getNextToken();
+                            continue;
+                        }
+                        log.warn("[rateLimit] GraphQL rate-limited and max rotations reached ({}). Returning last response.", MAXIMUM_RETRIES);
+                    }
+
+                    return parsed;
+                } catch (HttpClientErrorException e) {
+                    int status = e.getStatusCode().value();
+
+                    // HTTP 레벨 인증 문제 처리
+                    if ((status == 401 || status == 403) && rotations < MAXIMUM_RETRIES) {
+                        log.warn("[auth] {} from GitHub. Rotating token ({}/{})", status, rotations + 1, MAXIMUM_RETRIES);
                         token = tokenManager.getNextToken();
+                        rotations++;
                         continue;
                     }
-                    log.warn("[rateLimit] GraphQL rate-limited and max rotations reached ({}). Returning last response.", MAXIMUM_RETRIES);
+
+                    throw e;
                 }
-                return parsed; // 정상 or 회전 소진 후 반환
             }
         }
 
@@ -128,19 +147,28 @@ public class GithubGraphQLClient {
             if (errors == null || errors.isEmpty()) return false;
             for (GraphQLError err : errors) {
                 String msg = err.getMessage() == null ? "" : err.getMessage().toLowerCase();
-                Object code = err.getExtensions() != null ? err.getExtensions().get("code") : null;
-                Object type = err.getExtensions() != null ? err.getExtensions().get("type") : null;
 
-                // GitHub는 errors에 code/type/messsage 조합으로 올 수 있으니 모두 체크
-                if ("RATE_LIMITED".equalsIgnoreCase(String.valueOf(code))
-                        || "RATE_LIMITED".equalsIgnoreCase(String.valueOf(type))
-                        || msg.contains("rate limit exceeded")
-                        || msg.contains("api rate limit exceeded")){
-                    return true;
+                // extensions가 null일 수 있으므로 NPE 방어
+                String code = null;
+                String type = null;
+                if (err.getExtensions() != null) {
+                    Object codeObj = err.getExtensions().get("code");
+                    Object typeObj = err.getExtensions().get("type");
+                    code = codeObj == null ? null : codeObj.toString();
+                    type = typeObj == null ? null : typeObj.toString();
                 }
+
+                if ("RATE_LIMIT".equalsIgnoreCase(err.getType())) return true;
+                if ("RATE_LIMIT".equalsIgnoreCase(type)) return true;
+                if ("RATE_LIMITED".equalsIgnoreCase(type)) return true;
+                if ("RATE_LIMIT".equalsIgnoreCase(code)) return true;
+                if ("RATE_LIMITED".equalsIgnoreCase(code)) return true;
+                if (msg.contains("rate limit exceeded")) return true;
+                if (msg.contains("api rate limit exceeded")) return true;
             }
             return false;
         }
+
 
 
 
