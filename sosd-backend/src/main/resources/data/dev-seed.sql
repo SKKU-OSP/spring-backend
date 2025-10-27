@@ -44,7 +44,7 @@ VALUES (
 
 
 -- 기본 유저 계정 데이터
-INSERT INTO user_account (
+INSERT INTO student_account (
     student_id, name, role, college, dept, plural_major, photo, introduction, portfolio,
     date_joined, updated_at, last_login, absence, is_active
 )
@@ -89,7 +89,7 @@ ON DUPLICATE KEY UPDATE
                      last_crawling = VALUES(last_crawling);
 
 -- 기본 유저 계정 데이터
-INSERT INTO user_account (
+INSERT INTO student_account (
     student_id, name, role, college, dept, plural_major, photo, introduction, portfolio,
     date_joined, updated_at, last_login, absence, is_active
 )

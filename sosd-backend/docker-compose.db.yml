@@ -1,0 +1,28 @@
+# 로컬에서 MySQL 8.0 컨테이너를 실행하기 위한 Docker Compose 파일입니다.
+# 개발/운영 서버에는 이미 DB 컨테이너가 존재하므로 사용할 필요 없습니다.
+
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: sosd-spring-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "${MYSQL_PORT}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+volumes:
+  mysql_data:
+    driver: local
