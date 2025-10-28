@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  SPRING:
+    container_name: sosd-spring-backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sosd/sosd-backend-spring:dev
+    restart: always
+
+    env_file:
+      - .env.dev
+
+    environment:
+      # Spring profile
+      SPRING_PROFILES_ACTIVE: dev
+
+      # DB 연결 정보
+      MYSQL_HOST: host.docker.internal
+      MYSQL_PORT: ${MYSQL_PORT}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+    networks:
+      - net
+
+    ports:
+      - "4403:8080"
+
+networks:
+  net:
+    external: true
