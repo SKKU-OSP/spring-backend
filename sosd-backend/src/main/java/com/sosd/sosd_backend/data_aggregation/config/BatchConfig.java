@@ -18,7 +18,6 @@ public class BatchConfig {
 
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
-
     private final ContributionStatsReader reader;
     private final ContributionStatsProcessor processor;
     private final ContributionStatsWriter writer;
