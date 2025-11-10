@@ -13,18 +13,14 @@ import java.util.List;
 public interface GithubAccountRepositoryLinkRepository extends JpaRepository<GithubAccountRepositoryEntity, GithubAccountRepositoryId> {
 
     @Query("""
-        SELECT new com.sosd.sosd_backend.data_aggregation.dto.AccountRepoPair(
-            ar.githubAccountId,
-            ar.githubRepoId,
-            ar.lastUpdatedAt
-        )
-        FROM GithubAccountRepositoryEntity ar
-        WHERE ar.lastUpdatedAt > (
+        SELECT gar
+        FROM GithubAccountRepositoryEntity gar
+        WHERE gar.lastUpdatedAt > (
             SELECT COALESCE(MAX(s.lastUpdatedAt), '1970-01-01')
             FROM GithubContributionStats s
-            WHERE s.githubId = ar.githubAccountId
-              AND s.repoId = ar.githubRepoId
+            WHERE s.githubId = gar.githubAccount.githubId
+              AND s.repoId = gar.repository.id
         )
     """)
-    List<AccountRepoPair> findPairsNeedUpdate();
+    List<GithubAccountRepositoryEntity> findLinksNeedUpdate();
 }
