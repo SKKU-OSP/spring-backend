@@ -1,5 +1,7 @@
 package com.sosd.sosd_backend.data_aggregation.config;
 
+import com.sosd.sosd_backend.data_aggregation.batch.ContributionStatsProcessor;
+import com.sosd.sosd_backend.data_aggregation.batch.ContributionStatsReader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
