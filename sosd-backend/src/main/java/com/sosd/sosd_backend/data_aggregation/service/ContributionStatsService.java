@@ -55,5 +55,5 @@ public class ContributionStatsService {
         return statsRepository.save(stats);
     }
 }
-}
+
 

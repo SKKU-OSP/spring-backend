@@ -2,6 +2,9 @@ package com.sosd.sosd_backend.data_aggregation.config;
 
 import com.sosd.sosd_backend.data_aggregation.batch.ContributionStatsProcessor;
 import com.sosd.sosd_backend.data_aggregation.batch.ContributionStatsReader;
+import com.sosd.sosd_backend.data_aggregation.batch.ContributionStatsWriter;
+import com.sosd.sosd_backend.data_aggregation.entity.GithubContributionStats;
+import com.sosd.sosd_backend.entity.github.GithubAccountRepositoryEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -13,6 +16,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
+
+import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
@@ -34,12 +39,11 @@ public class BatchConfig {
     @Bean
     public Step contributionStatsStep() {
         return new StepBuilder("contributionStatsStep", jobRepository)
-                .<GithubAccount, List<GithubContributionStats>>chunk(5, transactionManager)
+                .<GithubAccountRepositoryEntity, List<GithubContributionStats>>chunk(3, transactionManager)
                 .reader(reader)
                 .processor(processor)
                 .writer(writer)
                 .taskExecutor(taskExecutor())
-                .throttleLimit(8)
                 .build();
     }
 
