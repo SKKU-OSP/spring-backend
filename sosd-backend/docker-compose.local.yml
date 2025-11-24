@@ -1,25 +1,34 @@
-version: '3.8'
+version: "3.9"
 
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: sosd-spring-mysql
+  app:
+    container_name: sosd-local-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+    env_file:
+      - .env.local
+
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      SPRING_PROFILES_ACTIVE: local
+
+      # DB 접속 정보: 이제 db 컨테이너랑 한 compose 네트워크에 없으니까
+      # 호스트로 나갔다가 포트포워딩된 MySQL로 들어간다.
+      # 윈도우/맥: host.docker.internal
+      # (만약 리눅스라서 host.docker.internal 없으면, 나중에 DB 컨테이너의 브릿지 IP나 custom network로 바꾸면 돼)
+      MYSQL_HOST: host.docker.internal
+      MYSQL_PORT: ${MYSQL_PORT}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    ports:
-      - "${MYSQL_PORT}:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
 
-volumes:
-  mysql_data:
-    driver: local
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+
+    ports:
+      - "8080:8080"
+
+    volumes:
+      - ./logs:/app/logs
+      - ./.env.local:/app/.env.local:ro

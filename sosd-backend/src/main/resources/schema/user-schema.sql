@@ -1,7 +1,7 @@
 -- src/main/resources/schema/user-schema.sql
 
 -- 유저 테이블
-CREATE TABLE IF NOT EXISTS user_account (
+CREATE TABLE IF NOT EXISTS student_account (
     student_id VARCHAR(20) NOT NULL PRIMARY KEY COMMENT '학번 (SSO)',
     name VARCHAR(40) NOT NULL COMMENT '이름(SSO)',
     role INT NOT NULL DEFAULT 0 COMMENT '역할 (0: 일반회원, 1: 관리자 등), 추후 역할 추가 가능성이 있기에 int로 설정',

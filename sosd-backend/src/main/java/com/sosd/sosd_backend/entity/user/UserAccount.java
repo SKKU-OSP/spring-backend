@@ -15,7 +15,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "user_account")
+@Table(name = "student_account")
 public class UserAccount {
 
     // 기본 키

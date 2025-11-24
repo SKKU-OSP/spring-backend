@@ -30,7 +30,7 @@ public class GithubSchedulerTrigger {
 //    }
 
     // 앱 시작 10초 뒤부터 15분 간격 실행 (테스트용으로 사용하세요)
-    @Scheduled(initialDelayString = "10s", fixedDelayString = "15m")
+    @Scheduled(initialDelayString = "10s", fixedDelayString = "6h")
     public void runPeriodically() {
         if (!running.compareAndSet(false, true)) {
             // 이미 실행 중이면 스킵

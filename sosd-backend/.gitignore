@@ -49,3 +49,7 @@ src/main/generated/
 *.log
 *.log.*
 *.gz
+
+# env
+.env
+.env.*
