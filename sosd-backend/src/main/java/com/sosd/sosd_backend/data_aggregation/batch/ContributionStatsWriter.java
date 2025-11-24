@@ -1,7 +1,7 @@
 package com.sosd.sosd_backend.data_aggregation.batch;
 
 import com.sosd.sosd_backend.data_aggregation.entity.GithubContributionStats;
-import com.sosd.sosd_backend.data_aggregation.repository.GithubContributionStatsRepository;
+import com.sosd.sosd_backend.data_aggregation.repository.AggregationGithubContributionStatsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
@@ -15,7 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ContributionStatsWriter implements ItemWriter<List<GithubContributionStats>> {
 
-    private final GithubContributionStatsRepository statsRepository;
+    private final AggregationGithubContributionStatsRepository statsRepository;
 
     @Override
     @Transactional
@@ -26,4 +26,3 @@ public class ContributionStatsWriter implements ItemWriter<List<GithubContributi
         statsRepository.saveAll(flatList);
     }
 }
-

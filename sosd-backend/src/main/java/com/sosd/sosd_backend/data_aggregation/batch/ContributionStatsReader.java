@@ -1,6 +1,7 @@
 package com.sosd.sosd_backend.data_aggregation.batch;
 
-import com.sosd.sosd_backend.data_aggregation.repository.GithubAccountRepositoryLinkRepository;
+import com.sosd.sosd_backend.data_aggregation.dto.AccountRepoProjection;
+import com.sosd.sosd_backend.data_aggregation.repository.AggregationGithubAccountRepositoryLinkRepository;
 import com.sosd.sosd_backend.entity.github.GithubAccountRepositoryEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.item.ItemReader;
@@ -11,14 +12,14 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class ContributionStatsReader implements ItemReader<GithubAccountRepositoryEntity> {
-    private final GithubAccountRepositoryLinkRepository linkRepository;
-    private Iterator<GithubAccountRepositoryEntity> iterator;
+public class ContributionStatsReader implements ItemReader<AccountRepoProjection> {
+    private final AggregationGithubAccountRepositoryLinkRepository linkRepository;
+    private Iterator<AccountRepoProjection> iterator;
 
     @Override
-    public GithubAccountRepositoryEntity read() {
+    public AccountRepoProjection read() {
         if (iterator == null) {
-            List<GithubAccountRepositoryEntity> links = linkRepository.findLinksNeedUpdate();
+            List<AccountRepoProjection> links = linkRepository.findLinksNeedUpdate();
             iterator = links.iterator();
         }
         return iterator.hasNext() ? iterator.next() : null;
