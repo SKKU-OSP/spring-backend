@@ -10,6 +10,7 @@ import com.sosd.sosd_backend.github_collector.dto.ref.RepoRef;
 import com.sosd.sosd_backend.github_collector.dto.response.GithubRepositoryResponseDto;
 import com.sosd.sosd_backend.repository.github.GithubAccountRepository;
 import com.sosd.sosd_backend.service.github.GithubAccountRepositoryLinkService;
+import com.sosd.sosd_backend.service.github.GithubAccountService;
 import com.sosd.sosd_backend.service.github.RepoUpsertService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +30,7 @@ public class GithubAccountCollectionOrchestrator {
     private final RepoCollector repoCollector;
     private final RepoUpsertService repoUpsertService;
     private final GithubAccountRepositoryLinkService linkService;
-    private final GithubAccountRepository githubAccountRepository;
+    private final GithubAccountService githubAccountService;
 
     /**
      * 단일 깃허브 계정에 대한 수집 수행
@@ -130,10 +131,7 @@ public class GithubAccountCollectionOrchestrator {
 
         try {
             LocalDateTime now = LocalDateTime.now();
-            githubAccountRepository.updateLastCrawlingByGithubId(
-                    githubAccountRef.githubId(),
-                    now
-            );
+            githubAccountService.updateLastCrawling(githubAccountRef.githubId(), now);
             log.info("[update] last crawling updated at {}", now);
         } catch (Exception e) {
             log.error("[update] last crawling update failed", e);
