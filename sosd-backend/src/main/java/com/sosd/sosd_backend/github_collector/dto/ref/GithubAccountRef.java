@@ -1,5 +1,6 @@
 package com.sosd.sosd_backend.github_collector.dto.ref;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
@@ -18,8 +19,9 @@ public record GithubAccountRef(
         String githubLoginUsername,
         String githubName,
         String githubToken,
-        String githubEmail
-) {
+        String githubEmail,
+        LocalDateTime lastCrawling
+        ) {
     public GithubAccountRef{
         Objects.requireNonNull(githubId);
         Objects.requireNonNull(githubGraphqlNodeId);
