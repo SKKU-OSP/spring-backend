@@ -55,7 +55,8 @@ public class GithubAccountRepositoryLinkService {
                         e.getGithubRepoId(),
                         e.getOwnerName(),
                         e.getRepoName(),
-                        e.getFullName()
+                        e.getFullName(),
+                        e.getGithubRepositoryUpdatedAt()
                 ))
                 .toList();
     }
