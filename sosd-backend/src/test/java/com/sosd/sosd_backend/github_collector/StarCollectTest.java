@@ -27,6 +27,7 @@ public class StarCollectTest {
                 "SKKU-OSP",
                 "SKKU-OSP",
                 "SKKU-OSP/SKKU-OSP",
+                LocalDateTime.now(),
                 LocalDateTime.now()
         );
 

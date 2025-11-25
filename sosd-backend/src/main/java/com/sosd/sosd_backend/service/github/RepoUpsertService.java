@@ -59,7 +59,8 @@ public class RepoUpsertService {
                         e.getOwnerName(),
                         e.getRepoName(),
                         e.getOwnerName() + "/" + e.getRepoName(),
-                        e.getGithubRepositoryUpdatedAt()
+                        e.getGithubRepositoryUpdatedAt(),
+                        e.getGithubPushedAt()
                 ))
                 .toList();
     }

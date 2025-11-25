@@ -27,6 +27,7 @@ public class CommitCollectTest {
                 "SKKU-OSP",
                 "spring-backend",
                 "SKKU-OSP/spring-backend",
+                LocalDateTime.now(),
                 LocalDateTime.now()
         );
 

@@ -30,6 +30,7 @@ public class IssueCollectTest {
                 "SKKU-SUCPI",
                 "frontend-2.0",
                 "SKKU-SUCPI/frontend-2.0",
+                LocalDateTime.now(),
                 LocalDateTime.now()
         );
 

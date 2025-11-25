@@ -18,8 +18,8 @@ public record RepoRef(
         String ownerName,
         String repoName,
         String fullName,
-        LocalDateTime githubRepositoryUpdatedAt
-
+        LocalDateTime githubRepositoryUpdatedAt,
+        LocalDateTime githubPushedAt
 ) {
     public RepoRef {
         Objects.requireNonNull(repoId, "repoId must not be null");

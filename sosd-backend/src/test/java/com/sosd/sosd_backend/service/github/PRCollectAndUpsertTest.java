@@ -38,6 +38,7 @@ class PRCollectAndUpsertTest {
                 "SKKU-OSP",
                 "spring-backend",
                 "SKKU-OSP/spring-backend",
+                LocalDateTime.now(),
                 LocalDateTime.now()
         );
 
