@@ -8,12 +8,14 @@ import com.sosd.sosd_backend.github_collector.dto.collect.result.TimeCursor;
 import com.sosd.sosd_backend.github_collector.dto.ref.GithubAccountRef;
 import com.sosd.sosd_backend.github_collector.dto.ref.RepoRef;
 import com.sosd.sosd_backend.github_collector.dto.response.GithubRepositoryResponseDto;
+import com.sosd.sosd_backend.repository.github.GithubAccountRepository;
 import com.sosd.sosd_backend.service.github.GithubAccountRepositoryLinkService;
 import com.sosd.sosd_backend.service.github.RepoUpsertService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.MDC;
@@ -27,7 +29,7 @@ public class GithubAccountCollectionOrchestrator {
     private final RepoCollector repoCollector;
     private final RepoUpsertService repoUpsertService;
     private final GithubAccountRepositoryLinkService linkService;
-
+    private final GithubAccountRepository githubAccountRepository;
 
     /**
      * 단일 깃허브 계정에 대한 수집 수행
@@ -37,8 +39,6 @@ public class GithubAccountCollectionOrchestrator {
     public void collectByGithubAccount(GithubAccountRef githubAccountRef){
 
         log.info(">> Start collection for account: {}", githubAccountRef.githubLoginUsername());
-
-        List<RepoRef> repoRefs = new ArrayList<>();
 
         // 1) 해당 유저가 기여한 모든 레포 수집
         RepoListCollectContext ctx = new RepoListCollectContext(
@@ -114,11 +114,25 @@ public class GithubAccountCollectionOrchestrator {
         for(RepoRef repoRef : allLinkedRepoRefs){
             MDC.put("repoCtx", "Repo:" + repoRef.fullName());
             try {
+
+                LocalDateTime lastCrawling = githubAccountRef.lastCrawling();
+                // 5-1 최종 크롤링 이후 업데이트가 없다면 스킵
+                if (lastCrawling != null && lastCrawling.isAfter(repoRef.githubRepositoryUpdatedAt())) {
+                    log.info("Skip collection for repository (no updates since last crawl)");
+                    continue;
+                }
+                // 5-2 수집 실행
                 githubRepositoryOrchestrator.collectByRepository(githubAccountRef, repoRef);
             } finally {
                 MDC.remove("repoCtx");
             }
         }
+
+        githubAccountRepository.updateLastCrawlingByGithubId(
+                githubAccountRef.githubId(),
+                LocalDateTime.now()
+        );
+
         log.info("<< End collection for account: {}", githubAccountRef.githubLoginUsername());
     }
 
