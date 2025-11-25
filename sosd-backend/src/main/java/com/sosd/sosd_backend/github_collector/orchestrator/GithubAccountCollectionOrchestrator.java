@@ -128,10 +128,16 @@ public class GithubAccountCollectionOrchestrator {
             }
         }
 
-        githubAccountRepository.updateLastCrawlingByGithubId(
-                githubAccountRef.githubId(),
-                LocalDateTime.now()
-        );
+        try {
+            LocalDateTime now = LocalDateTime.now();
+            githubAccountRepository.updateLastCrawlingByGithubId(
+                    githubAccountRef.githubId(),
+                    now
+            );
+            log.info("[update] last crawling updated at {}", now);
+        } catch (Exception e) {
+            log.error("[update] last crawling update failed", e);
+        }
 
         log.info("<< End collection for account: {}", githubAccountRef.githubLoginUsername());
     }
