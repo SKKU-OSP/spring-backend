@@ -20,6 +20,9 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
+
 import org.slf4j.MDC;
 
 @Slf4j
@@ -118,11 +121,20 @@ public class GithubAccountCollectionOrchestrator {
             try {
 
                 LocalDateTime lastCrawling = githubAccountRef.lastCrawling();
+                LocalDateTime updatedAt = repoRef.githubRepositoryUpdatedAt();
+                LocalDateTime pushedAt = repoRef.githubPushedAt();
+
+                LocalDateTime lastChangedAt = Stream.of(updatedAt, pushedAt)
+                        .filter(Objects::nonNull)
+                        .max(LocalDateTime::compareTo)
+                        .orElse(updatedAt);
+
                 // 5-1 최종 크롤링 이후 업데이트가 없다면 스킵
-                if (lastCrawling != null && lastCrawling.isAfter(repoRef.githubRepositoryUpdatedAt())) {
+                if (lastCrawling != null && !lastChangedAt.isAfter(lastCrawling)) {
                     log.info("Skip collection for repository (no updates since last crawl)");
                     continue;
                 }
+
                 // 5-2 수집 실행
                 githubRepositoryOrchestrator.collectByRepository(githubAccountRef, repoRef);
             } finally {
