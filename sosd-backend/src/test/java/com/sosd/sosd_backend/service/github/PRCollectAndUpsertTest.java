@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,13 +37,16 @@ class PRCollectAndUpsertTest {
                 123L,
                 "SKKU-OSP",
                 "spring-backend",
-                "SKKU-OSP/spring-backend"
+                "SKKU-OSP/spring-backend",
+                LocalDateTime.now(),
+                LocalDateTime.now()
         );
 
         GithubAccountRef testAccountRef = new GithubAccountRef(
                 80045655L,
                 "MDQ6VXNlcjgwMDQ1NjU1",
                 "byungKHee",
+                null,
                 null,
                 null,
                 null

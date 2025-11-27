@@ -1,5 +1,6 @@
 package com.sosd.sosd_backend.github_collector.dto.ref;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
@@ -16,7 +17,9 @@ public record RepoRef(
         Long githubRepoId,
         String ownerName,
         String repoName,
-        String fullName
+        String fullName,
+        LocalDateTime githubRepositoryUpdatedAt,
+        LocalDateTime githubPushedAt
 ) {
     public RepoRef {
         Objects.requireNonNull(repoId, "repoId must not be null");
@@ -24,5 +27,6 @@ public record RepoRef(
         Objects.requireNonNull(ownerName, "ownerName must not be null");
         Objects.requireNonNull(repoName, "repoName must not be null");
         Objects.requireNonNull(fullName, "fullName must not be null");
+        Objects.requireNonNull(githubRepositoryUpdatedAt, "githubRepositoryUpdatedAt must not be null");
     }
 }

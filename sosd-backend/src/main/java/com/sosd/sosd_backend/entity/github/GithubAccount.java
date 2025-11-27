@@ -85,7 +85,8 @@ public class GithubAccount {
                 this.githubLoginUsername,
                 this.githubName,
                 this.githubToken,
-                this.githubEmail
+                this.githubEmail,
+                this.lastCrawling
         );
     }
 

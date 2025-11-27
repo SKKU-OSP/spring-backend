@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -28,13 +29,16 @@ public class IssueCollectTest {
                 123L,
                 "SKKU-SUCPI",
                 "frontend-2.0",
-                "SKKU-SUCPI/frontend-2.0"
+                "SKKU-SUCPI/frontend-2.0",
+                LocalDateTime.now(),
+                LocalDateTime.now()
         );
 
         GithubAccountRef testAccountRef = new GithubAccountRef(
                 80045655L,
                 "MDQ6VXNlcjgwMDQ1NjU1",
                 "byungKHee",
+                null,
                 null,
                 null,
                 null
