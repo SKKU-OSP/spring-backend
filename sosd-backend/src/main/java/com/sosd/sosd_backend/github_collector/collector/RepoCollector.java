@@ -1,5 +1,6 @@
 package com.sosd.sosd_backend.github_collector.collector;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sosd.sosd_backend.github_collector.api.GithubGraphQLClient;
 import com.sosd.sosd_backend.github_collector.dto.collect.context.RepoListCollectContext;
 import com.sosd.sosd_backend.github_collector.dto.collect.result.CollectResult;
@@ -31,6 +32,33 @@ public class RepoCollector implements GithubResourceCollector
 
     private final GithubRestClient githubRestClient;
     private final GithubGraphQLClient githubGraphQLClient;
+    private final ObjectMapper objectMapper;
+
+    private static final String REPO_FRAGMENT = """
+        fragment RepoFields on Repository {
+            databaseId
+            nameWithOwner
+            isPrivate
+            defaultBranchRef { name target { ... on Commit { history { totalCount } } } }
+            description
+            stargazerCount
+            watchers { totalCount }
+            forkCount
+            licenseInfo { name }
+            createdAt
+            updatedAt
+            pushedAt
+            object(expression: "HEAD:README.md") { ... on Blob { text } }
+            languages(first: 5, orderBy: {field: SIZE, direction: DESC}) { totalSize edges { size node { name } } }
+            dependencyGraphManifests(first: 1) { totalCount }
+            mentionableUsers(first: 0) { totalCount }
+            openPRs: pullRequests(states: OPEN) { totalCount }
+            closedPRs: pullRequests(states: CLOSED) { totalCount }
+            mergedPRs: pullRequests(states: MERGED) { totalCount }
+            openIssues: issues(states: OPEN) { totalCount }
+            closedIssues: issues(states: CLOSED) { totalCount }
+        }
+    """;
 
     @Override
     public CollectResult<GithubRepositoryResponseDto, TimeCursor> collect(RepoListCollectContext context) {
@@ -52,15 +80,26 @@ public class RepoCollector implements GithubResourceCollector
 
         // 2. 각 repo의 상세 정보 수집
         List<GithubRepositoryGraphQLResult> results = new ArrayList<>();
-        for (String fullName : fullNames) {
-            String[] parts = fullName.split("/");
-            if (parts.length == 2) {
-                var res = getRepoInfoGraphQL(parts[0], parts[1]);
-                if (res != null) {
-                    results.add(res);
-                }
-            }
+        List<String> allNames = new ArrayList<>(fullNames);
+
+        int totalCount = allNames.size();
+        int batchSize = 20; // 배치 크기 설정
+
+        for (int i = 0; i < totalCount; i += batchSize) {
+            long batchStart = System.nanoTime();
+
+            int end = Math.min(totalCount, i + batchSize);
+            List<String> batchNames = allNames.subList(i, end);
+
+            // 배치 요청 실행
+            List<GithubRepositoryGraphQLResult> batchResults = getBatchRepoInfoGraphQL(batchNames);
+            results.addAll(batchResults);
+
+            long batchElapsed = (System.nanoTime() - batchStart) / 1_000_000;
+
+            log.info("Repo info fetched={}/{}(total) elapsed={}ms", end, totalCount, batchElapsed);
         }
+
 
         // 3. 결과값 구성
         List<GithubRepositoryResponseDto> repoList = results.stream()
@@ -84,98 +123,176 @@ public class RepoCollector implements GithubResourceCollector
     @Override
     public String source() { return "repo"; }
 
+//    /**
+//     * 단일 repo 정보 조회 - GraphQL
+//     */
+//    private GithubRepositoryGraphQLResult getRepoInfoGraphQL(String owner, String name) {
+//        final String query = """
+//                query RepoOverview($owner: String!, $name: String!) {
+//                  repository(owner: $owner, name: $name) {
+//                    databaseId
+//                    nameWithOwner
+//                    isPrivate
+//                    defaultBranchRef {\s
+//                        name
+//                        target {
+//                        ... on Commit {
+//                          history {
+//                            totalCount
+//                          }
+//                        }
+//                      }   \s
+//                    }
+//                    description
+//                    stargazerCount
+//                    watchers { totalCount }
+//                    forkCount
+//                    licenseInfo { name }
+//                    createdAt
+//                    updatedAt
+//                    pushedAt
+//
+//                    object(expression: "HEAD:README.md") {
+//                      ... on Blob { text }
+//                    }
+//
+//                    languages(first: 5, orderBy: {field: SIZE, direction: DESC}) {
+//                      totalSize
+//                      edges {
+//                        size
+//                        node { name }
+//                      }
+//                    }
+//
+//                    dependencyGraphManifests(first: 1) {
+//                      totalCount
+//                    }
+//                    mentionableUsers(first: 0) { totalCount }
+//
+//
+//                    # Pull Request 수 (alias 사용)
+//                    openPRs: pullRequests(states: OPEN) {
+//                      totalCount
+//                    }
+//                    closedPRs: pullRequests(states: CLOSED) {
+//                      totalCount
+//                    }
+//                    mergedPRs: pullRequests(states: MERGED) {
+//                      totalCount
+//                    }
+//
+//                    # Issue 수 (alias 사용)
+//                    openIssues: issues(states: OPEN) {
+//                      totalCount
+//                    }
+//                    closedIssues: issues(states: CLOSED) {
+//                      totalCount
+//                    }
+//                  }
+//
+//                  rateLimit {
+//                    cost
+//                    used
+//                    remaining
+//                    limit
+//                    resetAt
+//                  }
+//                }
+//                """;
+//
+//        Map<String, Object> variables = new HashMap<>();
+//        variables.put("owner", owner);
+//        variables.put("name", name);
+//
+//        var res = githubGraphQLClient.query(query)
+//                .variables(variables)
+//                .executeWithAutoRotate(GithubRepositoryGraphQLResult.class);
+//
+//        if (res.getErrors() != null && !res.getErrors().isEmpty()) {
+//            // 에러가 발생한 경우 로그 출력 후 null 반환
+//            System.err.println("GraphQL Errors: " + res.getErrors());
+//            return null;
+//        }
+//        return res.getData();
+//    }
+
+
     /**
-     * 단일 repo 정보 조회 - GraphQL
+     * 배치 단위로 GraphQL 요청을 보내고 결과를 파싱하는 메서드
      */
-    private GithubRepositoryGraphQLResult getRepoInfoGraphQL(String owner, String name) {
-        final String query = """
-                query RepoOverview($owner: String!, $name: String!) {
-                  repository(owner: $owner, name: $name) {
-                    databaseId
-                    nameWithOwner
-                    isPrivate
-                    defaultBranchRef {\s
-                        name
-                        target {
-                        ... on Commit {
-                          history {
-                            totalCount
-                          }
-                        }
-                      }   \s
-                    }
-                    description
-                    stargazerCount
-                    watchers { totalCount }
-                    forkCount
-                    licenseInfo { name }
-                    createdAt
-                    updatedAt
-                    pushedAt
-                
-                    object(expression: "HEAD:README.md") {
-                      ... on Blob { text }
-                    }
-                
-                    languages(first: 5, orderBy: {field: SIZE, direction: DESC}) {
-                      totalSize
-                      edges {
-                        size
-                        node { name }
-                      }
-                    }
-                
-                    dependencyGraphManifests(first: 1) {
-                      totalCount
-                    }
-                    mentionableUsers(first: 0) { totalCount }
-                
-                
-                    # Pull Request 수 (alias 사용)
-                    openPRs: pullRequests(states: OPEN) {
-                      totalCount
-                    }
-                    closedPRs: pullRequests(states: CLOSED) {
-                      totalCount
-                    }
-                    mergedPRs: pullRequests(states: MERGED) {
-                      totalCount
-                    }
-                
-                    # Issue 수 (alias 사용)
-                    openIssues: issues(states: OPEN) {
-                      totalCount
-                    }
-                    closedIssues: issues(states: CLOSED) {
-                      totalCount
-                    }
-                  }
-                
-                  rateLimit {
-                    cost
-                    used
-                    remaining
-                    limit
-                    resetAt
-                  }
-                }
-                """;
+    private List<GithubRepositoryGraphQLResult> getBatchRepoInfoGraphQL(List<String> batchNames) {
+        // 1. 쿼리 문자열 조립 (Java StringBuilder 사용)
+        StringBuilder sb = new StringBuilder();
+        sb.append("query BatchRepos {");
 
-        Map<String, Object> variables = new HashMap<>();
-        variables.put("owner", owner);
-        variables.put("name", name);
+        // 루프를 돌며 repo_0, repo_1 등의 별칭(Alias)으로 쿼리 생성
+        for (int i = 0; i < batchNames.size(); i++) {
+            String fullName = batchNames.get(i);
+            String[] parts = fullName.split("/");
+            if (parts.length != 2) continue;
 
-        var res = githubGraphQLClient.query(query)
-                .variables(variables)
-                .executeWithAutoRotate(GithubRepositoryGraphQLResult.class);
+            String alias = "repo_" + i;
+            String owner = parts[0];
+            String name = parts[1];
 
-        if (res.getErrors() != null && !res.getErrors().isEmpty()) {
-            // 에러가 발생한 경우 로그 출력 후 null 반환
-            System.err.println("GraphQL Errors: " + res.getErrors());
-            return null;
+            // Fragment(...RepoFields)를 사용하여 쿼리 길이를 줄임
+            sb.append(String.format("""
+                 %s: repository(owner: "%s", name: "%s") {
+                   ...RepoFields
+                 }
+            """, alias, owner, name));
         }
-        return res.getData();
+
+        // RateLimit 정보는 맨 마지막에 한 번만 요청 & 쿼리 닫기
+        sb.append(" rateLimit { cost used remaining limit resetAt } }");
+
+        // Fragment 본문 추가
+        sb.append(REPO_FRAGMENT);
+
+        // 2. 클라이언트 실행 (결과를 Map으로 받음)
+        // 주의: QueryBuilder가 아닌 StringBuilder로 만든 문자열을 넘겨줌
+        var res = githubGraphQLClient.query(sb.toString())
+                .executeWithAutoRotate(Map.class);
+
+        // 에러 로깅 (부분 실패가 있어도 성공한 데이터는 처리)
+        if (res.getErrors() != null && !res.getErrors().isEmpty()) {
+            log.warn("GraphQL Batch Errors: {}", res.getErrors());
+        }
+
+        List<GithubRepositoryGraphQLResult> batchResults = new ArrayList<>();
+
+        // 3. Map 결과 파싱 (Map -> DTO)
+        if (res.getData() != null) {
+            Map<String, Object> dataMap = res.getData();
+
+            for (Map.Entry<String, Object> entry : dataMap.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+
+                if (key.startsWith("repo_") && value != null) {
+                    try {
+                        // [수정 포인트] DTO 구조에 맞추기 위해 강제로 포장(Wrapping)
+                        // GithubRepositoryGraphQLResult는 { "repository": ... } 구조를 기대함
+                        Map<String, Object> wrapper = new HashMap<>();
+                        wrapper.put("repository", value);
+
+                        // wrapper를 변환
+                        GithubRepositoryGraphQLResult repoResult = objectMapper.convertValue(wrapper, GithubRepositoryGraphQLResult.class);
+
+                        // 변환된 객체 검증 (혹시나 해서)
+                        if (repoResult != null) {
+                            batchResults.add(repoResult);
+                        }
+                    } catch (Exception e) {
+                        log.error("Failed to convert map to DTO for key: {}", key, e);
+                    }
+                }
+            }
+        }
+
+        return batchResults;
     }
+
 
     /**
      * 1. username의 모든 공개 repo의 full_name 목록 수집
