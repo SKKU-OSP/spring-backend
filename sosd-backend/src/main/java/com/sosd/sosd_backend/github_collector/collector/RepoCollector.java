@@ -42,17 +42,6 @@ public class RepoCollector implements GithubResourceCollector
         // 1. 기여한 레포 full name 목록 수집
         Set<String> fullNames = new HashSet<>();
         // TODO: 모든 레포를 다 가져오는건 코스트가 상당히 크기 때문에 적절한 정책 생각해볼 것
-//        // 1-1. 사용자의 모든 공개 repo 목록에서 추출 - 수집기록이 없으면 실행
-//        if (context.lastCrawling() == null || context.lastCrawling().isBefore(OffsetDateTime.now().minusDays(7))) {
-//            fullNames.addAll(fetchReposFromUserRepos(context.githubAccountRef().githubLoginUsername()));
-//        }
-//        // 1-2. 사용자가 최근에 기여한 이슈/PR에서 repo 추출 - 수집기록이 없거나 2일 이상 지난 경우 실행
-//        if (context.lastCrawling() == null || context.lastCrawling().isBefore(OffsetDateTime.now().minusDays(2))) {
-//            fullNames.addAll(fetchReposFromSearchIssues(context.githubAccountRef().githubLoginUsername(), context.lastCrawling()));
-//        }
-//        // 1-3. 사용자의 이벤트에서 기여한 repo 추출 - 항상 실행
-//        fullNames.addAll(fetchReposFromEvents(context.githubAccountRef().githubLoginUsername()));
-
         // 1-1. 사용자의 모든 공개 repo 목록에서 추출
         fullNames.addAll(fetchReposFromUserRepos(context.githubAccountRef().githubLoginUsername()));
         // 1-2. 사용자가 최근에 기여한 이슈/PR에서 repo 추출
