@@ -32,6 +32,9 @@ services:
     ports:
       - "4403:8080"
 
+    volumes:
+      - ../spring_log_backups:/app/logs
+
 networks:
   net:
     external: true
