@@ -126,7 +126,6 @@ public class GithubAccountCollectionOrchestrator {
                 ).orElse(null);
                 LocalDateTime updatedAt = repoRef.githubRepositoryUpdatedAt();
                 LocalDateTime pushedAt = repoRef.githubPushedAt();
-
                 LocalDateTime lastChangedAt = Stream.of(updatedAt, pushedAt)
                         .filter(Objects::nonNull)
                         .max(LocalDateTime::compareTo)

@@ -75,8 +75,7 @@ public interface AccountRepoLinkRepository extends JpaRepository<GithubAccountRe
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
         update GithubAccountRepositoryEntity ar
-        set ar.lastCommitSha = :sha,
-            ar.lastUpdatedAt = CURRENT_TIMESTAMP
+        set ar.lastCommitSha = :sha
         where ar.id.githubAccountId = :accountId
           and ar.id.githubRepoId    = :repoId
     """)
@@ -87,8 +86,7 @@ public interface AccountRepoLinkRepository extends JpaRepository<GithubAccountRe
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
         update GithubAccountRepositoryEntity ar
-        set ar.lastPrDate = :dt,
-            ar.lastUpdatedAt = CURRENT_TIMESTAMP
+        set ar.lastPrDate = :dt
         where ar.id.githubAccountId = :accountId
           and ar.id.githubRepoId    = :repoId
     """)
@@ -99,8 +97,7 @@ public interface AccountRepoLinkRepository extends JpaRepository<GithubAccountRe
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
         update GithubAccountRepositoryEntity ar
-        set ar.lastIssueDate = :dt,
-            ar.lastUpdatedAt = CURRENT_TIMESTAMP
+        set ar.lastIssueDate = :dt
         where ar.id.githubAccountId = :accountId
           and ar.id.githubRepoId    = :repoId
     """)
