@@ -85,6 +85,11 @@ public class GithubAccountRepositoryLinkService {
         return linkRepo.findLastIssueDate(accountId, repoId);
     }
 
+    @Transactional(readOnly = true)
+    public Optional<LocalDateTime> getLastUpdatedAt(Long accountId, Long repoId) {
+        return linkRepo.findLastUpdatedAt(accountId, repoId);
+    }
+
     /** 4) 커서 갱신들 */
     @Transactional
     public void updateCommitCursor(Long accountId, Long repoId, String sha) {

@@ -73,9 +73,14 @@ public class GithubRepositoryOrchestrator {
                 () -> collectIssues(githubAccountRef, repoRef), githubCollectorTaskExecutor);
 
         // 모든 작업 완료 대기
-        CompletableFuture.allOf(commitTask, prTask, issueTask).join();
-
+        try {
+            CompletableFuture.allOf(commitTask, prTask, issueTask).join();
+            linkService.touchUpdatedAt(githubAccountRef.githubId(), repoRef.repoId());
+        } catch (Exception e) {
+            log.error("[collect] Collection partially failed", e);
+        }
         log.info("< End collection for repository parallel");
+
 
 //        // commit 수집
 //        collectCommits(githubAccountRef, repoRef);

@@ -120,7 +120,10 @@ public class GithubAccountCollectionOrchestrator {
             MDC.put("repoCtx", "Repo:" + repoRef.fullName());
             try {
 
-                LocalDateTime lastCrawling = githubAccountRef.lastCrawling();
+                LocalDateTime lastCrawling = linkService.getLastUpdatedAt(
+                        githubAccountRef.githubId(),
+                        repoRef.repoId()
+                ).orElse(null);
                 LocalDateTime updatedAt = repoRef.githubRepositoryUpdatedAt();
                 LocalDateTime pushedAt = repoRef.githubPushedAt();
 

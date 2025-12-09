@@ -61,6 +61,15 @@ public interface AccountRepoLinkRepository extends JpaRepository<GithubAccountRe
     Optional<LocalDateTime> findLastIssueDate(@Param("accountId") Long accountId,
                                               @Param("repoId") Long repoId);
 
+    @Query("""
+    select gar.lastUpdatedAt
+    from GithubAccountRepositoryEntity gar
+    where gar.id.githubAccountId = :accountId
+        and gar.id.githubRepoId    = :repoId
+""")
+    Optional<LocalDateTime> findLastUpdatedAt(@Param("accountId") Long accountId,
+                                              @Param("repoId") Long repoId);
+
 
     // === 커서/업데이트 계열 (DB 시간 사용) ===
     @Modifying(clearAutomatically = true, flushAutomatically = true)
