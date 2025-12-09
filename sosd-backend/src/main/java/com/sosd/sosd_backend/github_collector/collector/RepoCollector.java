@@ -55,8 +55,8 @@ public class RepoCollector implements GithubResourceCollector
 
         // 1-1. 사용자의 모든 공개 repo 목록에서 추출
         fullNames.addAll(fetchReposFromUserRepos(context.githubAccountRef().githubLoginUsername()));
-//        // 1-2. 사용자가 최근에 기여한 이슈/PR에서 repo 추출
-//        fullNames.addAll(fetchReposFromSearchIssues(context.githubAccountRef().githubLoginUsername(), context.lastCrawling()));
+        // 1-2. 사용자가 최근에 기여한 이슈/PR에서 repo 추출
+        fullNames.addAll(fetchReposFromSearchIssues(context.githubAccountRef().githubLoginUsername(), context.lastCrawling()));
         // 1-3. 사용자의 이벤트에서 기여한 repo 추출
         fullNames.addAll(fetchReposFromEvents(context.githubAccountRef().githubLoginUsername()));
 
@@ -196,6 +196,7 @@ public class RepoCollector implements GithubResourceCollector
         int page = 1;
         int perPage = 10;
 
+        long startedNs = System.nanoTime();
 
         try {
             while (true) {
@@ -242,6 +243,10 @@ public class RepoCollector implements GithubResourceCollector
             // 네트워크/서버 에러는 위로 → 상위에서 재시도/알람
             throw e;
         }
+
+        long elapsedTimeMs = Math.round((System.nanoTime() - startedNs) / 1_000_000.0);
+        log.info("  >> repo from api fetched={} elapsed={}ms", result.size(), elapsedTimeMs);
+
         return result;
     }
 
@@ -250,6 +255,8 @@ public class RepoCollector implements GithubResourceCollector
      */
     private Set<String> fetchReposFromSearchIssues(String username, OffsetDateTime since) {
         record SearchIssuesResponse(List<SearchIssuesDto> items) {}
+
+        long startedNs = System.nanoTime();
 
         // 쿼리 파라미터 설정
         int page = 1;
@@ -315,6 +322,8 @@ public class RepoCollector implements GithubResourceCollector
         catch (ResourceAccessException | HttpServerErrorException e) {
             throw e;
         }
+        long elapsedTimeMs = Math.round((System.nanoTime() - startedNs) / 1_000_000.0);
+        log.info("  >> repo from pr/issue history fetched={} elapsed={}ms", result.size(), elapsedTimeMs);
         return result;
     }
 
@@ -324,6 +333,8 @@ public class RepoCollector implements GithubResourceCollector
     private Set<String> fetchReposFromEvents(String username) {
         List<EventRepoDto> events = new ArrayList<>();
         // event API는 최대 300개 이벤트까지만 제공
+
+        long startedNs = System.nanoTime();
 
         try {
             for (int page = 1; page <= 3; page++) {
@@ -356,6 +367,9 @@ public class RepoCollector implements GithubResourceCollector
         catch (ResourceAccessException | HttpServerErrorException e) {
             throw e;
         }
+
+        long elapsedTimeMs = Math.round((System.nanoTime() - startedNs) / 1_000_000.0);
+        log.info("  >> repo from events fetched={} elapsed={}ms", events.size(), elapsedTimeMs);
 
         Set<String> result = new HashSet<>();
         events.stream()
