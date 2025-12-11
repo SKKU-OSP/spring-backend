@@ -61,13 +61,21 @@ public interface AccountRepoLinkRepository extends JpaRepository<GithubAccountRe
     Optional<LocalDateTime> findLastIssueDate(@Param("accountId") Long accountId,
                                               @Param("repoId") Long repoId);
 
+    @Query("""
+    select gar.lastUpdatedAt
+    from GithubAccountRepositoryEntity gar
+    where gar.id.githubAccountId = :accountId
+        and gar.id.githubRepoId    = :repoId
+""")
+    Optional<LocalDateTime> findLastUpdatedAt(@Param("accountId") Long accountId,
+                                              @Param("repoId") Long repoId);
+
 
     // === 커서/업데이트 계열 (DB 시간 사용) ===
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
         update GithubAccountRepositoryEntity ar
-        set ar.lastCommitSha = :sha,
-            ar.lastUpdatedAt = CURRENT_TIMESTAMP
+        set ar.lastCommitSha = :sha
         where ar.id.githubAccountId = :accountId
           and ar.id.githubRepoId    = :repoId
     """)
@@ -78,8 +86,7 @@ public interface AccountRepoLinkRepository extends JpaRepository<GithubAccountRe
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
         update GithubAccountRepositoryEntity ar
-        set ar.lastPrDate = :dt,
-            ar.lastUpdatedAt = CURRENT_TIMESTAMP
+        set ar.lastPrDate = :dt
         where ar.id.githubAccountId = :accountId
           and ar.id.githubRepoId    = :repoId
     """)
@@ -90,8 +97,7 @@ public interface AccountRepoLinkRepository extends JpaRepository<GithubAccountRe
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
         update GithubAccountRepositoryEntity ar
-        set ar.lastIssueDate = :dt,
-            ar.lastUpdatedAt = CURRENT_TIMESTAMP
+        set ar.lastIssueDate = :dt
         where ar.id.githubAccountId = :accountId
           and ar.id.githubRepoId    = :repoId
     """)
@@ -101,12 +107,14 @@ public interface AccountRepoLinkRepository extends JpaRepository<GithubAccountRe
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
-        update GithubAccountRepositoryEntity ar
-        set ar.lastUpdatedAt = CURRENT_TIMESTAMP
-        where ar.id.githubAccountId = :accountId
-          and ar.id.githubRepoId    = :repoId
-    """)
+    update GithubAccountRepositoryEntity ar
+    set ar.lastUpdatedAt = :now
+    where ar.id.githubAccountId = :accountId
+      and ar.id.githubRepoId    = :repoId
+""")
     int touchLastUpdatedAt(@Param("accountId") Long accountId,
-                           @Param("repoId") Long repoId);
+                           @Param("repoId") Long repoId,
+                           @Param("now") LocalDateTime now);
+
 
 }
