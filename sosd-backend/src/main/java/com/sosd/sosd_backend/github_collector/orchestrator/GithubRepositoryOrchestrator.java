@@ -26,6 +26,8 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import org.slf4j.MDC;
 import java.time.ZoneOffset;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 @Slf4j
 @Component
@@ -45,6 +47,9 @@ public class GithubRepositoryOrchestrator {
     // link table
     private final GithubAccountRepositoryLinkService linkService;
 
+    // thread pool
+    private final Executor githubCollectorTaskExecutor;
+
     // util
     private static final OffsetDateTime DEFAULT_SINCE =
             OffsetDateTime.parse("2019-01-01T00:00:00Z");
@@ -58,12 +63,31 @@ public class GithubRepositoryOrchestrator {
 
         log.info("> Start collection for repository");
 
-        // commit 수집
-        collectCommits(githubAccountRef, repoRef);
-        // pr 수집
-        collectPullRequests(githubAccountRef, repoRef);
-        // issue 수집
-        collectIssues(githubAccountRef, repoRef);
+        CompletableFuture<Void> commitTask = CompletableFuture.runAsync(
+                () -> collectCommits(githubAccountRef, repoRef), githubCollectorTaskExecutor);
+
+        CompletableFuture<Void> prTask = CompletableFuture.runAsync(
+                () -> collectPullRequests(githubAccountRef, repoRef), githubCollectorTaskExecutor);
+
+        CompletableFuture<Void> issueTask = CompletableFuture.runAsync(
+                () -> collectIssues(githubAccountRef, repoRef), githubCollectorTaskExecutor);
+
+        // 모든 작업 완료 대기
+        try {
+            CompletableFuture.allOf(commitTask, prTask, issueTask).join();
+            linkService.touchUpdatedAt(githubAccountRef.githubId(), repoRef.repoId());
+        } catch (Exception e) {
+            log.error("[collect] Collection partially failed", e);
+        }
+        log.info("< End collection for repository parallel");
+
+
+//        // commit 수집
+//        collectCommits(githubAccountRef, repoRef);
+//        // pr 수집
+//        collectPullRequests(githubAccountRef, repoRef);
+//        // issue 수집
+//        collectIssues(githubAccountRef, repoRef);
     }
 
     private void collectCommits(GithubAccountRef acc, RepoRef repo) {

@@ -19,7 +19,6 @@ import java.util.regex.Pattern;
 @Component
 public class GithubRestClient {
 
-    private static final String GITHUB_BASE_URL = "https://api.github.com";
     private static final int MAXIMUM_RETRIES = 3;
     private static final Pattern RATE_LIMIT_PATTERN =
             Pattern.compile("api\\s+rate\\s+limit\\s+exceeded", Pattern.CASE_INSENSITIVE);
@@ -27,14 +26,10 @@ public class GithubRestClient {
     private final GithubTokenManager tokenManager;
     private final RestClient baseClient;
 
-    public GithubRestClient(GithubTokenManager tokenManager) {
+    public GithubRestClient(GithubTokenManager tokenManager, RestClient githubClient) {
         this.tokenManager = tokenManager;
-        this.baseClient = RestClient.builder()
-                .baseUrl(GITHUB_BASE_URL)
-                .defaultHeader(HttpHeaders.ACCEPT, "application/vnd.github+json")
-                .defaultHeader(HttpHeaders.USER_AGENT, "sosd-collector")
-                .build();
-        log.debug("GithubRestClient initialized with TokenManager");
+        this.baseClient = githubClient;
+        log.debug("GithubRestClient initialized with Injected Bean");
     }
 
     public RequestBuilder request(){
