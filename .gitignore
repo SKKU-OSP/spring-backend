@@ -6,3 +6,6 @@
 
 ### env ###
 .env
+
+### log ###
+spring_log_backups/
