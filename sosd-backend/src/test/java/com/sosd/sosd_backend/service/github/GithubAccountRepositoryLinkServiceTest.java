@@ -174,7 +174,7 @@ class GithubAccountRepositoryLinkServiceTest {
 
         service.touchUpdatedAt(accountId, repoId);
 
-        verify(linkRepo).touchLastUpdatedAt(accountId, repoId);
+        verify(linkRepo).touchLastUpdatedAt(accountId, repoId, any(LocalDateTime.class));
     }
 
     // ---------- helpers ----------

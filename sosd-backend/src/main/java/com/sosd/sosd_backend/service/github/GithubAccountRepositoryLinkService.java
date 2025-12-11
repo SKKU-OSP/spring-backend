@@ -112,6 +112,6 @@ public class GithubAccountRepositoryLinkService {
     @Transactional
     public void touchUpdatedAt(Long accountId, Long repoId) {
         linkIfAbsent(accountId, repoId);
-        linkRepo.touchLastUpdatedAt(accountId, repoId);
+        linkRepo.touchLastUpdatedAt(accountId, repoId, LocalDateTime.now());
     }
 }

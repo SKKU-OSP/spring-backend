@@ -107,12 +107,14 @@ public interface AccountRepoLinkRepository extends JpaRepository<GithubAccountRe
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
-        update GithubAccountRepositoryEntity ar
-        set ar.lastUpdatedAt = CURRENT_TIMESTAMP
-        where ar.id.githubAccountId = :accountId
-          and ar.id.githubRepoId    = :repoId
-    """)
+    update GithubAccountRepositoryEntity ar
+    set ar.lastUpdatedAt = :now
+    where ar.id.githubAccountId = :accountId
+      and ar.id.githubRepoId    = :repoId
+""")
     int touchLastUpdatedAt(@Param("accountId") Long accountId,
-                           @Param("repoId") Long repoId);
+                           @Param("repoId") Long repoId,
+                           @Param("now") LocalDateTime now);
+
 
 }
