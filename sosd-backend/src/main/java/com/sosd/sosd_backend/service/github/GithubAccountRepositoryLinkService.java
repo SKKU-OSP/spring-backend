@@ -7,6 +7,7 @@ import com.sosd.sosd_backend.github_collector.dto.ref.RepoRef;
 import com.sosd.sosd_backend.repository.github.AccountRepoLinkRepository;
 import com.sosd.sosd_backend.repository.github.GithubAccountRepository;
 import com.sosd.sosd_backend.repository.github.GithubRepositoryRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -113,5 +114,61 @@ public class GithubAccountRepositoryLinkService {
     public void touchUpdatedAt(Long accountId, Long repoId) {
         linkIfAbsent(accountId, repoId);
         linkRepo.touchLastUpdatedAt(accountId, repoId, LocalDateTime.now());
+    }
+
+    // -- 5) 스케줄링 관련 메서드
+
+    /**
+     * 스케줄러가 큐에 넣을 때 호출 (Locking)
+     * 상태를 QUEUED로 변경하여 다른 스케줄러가 중복 수집하지 못하게 함
+     */
+    @Transactional
+    public void markAsQueued(Long accountId, Long repoId) {
+        GithubAccountRepositoryEntity link = findEntityOrThrow(accountId, repoId);
+        link.markAsQueued(); // Entity의 편의 메서드 호출
+    }
+
+    /**
+     * 수집 성공 후 스케줄 업데이트 (MLFQ)
+     * 가중치와 다음 수집 시간을 갱신하고 상태를 READY로 복귀
+     */
+    @Transactional
+    public void updateScheduleInfo(Long accountId, Long repoId, int newWeight, LocalDateTime nextCollectDate) {
+        GithubAccountRepositoryEntity link = findEntityOrThrow(accountId, repoId);
+        link.updateScheduleInfo(newWeight, nextCollectDate);
+    }
+
+    /**
+     * RateLimit 등으로 인한 지연 (Defer)
+     * 상태는 READY로 두되, 시간만 뒤로 미룸
+     */
+    @Transactional
+    public void deferSchedule(Long accountId, Long repoId, LocalDateTime deferredTime) {
+        GithubAccountRepositoryEntity link = findEntityOrThrow(accountId, repoId);
+        link.deferSchedule(deferredTime);
+    }
+
+    /**
+     * 404 발생 시 (Name Rescue 요청)
+     */
+    @Transactional
+    public void markAsNameRescueNeeded(Long accountId, Long repoId) {
+        GithubAccountRepositoryEntity link = findEntityOrThrow(accountId, repoId);
+        link.markAsNameRescueNeeded();
+    }
+
+    /**
+     * 정합성 깨짐 발생 시 (Diverged)
+     */
+    @Transactional
+    public void markAsDiverged(Long accountId, Long repoId) {
+        GithubAccountRepositoryEntity link = findEntityOrThrow(accountId, repoId);
+        link.markAsDiverged();
+    }
+
+    // 내부 헬퍼 메서드
+    private GithubAccountRepositoryEntity findEntityOrThrow(Long accountId, Long repoId) {
+        return linkRepo.findById(new GithubAccountRepositoryId(accountId, repoId))
+                .orElseThrow(() -> new EntityNotFoundException("Link not found: " + accountId + "-" + repoId));
     }
 }
