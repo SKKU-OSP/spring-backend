@@ -42,6 +42,13 @@ public class GithubAccount {
     @Column(name = "last_crawling")
     private LocalDateTime lastCrawling;
 
+    // --- 스케줄링 필드 ---
+    @Column(name = "weight", nullable = false)
+    private Integer weight = 1; // 기본값 1 (신규/활성 유저)
+
+    @Column(name = "next_collect_date", nullable = false)
+    private LocalDateTime nextCollectDate = LocalDateTime.now(); // 기본값 현재
+
     // 연관관계 설정
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id", nullable = false)
@@ -60,7 +67,9 @@ public class GithubAccount {
             String githubName,
             String githubToken,
             String githubEmail,
-            UserAccount userAccount
+            UserAccount userAccount,
+            Integer weight,
+            LocalDateTime nextCollectDate
     ) {
         this.githubId = githubId;
         this.githubGraphqlNodeId = githubGraphqlNodeId;
@@ -70,11 +79,20 @@ public class GithubAccount {
         this.githubEmail = githubEmail;
         this.lastCrawling = null;
         this.userAccount = userAccount;
+        if (weight != null) this.weight = weight;
+        if (nextCollectDate != null) this.nextCollectDate = nextCollectDate;
     }
 
     // 수집기 작동 시 호출 메소드
     public void updateLastCrawling() {
         this.lastCrawling = LocalDateTime.now();
+    }
+
+    // 스케줄러용 업데이트 메서드
+    public void updateScanSchedule(int newWeight, LocalDateTime nextTime) {
+        this.weight = newWeight;
+        this.nextCollectDate = nextTime;
+        this.updateLastCrawling(); // 기록용
     }
 
     // 엔티티 -> githubAccountRef 변환 메서드

@@ -17,11 +17,16 @@ CREATE TABLE IF NOT EXISTS github_account (
     last_crawling TIMESTAMP NULL COMMENT '마지막 크롤링 일시',
     student_id VARCHAR(20) NOT NULL COMMENT '연결된 학번 (외래키)',
 
+    -- 스케줄링 정보
+    weight INT NOT NULL DEFAULT 1 COMMENT '신규 레포 스캔 가중치 (1: 자주/신규유저, 높을수록 가끔)',
+    next_collect_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '다음 신규 레포 스캔 예정 시간',
+
     -- 인덱스
     INDEX idx_github_account_login (github_login_username) COMMENT 'username을 통한 조회용',
     UNIQUE INDEX idx_github_graphql_node_id (github_graphql_node_id) COMMENT 'node id를 통한 조회용',
     INDEX idx_github_account_last_crawling (last_crawling) COMMENT '스케쥴링할 때 기간 쿼리용',
-    INDEX idx_github_account_student_id (student_id) COMMENT '학번을 통한 조회'
+    INDEX idx_github_account_student_id (student_id) COMMENT '학번을 통한 조회',
+    INDEX idx_user_scan_scheduler (next_collect_date) COMMENT '유저 스캔 스케줄러용 인덱스'
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub 계정 테이블';
 
