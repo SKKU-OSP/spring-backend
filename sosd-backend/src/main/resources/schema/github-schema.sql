@@ -70,15 +70,25 @@ CREATE TABLE IF NOT EXISTS github_account_repository (
     github_account_id BIGINT NOT NULL COMMENT 'github_account 테이블 id (외례키)',
     github_repo_id BIGINT NOT NULL COMMENT 'github_repository 테이블 id (외례키)',
     PRIMARY KEY (github_account_id, github_repo_id) COMMENT '복합 PK',
+
+    -- 증분 수집용 필드
     last_commit_sha VARCHAR(40) COMMENT '증분 처리를 위한 마지막 sha 지점',
     last_pr_date DATETIME COMMENT '증분 처리를 위한 마지막 pr 날짜',
     last_issue_date DATETIME COMMENT '증분 처리를 위한 마지막 issue 날짜',
     last_updated_at DATETIME COMMENT '마지막 업데이트 시간 기록용',
 
+    -- 스케줄링 및 상태 관리
+    weight INT NOT NULL DEFAULT 1 COMMENT '스케줄러 가중치 (1: 활발/자주, 숫자가 클수록 비활성/가끔)',
+    next_collect_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '다음 수집 예정 시간 (이 시간 이후에 스케줄러가 Pick)',
+    status VARCHAR(20) NOT NULL DEFAULT 'READY' COMMENT '상태 (READY, QUEUED, NAME_RESCUE, DIVERGED, DELETED, BLOCKED)',
+
     -- 인덱스
-    INDEX idx_account_repository_repo_id (github_repo_id, github_account_id) COMMENT '저장소 id를 통한 계정 조회용'
+    INDEX idx_account_repository_repo_id (github_repo_id, github_account_id) COMMENT '저장소 id를 통한 계정 조회용',
+    INDEX idx_scheduler_polling (status, next_collect_date) COMMENT '스케줄러 폴링 성능 최적화 인덱스'
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='github_account - github_repository 조인 테이블 ';
+
+
 
 -- Commit 테이블
 CREATE TABLE IF NOT EXISTS github_commit (

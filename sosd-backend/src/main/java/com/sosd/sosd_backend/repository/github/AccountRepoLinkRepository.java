@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.awt.print.Pageable;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -116,5 +117,19 @@ public interface AccountRepoLinkRepository extends JpaRepository<GithubAccountRe
                            @Param("repoId") Long repoId,
                            @Param("now") LocalDateTime now);
 
+
+    // --- 스케줄링 관련 --- //
+
+    // status가 READY이고, 수집 시간이 현재보다 과거인 것들
+    @Query("SELECT r FROM GithubAccountRepositoryEntity r " +
+            "WHERE r.status = 'READY' AND r.nextCollectDate <= :now " +
+            "ORDER BY r.nextCollectDate ASC")
+    List<GithubAccountRepositoryEntity> findReadyTargets(@Param("now") LocalDateTime now, Pageable pageable);
+
+    // QUEUED 상태로 TIMEOUT 이상 방치된 녀석들을 READY로 강제 리셋
+    @Modifying
+    @Query("UPDATE GithubAccountRepositoryEntity r SET r.status = 'READY' " +
+            "WHERE r.status = 'QUEUED' AND r.lastUpdatedAt < :timeout")
+    int resetStuckJobs(@Param("timeout") LocalDateTime timeout);
 
 }
