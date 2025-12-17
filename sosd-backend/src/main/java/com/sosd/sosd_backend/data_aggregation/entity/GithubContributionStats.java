@@ -17,7 +17,9 @@ public class GithubContributionStats {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name="github_id")
     private Long githubId;
+    @Column(name="repo_id")
     private Long repoId;
     private int year;
 

@@ -1,13 +1,12 @@
 package com.sosd.sosd_backend.data_aggregation.service;
 
-
+import com.sosd.sosd_backend.data_aggregation.dto.AccountRepoProjection;
 import com.sosd.sosd_backend.data_aggregation.entity.GithubContributionStats;
 import com.sosd.sosd_backend.data_aggregation.repository.*;
-import com.sosd.sosd_backend.entity.github.GithubAccount;
-import com.sosd.sosd_backend.entity.github.GithubRepositoryEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,45 +14,46 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ContributionStatsService {
 
-    private final GithubCommitRepository commitRepository;
-    private final GithubPullRequestRepository prRepository;
-    private final GithubIssueRepository issueRepository;
-    private final GithubContributionStatsRepository statsRepository;
+    private final AggregationGithubCommitRepository commitRepository;
+    private final AggregationGithubPullRequestRepository prRepository;
+    private final AggregationGithubIssueRepository issueRepository;
+    private final AggregationGithubContributionStatsRepository statsRepository;
 
-    public GithubContributionStats calculateStatsForYear(GithubAccount account,
-                                                         GithubRepositoryEntity repo,
-                                                         int year) {
-        Long githubId = account.getGithubId();
-        Long repoId = repo.getId();
+    public List<GithubContributionStats> calculateStats(AccountRepoProjection dto) {
+        int currentYear = LocalDate.now().getYear();
+        List<GithubContributionStats> results = new ArrayList<>();
 
-        // 통계 데이터 수집
-        int commitCount = commitRepository.countByGithubIdAndRepoIdAndYear(githubId, repoId, year);
-        int commitLines = commitRepository.sumLinesByGithubIdAndRepoIdAndYear(githubId, repoId, year);
-        int prCount = prRepository.countByGithubIdAndRepoIdAndYear(githubId, repoId, year);
-        int issueCount = issueRepository.countByGithubIdAndRepoIdAndYear(githubId, repoId, year);
+        for (int year = 2019; year <= currentYear; year++) {
+            final int targetYear = year;
 
-        // 점수 계산
-        double commitLineScore = Math.min(commitLines / 7500.0, 1.0);
-        double commitCntScore = Math.min(commitCount / 30.0, 1.0);
-        double prIssueScore = Math.min((prCount + issueCount) * 0.1, 0.7);
-        double guidelineScore =
-                (repo.getReadme() != null && repo.getLicense() != null && repo.getDescription() != null)
-                        ? 0.3 : 0.0;
+            Long githubId = dto.githubId();
+            Long repoId = dto.repoId();
 
-        double repoScore = commitLineScore + commitCntScore + prIssueScore + guidelineScore;
+            int commitCount = commitRepository.countByGithubIdAndRepoIdAndYear(githubId, repoId, targetYear);
+            int commitLines = commitRepository.sumLinesByGithubIdAndRepoIdAndYear(githubId, repoId, targetYear);
+            int prCount = prRepository.countByGithubIdAndRepoIdAndYear(githubId, repoId, targetYear);
+            int issueCount = issueRepository.countByGithubIdAndRepoIdAndYear(githubId, repoId, targetYear);
 
-        // 기존 데이터 조회 (없으면 새로 생성)
-        GithubContributionStats stats = statsRepository
-                .findByGithubIdAndRepoIdAndYear(githubId, repoId, year)
-                .orElseGet(() -> GithubContributionStats.createNew(githubId, repoId, year));
+            double commitLineScore = Math.min(commitLines / 7500.0, 1.0);
+            double commitCntScore = Math.min(commitCount / 30.0, 1.0);
+            double prIssueScore = Math.min((prCount + issueCount) * 0.1, 0.7);
+            double guidelineScore =
+                    (dto.readme() != null && dto.license() != null && dto.description() != null)
+                            ? 0.3 : 0.0;
 
-        // 도메인 메서드로 갱신
-        stats.updateStats(commitCount, commitLines, prCount, issueCount,
-                guidelineScore, repoScore, repo.getStar(), repo.getFork());
+            double repoScore = commitLineScore + commitCntScore + prIssueScore + guidelineScore;
 
-        // 저장 후 반환
-        return statsRepository.save(stats);
+            GithubContributionStats stats = statsRepository
+                    .findByGithubIdAndRepoIdAndYear(githubId, repoId, targetYear)
+                    .orElseGet(() -> GithubContributionStats.createNew(githubId, repoId, targetYear));
+
+            stats.updateStats(commitCount, commitLines, prCount, issueCount,
+                    guidelineScore, repoScore, dto.star(), dto.fork());
+
+            results.add(stats);
+        }
+
+
+        return results;
     }
 }
-
-
