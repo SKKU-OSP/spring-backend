@@ -18,11 +18,16 @@ public class ContributionStatsWriter implements ItemWriter<List<GithubContributi
     private final AggregationGithubContributionStatsRepository statsRepository;
 
     @Override
-    @Transactional
     public void write(Chunk<? extends List<GithubContributionStats>> chunk) {
+        // 1. Chunk<List<Stats>> 구조를 List<Stats>로 평탄화 (flatten)
         List<GithubContributionStats> flatList = chunk.getItems().stream()
                 .flatMap(Collection::stream)
                 .toList();
-        statsRepository.saveAll(flatList);
+
+        // 2. 하나씩 순회하며 Upsert 실행
+        // (ID 조회 없이 DB가 알아서 Insert/Update 판단)
+        for (GithubContributionStats item : flatList) {
+            statsRepository.upsert(item);
+        }
     }
 }

@@ -15,6 +15,5 @@ CREATE TABLE IF NOT EXISTS github_contribution_stats (
 
      last_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-     UNIQUE INDEX uq_user_repo_year (github_id, repo_id, year),
-     UNIQUE INDEX uq_user_repo_update (github_id, repo_id, last_updated_at)
+     UNIQUE INDEX uq_user_repo_year (github_id, repo_id, year)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='연도별 유저-레포 집계 점수 테이블';

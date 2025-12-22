@@ -17,7 +17,6 @@ public class ContributionStatsService {
     private final AggregationGithubCommitRepository commitRepository;
     private final AggregationGithubPullRequestRepository prRepository;
     private final AggregationGithubIssueRepository issueRepository;
-    private final AggregationGithubContributionStatsRepository statsRepository;
 
     public List<GithubContributionStats> calculateStats(AccountRepoProjection dto) {
         int currentYear = LocalDate.now().getYear();
@@ -43,9 +42,7 @@ public class ContributionStatsService {
 
             double repoScore = commitLineScore + commitCntScore + prIssueScore + guidelineScore;
 
-            GithubContributionStats stats = statsRepository
-                    .findByGithubIdAndRepoIdAndYear(githubId, repoId, targetYear)
-                    .orElseGet(() -> GithubContributionStats.createNew(githubId, repoId, targetYear));
+            GithubContributionStats stats = GithubContributionStats.createNew(githubId, repoId, targetYear);
 
             stats.updateStats(commitCount, commitLines, prCount, issueCount,
                     guidelineScore, repoScore, dto.star(), dto.fork());
