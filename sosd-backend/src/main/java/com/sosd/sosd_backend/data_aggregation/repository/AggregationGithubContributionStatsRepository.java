@@ -1,11 +1,13 @@
 package com.sosd.sosd_backend.data_aggregation.repository;
 
 import com.sosd.sosd_backend.data_aggregation.entity.GithubContributionStats;
+import com.sosd.sosd_backend.entity.github.GithubRepositoryEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface AggregationGithubContributionStatsRepository extends JpaRepository<GithubContributionStats, Long> {
@@ -37,4 +39,55 @@ public interface AggregationGithubContributionStatsRepository extends JpaReposit
             last_updated_at = NOW()
     """, nativeQuery = true)
     void upsert(GithubContributionStats s);
+
+    @Query("""
+        SELECT new com.sosd.sosd_backend.service.ContributionAggregate(
+            COALESCE(SUM(s.commitCount), 0),
+            COALESCE(SUM(s.commitLines), 0),
+            COALESCE(SUM(s.prCount), 0),
+            COALESCE(SUM(s.issueCount), 0),
+            COALESCE(SUM(s.starCount), 0),
+            COALESCE(SUM(s.forkCount), 0),
+            COALESCE(MAX(s.guidelineScore), 0.0)
+        )
+        FROM GithubContributionStats s
+        WHERE s.githubId = :githubId
+          AND s.year = :year
+    """)
+    Optional<com.sosd.sosd_backend.service.ContributionAggregate> aggregateByGithubIdAndYear(Long githubId, int year);
+
+    @Query("""
+        SELECT r.fullName
+        FROM GithubContributionStats s
+        JOIN GithubRepositoryEntity r ON s.repoId = r.id
+        WHERE s.githubId = :githubId
+          AND s.year = :year
+        ORDER BY s.commitLines DESC
+    """)
+    List<String> findTopRepoFullNameByCommitLines(Long githubId, int year);
+
+    /**
+     * 특정 사용자의 연도별 레포별 통계 조회 (레포 점수 내림차순)
+     */
+    @Query("""
+        SELECT s
+        FROM GithubContributionStats s
+        WHERE s.githubId = :githubId
+          AND s.year = :year
+        ORDER BY s.repoScore DESC
+    """)
+    List<GithubContributionStats> findAllByGithubIdAndYearOrderByRepoScoreDesc(Long githubId, int year);
+
+    /**
+     * 특정 사용자의 연도별 레포별 통계 조회 (레포 이름 포함)
+     */
+    @Query("""
+        SELECT s, r.fullName
+        FROM GithubContributionStats s
+        JOIN GithubRepositoryEntity r ON s.repoId = r.id
+        WHERE s.githubId = :githubId
+          AND s.year = :year
+        ORDER BY s.repoScore DESC
+    """)
+    List<Object[]> findAllWithRepoNameByGithubIdAndYear(Long githubId, int year);
 }
