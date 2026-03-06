@@ -3,6 +3,7 @@ package com.sosd.sosd_backend.service;
 import com.sosd.sosd_backend.data_aggregation.entity.GithubContributionStats;
 import com.sosd.sosd_backend.entity.github.GithubScoreEntity;
 import com.sosd.sosd_backend.data_aggregation.repository.AggregationGithubContributionStatsRepository;
+import com.sosd.sosd_backend.repository.github.GithubAccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ import java.util.List;
 public class ScoreCalculationService {
 
     private final AggregationGithubContributionStatsRepository statsRepository;
+    private final GithubAccountRepository githubAccountRepository;
 
     /**
      * 사용자의 연도별 GitHub 점수를 계산합니다. (OSP Ver1 방식)
@@ -44,6 +46,12 @@ public class ScoreCalculationService {
         // 1. 해당 사용자의 연도별 레포별 통계 조회 (레포 이름 포함)
         List<Object[]> repoDataList = statsRepository.findAllWithRepoNameByGithubIdAndYear(githubId, year);
 
+        // 1-1. star/fork 소유자 필터링을 위해 github 로그인 username 조회
+        String githubLoginUsername = githubAccountRepository.findByGithubId(githubId)
+                .map(a -> a.getGithubLoginUsername())
+                .orElse(null);
+        log.info("star/fork 소유 레포 필터 기준 username={}", githubLoginUsername);
+
         // 2. 레포별 점수 계산
         List<RepoScoreData> repoScores = new ArrayList<>();
         int totalCommitCount = 0;
@@ -58,8 +66,8 @@ public class ScoreCalculationService {
             String repoFullName = (String) row[1];
 
             // OSP Ver1 공식으로 레포 점수 계산
-            double commitLineScore = Math.min(stats.getCommitLines() / 10000.0, 1.0);
-            double commitCntScore = Math.min(stats.getCommitCount() / 50.0, 1.0);
+            double commitLineScore = Math.min(stats.getCommitLines() / 7500.0, 1.0);
+            double commitCntScore = Math.min(stats.getCommitCount() / 30.0, 1.0);
             double prIssueScore = Math.min((stats.getPrCount() + stats.getIssueCount()) * 0.1, 0.7);
             double guidelineScore = stats.getGuidelineScore() > 0 ? 0.3 : 0.0;
             double repoScore = commitLineScore + commitCntScore + prIssueScore + guidelineScore;
@@ -78,8 +86,11 @@ public class ScoreCalculationService {
             totalCommitLines += stats.getCommitLines();
             totalPrCount += stats.getPrCount();
             totalIssueCount += stats.getIssueCount();
-            totalStarCount += stats.getStarCount();
-            totalForkCount += stats.getForkCount();
+            // star/fork: 본인 소유 레포만 합산 (OSP 방식 - 타인 레포 기여 시 star/fork 제외)
+            if (githubLoginUsername != null && repoFullName.startsWith(githubLoginUsername + "/")) {
+                totalStarCount += stats.getStarCount();
+                totalForkCount += stats.getForkCount();
+            }
         }
 
         // 3. 레포 점수 내림차순 정렬

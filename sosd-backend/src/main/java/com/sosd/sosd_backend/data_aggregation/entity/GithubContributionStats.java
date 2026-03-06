@@ -6,7 +6,11 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "github_contribution_stats")
+@Table(name = "github_contribution_stats",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_github_contribution_stats",
+                columnNames = {"github_id", "repo_id", "year"}
+        ))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)

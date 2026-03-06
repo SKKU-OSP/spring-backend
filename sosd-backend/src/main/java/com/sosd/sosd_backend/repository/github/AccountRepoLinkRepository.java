@@ -1,5 +1,6 @@
 package com.sosd.sosd_backend.repository.github;
 
+import com.sosd.sosd_backend.entity.github.GithubAccount;
 import com.sosd.sosd_backend.entity.github.GithubAccountRepositoryEntity;
 import com.sosd.sosd_backend.entity.github.GithubAccountRepositoryId;
 import com.sosd.sosd_backend.entity.github.GithubRepositoryEntity;
@@ -32,6 +33,22 @@ public interface AccountRepoLinkRepository extends JpaRepository<GithubAccountRe
         where gar.id.githubAccountId = :accountId
     """)
     List<GithubRepositoryEntity> findReposByAccountId(@Param("accountId") Long accountId);
+
+    // 단일 레포와 링크된 모든 계정 조회 (레포 기준 수집용)
+    @Query("""
+        select gar.githubAccount
+        from GithubAccountRepositoryEntity gar
+        where gar.id.githubRepoId = :repoId
+    """)
+    List<GithubAccount> findAccountsByRepoId(@Param("repoId") Long repoId);
+
+    // 시스템에 등록된 모든 레포 조회 (중복 없이)
+    @Query("""
+        select distinct r
+        from GithubAccountRepositoryEntity gar
+        join gar.repository r
+    """)
+    List<GithubRepositoryEntity> findAllLinkedRepos();
 
     // === 커서 단건 조회 ===
     @Query("""

@@ -4,12 +4,14 @@ import com.sosd.sosd_backend.data_aggregation.dto.AccountRepoProjection;
 import com.sosd.sosd_backend.data_aggregation.entity.GithubContributionStats;
 import com.sosd.sosd_backend.data_aggregation.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ContributionStatsService {
@@ -22,6 +24,8 @@ public class ContributionStatsService {
         int currentYear = LocalDate.now().getYear();
         List<GithubContributionStats> results = new ArrayList<>();
 
+        log.info("통계 계산 시작: githubId={}, repoId={}", dto.githubId(), dto.repoId());
+
         for (int year = 2019; year <= currentYear; year++) {
             final int targetYear = year;
 
@@ -30,6 +34,8 @@ public class ContributionStatsService {
 
             int commitCount = commitRepository.countByGithubIdAndRepoIdAndYear(githubId, repoId, targetYear);
             int commitLines = commitRepository.sumLinesByGithubIdAndRepoIdAndYear(githubId, repoId, targetYear);
+
+            log.debug("Year {}: commits={}, lines={}", targetYear, commitCount, commitLines);
             int prCount = prRepository.countByGithubIdAndRepoIdAndYear(githubId, repoId, targetYear);
             int issueCount = issueRepository.countByGithubIdAndRepoIdAndYear(githubId, repoId, targetYear);
 

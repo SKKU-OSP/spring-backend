@@ -155,4 +155,45 @@ public class GithubAccountCollectionOrchestrator {
         log.info("<< End collection for account: {}", githubAccountRef.githubLoginUsername());
     }
 
+    /**
+     * 레포 발견 + 링크 생성만 수행 (커밋/PR/이슈 수집 없음)
+     * OSP 방식 1단계: 모든 사용자의 레포를 먼저 등록
+     */
+    public void discoverRepos(GithubAccountRef githubAccountRef) {
+        log.info(">> Start repo discovery for account: {}", githubAccountRef.githubLoginUsername());
+
+        RepoListCollectContext ctx = new RepoListCollectContext(githubAccountRef, null);
+        try {
+            CollectResult<GithubRepositoryResponseDto, TimeCursor> collectedRepos =
+                    repoCollector.collect(ctx);
+
+            log.info("[discover] fetched={}/{}(total) elapsed={}ms",
+                    collectedRepos.fetchedCount(),
+                    collectedRepos.totalCount(),
+                    collectedRepos.elapsedTimeMs()
+            );
+
+            List<GithubRepositoryUpsertDto> repoUpsertDtos = collectedRepos.results()
+                    .stream()
+                    .map(GithubRepositoryUpsertDto::from)
+                    .toList();
+
+            List<RepoRef> upsertedRepos = repoUpsertService.upsertRepos(repoUpsertDtos);
+
+            for (RepoRef repoRef : upsertedRepos) {
+                try {
+                    linkService.linkIfAbsent(githubAccountRef.githubId(), repoRef.repoId());
+                } catch (Exception e) {
+                    log.warn("[discover][link] failed repo={}", repoRef.fullName(), e);
+                }
+            }
+
+            log.info("[discover] repos registered count={}", upsertedRepos.size());
+        } catch (Exception e) {
+            log.error("[discover] repo collect failed", e);
+        }
+
+        log.info("<< End repo discovery for account: {}", githubAccountRef.githubLoginUsername());
+    }
+
 }

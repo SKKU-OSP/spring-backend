@@ -1,13 +1,16 @@
 package com.sosd.sosd_backend.github_collector.scheduler;
 
+import com.sosd.sosd_backend.entity.github.GithubAccount;
 import com.sosd.sosd_backend.entity.user.UserAccount;
-import com.sosd.sosd_backend.github_collector.orchestrator.UserCollectionOrchestrator;
-import com.sosd.sosd_backend.github_collector.dto.ref.UserAccountRef;
+import com.sosd.sosd_backend.github_collector.dto.ref.GithubAccountRef;
+import com.sosd.sosd_backend.github_collector.orchestrator.GithubAccountCollectionOrchestrator;
+import com.sosd.sosd_backend.github_collector.orchestrator.RepositoryBasedCollectionOrchestrator;
+import com.sosd.sosd_backend.repository.github.GithubAccountRepository;
 import com.sosd.sosd_backend.repository.user.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import org.slf4j.MDC;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
@@ -17,33 +20,51 @@ import java.util.List;
 public class GithubSimpleScheduler {
 
     private final UserAccountRepository userAccountRepository;
-    private final UserCollectionOrchestrator userCollectionOrchestrator;
+    private final GithubAccountRepository githubAccountRepository;
+    private final GithubAccountCollectionOrchestrator accountCollectionOrchestrator;
+    private final RepositoryBasedCollectionOrchestrator repositoryBasedCollectionOrchestrator;
 
-    public void run(){
-
+    /**
+     * OSP 방식 2단계 수집
+     *
+     * 1단계: 모든 사용자의 레포 탐색 및 등록 (GitHub API → DB)
+     * 2단계: 등록된 레포 기준으로 모든 계정의 커밋/PR/이슈 수집
+     */
+    public void run() {
         log.info("Start Github Simple Scheduler");
 
-        // 1. 활동 사용자 계정 모두 가져오기
         List<UserAccount> userAccounts = userAccountRepository.findAllByIsActiveTrue();
-
-        // 전체 유저 수 확인
         int totalCount = userAccounts.size();
+
+        // 1단계: 모든 사용자의 레포 발견 + 링크 생성
+        log.info("=== Phase 1: Repo Discovery ({} users) ===", totalCount);
         int currentIdx = 0;
-
-        // 2. 각 계정별로 수집 로직 실행
-        for(UserAccount userAccount : userAccounts){
-            currentIdx++; // 순번 증가
-
+        for (UserAccount userAccount : userAccounts) {
+            currentIdx++;
             log.info("Current Progress: {}/{} users", currentIdx, totalCount);
 
             MDC.put("userCtx", "User:" + userAccount.getStudentId());
-            try{
-                UserAccountRef userAccountRef = userAccount.toUserRef();
-                userCollectionOrchestrator.collectByUser(userAccountRef);
+            try {
+                List<GithubAccount> githubAccounts =
+                        githubAccountRepository.findAllByUserAccount_StudentId(userAccount.getStudentId());
+                for (GithubAccount githubAccount : githubAccounts) {
+                    MDC.put("githubCtx", "Acc:" + githubAccount.getGithubLoginUsername());
+                    try {
+                        GithubAccountRef ref = githubAccount.toGithubAccountRef();
+                        accountCollectionOrchestrator.discoverRepos(ref);
+                    } finally {
+                        MDC.remove("githubCtx");
+                    }
+                }
             } finally {
                 MDC.remove("userCtx");
             }
         }
+
+        // 2단계: 등록된 레포 기준으로 커밋/PR/이슈 수집
+        log.info("=== Phase 2: Repo-based Commit Collection ===");
+        repositoryBasedCollectionOrchestrator.collectAll();
+
         log.info("End Github Simple Scheduler");
     }
 }

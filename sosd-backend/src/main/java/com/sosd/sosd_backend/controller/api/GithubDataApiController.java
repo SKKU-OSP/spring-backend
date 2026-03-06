@@ -6,7 +6,9 @@ import com.sosd.sosd_backend.dto.api.GithubPullRequestApiDto;
 import com.sosd.sosd_backend.dto.api.GithubIssueApiDto;
 import com.sosd.sosd_backend.dto.api.GithubRepositoryApiDto;
 import com.sosd.sosd_backend.dto.api.GithubScoreApiDto;
+import com.sosd.sosd_backend.entity.github.GithubAccount;
 import com.sosd.sosd_backend.entity.github.GithubScoreEntity;
+import com.sosd.sosd_backend.repository.github.GithubAccountRepository;
 import com.sosd.sosd_backend.service.ScoreCalculationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +31,7 @@ import java.util.List;
 public class GithubDataApiController {
 
     private final ScoreCalculationService scoreCalculationService;
+    private final GithubAccountRepository githubAccountRepository;
 
     /**
      * 커밋 데이터 조회 API
@@ -291,12 +294,14 @@ public class GithubDataApiController {
      * GitHub 점수 조회 API
      *
      * URL: GET http://localhost:8080/api/v1/github/scores?githubId=123&studentId=2021&year=2024
+     * 또는: GET http://localhost:8080/api/v1/github/scores?githubUsername=kdy1&studentId=2021&year=2024
      *
      * Spring에서 계산한 점수 결과를 반환합니다.
      * - 수집기 실행 후 점수 자동 계산
      * - OSP는 이 API로 계산된 점수만 가져가면 됨
      *
-     * @param githubId GitHub ID
+     * @param githubId GitHub 숫자 ID (옵션)
+     * @param githubUsername GitHub 로그인 ID (옵션) - OSP 연동용
      * @param studentId 학번
      * @param year 연도
      * @return 계산된 점수 데이터
@@ -304,15 +309,42 @@ public class GithubDataApiController {
     @GetMapping("/scores")
     public ResponseEntity<ApiResponse<GithubScoreApiDto>> getScores(
             @RequestParam(required = false) Long githubId,
+            @RequestParam(required = false) String githubUsername,
             @RequestParam(required = false) String studentId,
             @RequestParam(required = false) Integer year
     ) {
-        log.info("점수 조회 API 호출됨: githubId={}, studentId={}, year={}", githubId, studentId, year);
+        log.info("점수 조회 API 호출됨: githubId={}, githubUsername={}, studentId={}, year={}",
+                githubId, githubUsername, studentId, year);
 
-        // 테스트용: 점수 계산 실행
-        // 실제로는 수집기가 돌고 나서 자동으로 계산되어야 함
+        // GitHub 숫자 ID 결정
+        Long resolvedGithubId = githubId;
+
+        // githubUsername이 제공된 경우 숫자 ID로 변환
+        if (resolvedGithubId == null && githubUsername != null) {
+            GithubAccount account = githubAccountRepository.findByGithubLoginUsername(githubUsername)
+                    .orElse(null);
+            if (account != null) {
+                resolvedGithubId = account.getGithubId();
+                log.info("GitHub 로그인 ID '{}' -> 숫자 ID {} 변환 완료", githubUsername, resolvedGithubId);
+            } else {
+                log.warn("GitHub 로그인 ID '{}' 를 찾을 수 없음", githubUsername);
+                // 빈 응답 반환
+                return ResponseEntity.ok(ApiResponse.<GithubScoreApiDto>builder()
+                        .success(false)
+                        .message("GitHub 사용자를 찾을 수 없습니다: " + githubUsername)
+                        .data(new ArrayList<>())
+                        .build());
+            }
+        }
+
+        // 기본값 설정
+        if (resolvedGithubId == null) {
+            resolvedGithubId = 123L;
+        }
+
+        // 점수 계산 실행
         GithubScoreEntity scoreEntity = scoreCalculationService.calculateScore(
-                githubId != null ? githubId : 123L,
+                resolvedGithubId,
                 studentId != null ? studentId : "2021123456",
                 year != null ? year : 2024
         );

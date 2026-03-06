@@ -3,6 +3,7 @@ package com.sosd.sosd_backend.service.github;
 import com.sosd.sosd_backend.entity.github.GithubAccountRepositoryEntity;
 import com.sosd.sosd_backend.entity.github.GithubAccountRepositoryId;
 import com.sosd.sosd_backend.entity.github.GithubRepositoryEntity;
+import com.sosd.sosd_backend.github_collector.dto.ref.GithubAccountRef;
 import com.sosd.sosd_backend.github_collector.dto.ref.RepoRef;
 import com.sosd.sosd_backend.repository.github.AccountRepoLinkRepository;
 import com.sosd.sosd_backend.repository.github.GithubAccountRepository;
@@ -67,6 +68,30 @@ public class GithubAccountRepositoryLinkService {
     public List<GithubAccountRepositoryEntity> listLinksWithRepo(Collection<Long> accountIds) {
         if (accountIds == null || accountIds.isEmpty()) return List.of();
         return linkRepo.findAllByAccountIdsJoinRepo(accountIds);
+    }
+
+    /** 2-3) 레포와 링크된 모든 계정 조회 (레포 기준 수집용) */
+    @Transactional(readOnly = true)
+    public List<GithubAccountRef> listAccountRefsByRepo(Long repoId) {
+        return linkRepo.findAccountsByRepoId(repoId).stream()
+                .map(account -> account.toGithubAccountRef())
+                .toList();
+    }
+
+    /** 2-4) 시스템에 등록된 모든 레포 조회 */
+    @Transactional(readOnly = true)
+    public List<RepoRef> listAllLinkedRepos() {
+        return linkRepo.findAllLinkedRepos().stream()
+                .map(e -> new RepoRef(
+                        e.getId(),
+                        e.getGithubRepoId(),
+                        e.getOwnerName(),
+                        e.getRepoName(),
+                        e.getFullName(),
+                        e.getGithubRepositoryUpdatedAt(),
+                        e.getGithubPushedAt()
+                ))
+                .toList();
     }
 
     /** 3) 커서 가져오기 */

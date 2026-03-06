@@ -30,4 +30,22 @@ public interface AggregationGithubAccountRepositoryLinkRepository extends JpaRep
         )
     """)
     List<AccountRepoProjection> findLinksNeedUpdate();
+
+    /**
+     * 모든 account-repo 링크 조회 (전체 재집계용)
+     */
+    @Query("""
+        SELECT new com.sosd.sosd_backend.data_aggregation.dto.AccountRepoProjection(
+            gar.githubAccount.githubId,
+            gar.repository.id,
+            gar.repository.readme,
+            gar.repository.license,
+            gar.repository.description,
+            gar.repository.star,
+            gar.repository.fork,
+            gar.lastUpdatedAt
+        )
+        FROM GithubAccountRepositoryEntity gar
+    """)
+    List<AccountRepoProjection> findAllLinks();
 }
