@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "github_score")
+@Table(name = "spring_github_score")
 public class GithubScoreEntity {
 
     @Id
