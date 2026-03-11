@@ -66,8 +66,8 @@ public class ScoreCalculationService {
             String repoFullName = (String) row[1];
 
             // OSP Ver1 공식으로 레포 점수 계산
-            double commitLineScore = Math.min(stats.getCommitLines() / 7500.0, 1.0);
-            double commitCntScore = Math.min(stats.getCommitCount() / 30.0, 1.0);
+            double commitLineScore = Math.min(stats.getCommitLines() / 10000.0, 1.0);
+            double commitCntScore = Math.min(stats.getCommitCount() / 50.0, 1.0);
             double prIssueScore = Math.min((stats.getPrCount() + stats.getIssueCount()) * 0.1, 0.7);
             double guidelineScore = stats.getGuidelineScore() > 0 ? 0.3 : 0.0;
             double repoScore = commitLineScore + commitCntScore + prIssueScore + guidelineScore;
