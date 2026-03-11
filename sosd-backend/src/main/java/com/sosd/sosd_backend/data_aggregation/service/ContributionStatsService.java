@@ -39,8 +39,8 @@ public class ContributionStatsService {
             int prCount = prRepository.countByGithubIdAndRepoIdAndYear(githubId, repoId, targetYear);
             int issueCount = issueRepository.countByGithubIdAndRepoIdAndYear(githubId, repoId, targetYear);
 
-            double commitLineScore = Math.min(commitLines / 7500.0, 1.0);
-            double commitCntScore = Math.min(commitCount / 30.0, 1.0);
+            double commitLineScore = Math.min(commitLines / 10000.0, 1.0);
+            double commitCntScore = Math.min(commitCount / 50.0, 1.0);
             double prIssueScore = Math.min((prCount + issueCount) * 0.1, 0.7);
             double guidelineScore =
                     (dto.readme() != null && dto.license() != null && dto.description() != null)
