@@ -16,5 +16,9 @@ public class BatchStartupRunner implements CommandLineRunner {
         System.out.println("🚀 Starting Contribution Stats Batch Job...");
         statsJobLauncher.runContributionStatsJob();
         System.out.println("✅ Contribution Stats Batch Job completed!");
+
+        System.out.println("🚀 Starting Monthly Stats Batch Job...");
+        statsJobLauncher.runMonthlyStatsJob();
+        System.out.println("✅ Monthly Stats Batch Job completed!");
     }
 }

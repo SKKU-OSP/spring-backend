@@ -1,11 +1,10 @@
 package com.sosd.sosd_backend.data_aggregation.config;
 
-import com.sosd.sosd_backend.data_aggregation.batch.ContributionStatsProcessor;
-import com.sosd.sosd_backend.data_aggregation.batch.ContributionStatsReader;
-import com.sosd.sosd_backend.data_aggregation.batch.ContributionStatsWriter;
+import com.sosd.sosd_backend.data_aggregation.batch.*;
 import com.sosd.sosd_backend.data_aggregation.dto.AccountRepoProjection;
 import com.sosd.sosd_backend.data_aggregation.entity.GithubContributionStats;
-import com.sosd.sosd_backend.entity.github.GithubAccountRepositoryEntity;
+import com.sosd.sosd_backend.data_aggregation.entity.GithubMonthlyStats;
+import com.sosd.sosd_backend.entity.github.GithubAccount;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -29,6 +28,9 @@ public class BatchConfig {
     private final ContributionStatsReader reader;
     private final ContributionStatsProcessor processor;
     private final ContributionStatsWriter writer;
+    private final MonthlyStatsReader monthlyStatsReader;
+    private final MonthlyStatsProcessor monthlyStatsProcessor;
+    private final MonthlyStatsWriter monthlyStatsWriter;
 
     @Bean
     public Job contributionStatsJob(Step contributionStatsStep) {
@@ -54,6 +56,23 @@ public class BatchConfig {
                 .reader(reader)
                 .processor(processor)
                 .writer(writer)
+                .build();
+    }
+
+    @Bean
+    public Job monthlyStatsJob(Step monthlyStatsStep) {
+        return new JobBuilder("monthlyStatsJob", jobRepository)
+                .start(monthlyStatsStep)
+                .build();
+    }
+
+    @Bean
+    public Step monthlyStatsStep() {
+        return new StepBuilder("monthlyStatsStep", jobRepository)
+                .<GithubAccount, List<GithubMonthlyStats>>chunk(10, transactionManager)
+                .reader(monthlyStatsReader)
+                .processor(monthlyStatsProcessor)
+                .writer(monthlyStatsWriter)
                 .build();
     }
 

@@ -5,7 +5,20 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface AggregationGithubIssueRepository extends JpaRepository<GithubIssueEntity, Long> {
+
+    // 월별 이슈 수
+    // Object[]: [yymm(String), issueCount(Long)]
+    @Query(value = """
+        SELECT DATE_FORMAT(i.issue_date, '%Y-%m-01') AS yymm,
+               COUNT(*)                              AS issue_count
+        FROM github_issue i
+        WHERE i.github_id = :githubId
+        GROUP BY DATE_FORMAT(i.issue_date, '%Y-%m-01')
+    """, nativeQuery = true)
+    List<Object[]> findMonthlyIssueStatsByGithubId(@Param("githubId") Long githubId);
 
     @Query("""
         SELECT COUNT(i)

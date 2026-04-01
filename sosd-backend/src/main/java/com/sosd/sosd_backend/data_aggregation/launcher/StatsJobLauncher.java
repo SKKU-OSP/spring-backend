@@ -16,6 +16,7 @@ public class StatsJobLauncher {
 
     private final JobLauncher jobLauncher;
     private final Job contributionStatsJob;
+    private final Job monthlyStatsJob;
 
     public void runContributionStatsJob() {
         try {
@@ -26,6 +27,20 @@ public class StatsJobLauncher {
                             .toJobParameters()
             );
             System.out.println("✅ Contribution Stats Batch Job launched successfully!");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void runMonthlyStatsJob() {
+        try {
+            jobLauncher.run(
+                    monthlyStatsJob,
+                    new JobParametersBuilder()
+                            .addLong("timestamp", Instant.now().toEpochMilli())
+                            .toJobParameters()
+            );
+            System.out.println("✅ Monthly Stats Batch Job launched successfully!");
         } catch (Exception e) {
             e.printStackTrace();
         }
