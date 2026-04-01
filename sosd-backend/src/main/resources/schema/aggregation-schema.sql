@@ -1,3 +1,19 @@
+CREATE TABLE IF NOT EXISTS github_monthly_stats (
+     id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+     github_id VARCHAR(40) NOT NULL COMMENT 'github_login_username (OSP 호환)',
+     start_yymm DATE NOT NULL COMMENT '월 시작일 (YYYY-MM-01)',
+     end_yymm DATE NOT NULL COMMENT '월 마지막일',
+     stars INT DEFAULT 0,
+     num_of_cr_repos INT DEFAULT 0 COMMENT '해당 월 생성 레포 수',
+     num_of_co_repos INT DEFAULT 0 COMMENT '해당 월 기여 레포 수',
+     num_of_commits INT DEFAULT 0,
+     num_of_PRs INT DEFAULT 0,
+     num_of_issues INT DEFAULT 0,
+     last_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+     UNIQUE INDEX uq_github_monthly (github_id, start_yymm)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='월별 유저 기여 통계 (OSP github_stats_yymm 대체)';
+
 CREATE TABLE IF NOT EXISTS github_contribution_stats (
      id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
      github_id BIGINT NOT NULL COMMENT '유저 github_id',
