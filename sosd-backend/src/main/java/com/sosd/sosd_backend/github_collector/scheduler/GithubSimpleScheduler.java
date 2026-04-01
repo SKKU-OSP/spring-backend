@@ -1,5 +1,6 @@
 package com.sosd.sosd_backend.github_collector.scheduler;
 
+import com.sosd.sosd_backend.data_aggregation.launcher.StatsJobLauncher;
 import com.sosd.sosd_backend.entity.github.GithubAccount;
 import com.sosd.sosd_backend.entity.user.UserAccount;
 import com.sosd.sosd_backend.github_collector.dto.ref.GithubAccountRef;
@@ -23,6 +24,7 @@ public class GithubSimpleScheduler {
     private final GithubAccountRepository githubAccountRepository;
     private final GithubAccountCollectionOrchestrator accountCollectionOrchestrator;
     private final RepositoryBasedCollectionOrchestrator repositoryBasedCollectionOrchestrator;
+    private final StatsJobLauncher statsJobLauncher;
 
     /**
      * OSP 방식 2단계 수집
@@ -64,6 +66,10 @@ public class GithubSimpleScheduler {
         // 2단계: 등록된 레포 기준으로 커밋/PR/이슈 수집
         log.info("=== Phase 2: Repo-based Commit Collection ===");
         repositoryBasedCollectionOrchestrator.collectAll();
+
+        // 3단계: 수집 완료 후 월별 통계 집계
+        log.info("=== Phase 3: Monthly Stats Aggregation ===");
+        statsJobLauncher.runMonthlyStatsJob();
 
         log.info("End Github Simple Scheduler");
     }
