@@ -40,6 +40,9 @@ public class GithubCommitEntity {
     @Column(name = "message")
     private String message;
 
+    @Column(name = "author_github")
+    private String authorGithub;
+
     // ===== 연관관계 =====
     // repo_id → github_repository.id
     @ManyToOne(fetch = FetchType.LAZY)
@@ -60,6 +63,7 @@ public class GithubCommitEntity {
             LocalDateTime authorDate,
             LocalDateTime committerDate,
             String message,
+            String authorGithub,
             GithubRepositoryEntity repository,
             GithubAccount account
     ){
@@ -70,6 +74,7 @@ public class GithubCommitEntity {
         this.authorDate = authorDate;
         this.committerDate = committerDate;
         this.message = message;
+        this.authorGithub = authorGithub;
         this.repository = repository;
         this.account = account;
     }
@@ -94,6 +99,7 @@ public class GithubCommitEntity {
                 .authorDate(d.authorDateUtc())     // 이미 UTC로 정규화된 값
                 .committerDate(d.committerDateUtc())
                 .message(d.message())
+                .authorGithub(d.authorLogin())
                 .repository(repository)
                 .account(account)
                 .build();

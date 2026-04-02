@@ -89,6 +89,7 @@ CREATE TABLE IF NOT EXISTS github_commit (
     author_date DATETIME NOT NULL COMMENT '커밋 작성자 시간',
     committer_date DATETIME NOT NULL COMMENT '푸시 시간',
     message TEXT COMMENT '커밋 메시지',
+    author_github VARCHAR(40) COMMENT '커밋 작성자 GitHub 로그인명 (OSP 호환)',
     repo_id BIGINT NOT NULL COMMENT '저장소 ID (외래키)',
     github_id BIGINT NOT NULL COMMENT '커밋 작성자 id(외례키)',
 
@@ -171,8 +172,8 @@ SELECT
     gc.committer_date,
     NULL                      AS author,
     NULL                      AS committer,
-    NULL                      AS author_github,
-    NULL                      AS committer_github
+    gc.author_github          AS author_github,
+    gc.author_github          AS committer_github
 FROM github_commit gc
 JOIN github_repository gr ON gc.repo_id = gr.id
 JOIN github_account ga ON gc.github_id = ga.github_id;

@@ -10,6 +10,7 @@ public record GithubCommitUpsertDto(
         LocalDateTime authorDateUtc,
         LocalDateTime committerDateUtc,
         String message,
-        Long repositoryId,     // github_repository.id
-        Long accountGithubId   // github_account.github_id
+        String authorLogin,        // github_account.github_login_username (author)
+        Long repositoryId,         // github_repository.id
+        Long accountGithubId       // github_account.github_id
 ) {}

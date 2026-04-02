@@ -17,6 +17,7 @@ public interface CommitMapper {
     @Mapping(target = "deletion", source = "src.deletions")
     @Mapping(target = "authorDateUtc", expression = "java(toUtc(src.authoredDate()))")
     @Mapping(target = "committerDateUtc", expression = "java(toUtc(src.committedDate()))")
+    @Mapping(target = "authorLogin", expression = "java(src.authorLogin())")
     @Mapping(target = "repositoryId", source = "repositoryId")
     @Mapping(target = "accountGithubId", source = "accountGithubId")
     GithubCommitUpsertDto toUpsertDto(GithubCommitResponseDto src,

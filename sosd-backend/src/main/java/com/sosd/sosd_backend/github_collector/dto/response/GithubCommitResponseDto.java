@@ -12,6 +12,22 @@ public record GithubCommitResponseDto(
         Integer deletions,
         @JsonProperty("messageHeadline") String message,
         OffsetDateTime authoredDate,
-        OffsetDateTime committedDate
+        OffsetDateTime committedDate,
+        Author author
 ) {
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record Author(
+            String name,
+            User user
+    ) {}
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record User(
+            String login
+    ) {}
+
+    public String authorLogin() {
+        if (author == null || author.user() == null) return null;
+        return author.user().login();
+    }
 }
