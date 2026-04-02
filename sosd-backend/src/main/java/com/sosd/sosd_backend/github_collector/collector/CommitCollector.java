@@ -55,6 +55,7 @@ public class CommitCollector implements GithubResourceCollector
                       deletions
                       author {
                         name
+                        email
                         user {login id}
                       }
                     }

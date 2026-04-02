@@ -11,6 +11,7 @@ public record GithubCommitUpsertDto(
         LocalDateTime committerDateUtc,
         String message,
         String authorLogin,        // github_account.github_login_username (author)
+        String authorEmail,        // 커밋 작성자 이메일 (OSP author 필드 호환)
         Long repositoryId,         // github_repository.id
         Long accountGithubId       // github_account.github_id
 ) {}

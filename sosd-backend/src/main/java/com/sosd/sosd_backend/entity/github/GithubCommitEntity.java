@@ -43,6 +43,9 @@ public class GithubCommitEntity {
     @Column(name = "author_github")
     private String authorGithub;
 
+    @Column(name = "author_email")
+    private String authorEmail;
+
     // ===== 연관관계 =====
     // repo_id → github_repository.id
     @ManyToOne(fetch = FetchType.LAZY)
@@ -64,6 +67,7 @@ public class GithubCommitEntity {
             LocalDateTime committerDate,
             String message,
             String authorGithub,
+            String authorEmail,
             GithubRepositoryEntity repository,
             GithubAccount account
     ){
@@ -75,6 +79,7 @@ public class GithubCommitEntity {
         this.committerDate = committerDate;
         this.message = message;
         this.authorGithub = authorGithub;
+        this.authorEmail = authorEmail;
         this.repository = repository;
         this.account = account;
     }
@@ -100,6 +105,7 @@ public class GithubCommitEntity {
                 .committerDate(d.committerDateUtc())
                 .message(d.message())
                 .authorGithub(d.authorLogin())
+                .authorEmail(d.authorEmail())
                 .repository(repository)
                 .account(account)
                 .build();

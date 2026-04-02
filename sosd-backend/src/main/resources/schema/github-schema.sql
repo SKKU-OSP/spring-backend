@@ -91,6 +91,7 @@ CREATE TABLE IF NOT EXISTS github_commit (
     committer_date DATETIME NOT NULL COMMENT '푸시 시간',
     message TEXT COMMENT '커밋 메시지',
     author_github VARCHAR(40) COMMENT '커밋 작성자 GitHub 로그인명 (OSP 호환)',
+    author_email VARCHAR(255) COMMENT '커밋 작성자 이메일 (OSP author 필드 호환)',
     repo_id BIGINT NOT NULL COMMENT '저장소 ID (외래키)',
     github_id BIGINT NOT NULL COMMENT '커밋 작성자 id(외례키)',
 
@@ -171,8 +172,8 @@ SELECT
     gc.deletion               AS deletions,
     gc.author_date,
     gc.committer_date,
-    NULL                      AS author,
-    NULL                      AS committer,
+    gc.author_email           AS author,
+    gc.author_email           AS committer,
     gc.author_github          AS author_github,
     gc.author_github          AS committer_github
 FROM github_commit gc
