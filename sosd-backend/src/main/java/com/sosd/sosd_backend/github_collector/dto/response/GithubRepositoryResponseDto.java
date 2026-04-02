@@ -18,6 +18,7 @@ public record GithubRepositoryResponseDto(
         Integer star,
         Integer fork,
         Integer dependency,
+        String language,
         String description,
         String readme,
         String license,
@@ -52,6 +53,11 @@ public record GithubRepositoryResponseDto(
         String license     = repo.licenseInfo() != null ? repo.licenseInfo().name() : null;
 
         String additionalJson = buildLanguagesJson(repo.languages());
+        String language = repo.languages() != null
+                && repo.languages().edges() != null
+                && !repo.languages().edges().isEmpty()
+                && repo.languages().edges().get(0).node() != null
+                ? repo.languages().edges().get(0).node().name() : null;
         Integer contributor = repo.mentionableUsers() != null ? repo.mentionableUsers().totalCount() : null;
 
         Integer openPr = repo.openPRs() != null ? nz(repo.openPRs().totalCount()) : 0;
@@ -77,6 +83,7 @@ public record GithubRepositoryResponseDto(
                 repo.stargazerCount(),
                 repo.forkCount(),
                 dependency,
+                language,
                 repo.description(),
                 readme,
                 license,

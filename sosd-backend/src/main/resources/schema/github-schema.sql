@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS github_repository (
     closed_issue INT DEFAULT 0 COMMENT 'closed Issue 개수',
     `commit` INT DEFAULT 0 COMMENT 'commit 개수',
     dependency INT DEFAULT 0 COMMENT '의존성 수',
+    language VARCHAR(45) COMMENT '주요 사용 언어 (OSP 호환)',
     description TEXT COMMENT '저장소 설명',
     readme MEDIUMTEXT COMMENT 'README 내용',
     license VARCHAR(255) COMMENT '라이선스 이름',

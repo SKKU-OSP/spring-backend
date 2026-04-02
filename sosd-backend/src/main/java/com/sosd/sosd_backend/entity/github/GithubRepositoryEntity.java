@@ -65,6 +65,9 @@ public class GithubRepositoryEntity {
     @Column(name = "dependency")
     private Integer dependency;
 
+    @Column(name = "language")
+    private String language;
+
     @Column(name = "description")
     private String description;
 
@@ -157,6 +160,7 @@ public class GithubRepositoryEntity {
         if (dto.closedIssue() != null) this.closedIssue = dto.closedIssue();
         if (dto.commit() != null) this.commit = dto.commit();
         if (dto.dependency() != null) this.dependency = dto.dependency();
+        if (dto.language() != null) this.language = dto.language();
         if (dto.description() != null) this.description = dto.description();
         if (dto.readme() != null) this.readme = dto.readme();
         if (dto.license() != null) this.license = dto.license();
