@@ -159,3 +159,20 @@ CREATE TABLE IF NOT EXISTS github_star (
     INDEX idx_star_date (star_date) COMMENT 'star 날짜 필터용'
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub Star 테이블';
+-- OSP 호환 VIEW: github_repo_commits 대체
+CREATE OR REPLACE VIEW v_github_repo_commits AS
+SELECT
+    ga.github_login_username AS github_id,
+    gr.repo_name              AS repo_name,
+    gc.sha,
+    gc.addition               AS additions,
+    gc.deletion               AS deletions,
+    gc.author_date,
+    gc.committer_date,
+    NULL                      AS author,
+    NULL                      AS committer,
+    NULL                      AS author_github,
+    NULL                      AS committer_github
+FROM github_commit gc
+JOIN github_repository gr ON gc.repo_id = gr.id
+JOIN github_account ga ON gc.github_id = ga.github_id;
