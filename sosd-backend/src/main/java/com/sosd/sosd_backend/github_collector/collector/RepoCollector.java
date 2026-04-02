@@ -57,6 +57,7 @@ public class RepoCollector implements GithubResourceCollector
             mergedPRs: pullRequests(states: MERGED) { totalCount }
             openIssues: issues(states: OPEN) { totalCount }
             closedIssues: issues(states: CLOSED) { totalCount }
+            releases(last: 1) { totalCount nodes { tagName } }
         }
     """;
 

@@ -19,6 +19,8 @@ public record GithubRepositoryResponseDto(
         Integer fork,
         Integer dependency,
         String language,
+        String releaseVer,
+        Integer releaseCount,
         String description,
         String readme,
         String license,
@@ -52,6 +54,12 @@ public record GithubRepositoryResponseDto(
         String readme      = repo.object() != null ? repo.object().text() : null;
         String license     = repo.licenseInfo() != null ? repo.licenseInfo().name() : null;
 
+        String releaseVer = repo.releases() != null
+                && repo.releases().nodes() != null
+                && !repo.releases().nodes().isEmpty()
+                ? repo.releases().nodes().get(0).tagName() : null;
+        Integer releaseCount = repo.releases() != null ? repo.releases().totalCount() : null;
+
         String additionalJson = buildLanguagesJson(repo.languages());
         String language = repo.languages() != null
                 && repo.languages().edges() != null
@@ -84,6 +92,8 @@ public record GithubRepositoryResponseDto(
                 repo.forkCount(),
                 dependency,
                 language,
+                releaseVer,
+                releaseCount,
                 repo.description(),
                 readme,
                 license,

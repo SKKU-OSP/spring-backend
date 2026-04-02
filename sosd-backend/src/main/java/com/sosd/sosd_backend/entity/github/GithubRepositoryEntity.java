@@ -68,6 +68,12 @@ public class GithubRepositoryEntity {
     @Column(name = "language")
     private String language;
 
+    @Column(name = "release_ver")
+    private String releaseVer;
+
+    @Column(name = "release_count")
+    private Integer releaseCount;
+
     @Column(name = "description")
     private String description;
 
@@ -161,6 +167,8 @@ public class GithubRepositoryEntity {
         if (dto.commit() != null) this.commit = dto.commit();
         if (dto.dependency() != null) this.dependency = dto.dependency();
         if (dto.language() != null) this.language = dto.language();
+        if (dto.releaseVer() != null) this.releaseVer = dto.releaseVer();
+        if (dto.releaseCount() != null) this.releaseCount = dto.releaseCount();
         if (dto.description() != null) this.description = dto.description();
         if (dto.readme() != null) this.readme = dto.readme();
         if (dto.license() != null) this.license = dto.license();

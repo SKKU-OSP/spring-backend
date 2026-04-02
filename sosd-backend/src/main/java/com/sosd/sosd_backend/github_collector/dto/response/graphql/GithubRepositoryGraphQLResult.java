@@ -33,7 +33,8 @@ public record GithubRepositoryGraphQLResult(
             Count closedPRs,
             Count mergedPRs,
             Count openIssues,
-            Count closedIssues
+            Count closedIssues,
+            Releases releases
     ) {}
 
     public record DefaultBranchRef(
@@ -84,7 +85,17 @@ public record GithubRepositoryGraphQLResult(
     public record DependencyGraphManifests(
             Integer totalCount
     ) {}
+
     public record MentionableUsers(
             Integer totalCount
+    ) {}
+
+    public record Releases(
+            Integer totalCount,
+            List<ReleaseNode> nodes
+    ) {}
+
+    public record ReleaseNode(
+            String tagName
     ) {}
 }

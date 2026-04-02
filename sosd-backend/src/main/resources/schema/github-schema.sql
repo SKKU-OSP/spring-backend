@@ -44,6 +44,8 @@ CREATE TABLE IF NOT EXISTS github_repository (
     `commit` INT DEFAULT 0 COMMENT 'commit 개수',
     dependency INT DEFAULT 0 COMMENT '의존성 수',
     language VARCHAR(45) COMMENT '주요 사용 언어 (OSP 호환)',
+    release_ver VARCHAR(45) COMMENT '최신 릴리즈 태그 (OSP 호환)',
+    release_count INT COMMENT '전체 릴리즈 수 (OSP 호환)',
     description TEXT COMMENT '저장소 설명',
     readme MEDIUMTEXT COMMENT 'README 내용',
     license VARCHAR(255) COMMENT '라이선스 이름',
