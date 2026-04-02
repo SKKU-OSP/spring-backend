@@ -131,5 +131,11 @@ public class GithubCommitEntity {
         if (!java.util.Objects.equals(this.message, d.message())) {
             this.message = d.message();
         }
+        if (d.authorLogin() != null && !java.util.Objects.equals(this.authorGithub, d.authorLogin())) {
+            this.authorGithub = d.authorLogin();
+        }
+        if (d.authorEmail() != null && !java.util.Objects.equals(this.authorEmail, d.authorEmail())) {
+            this.authorEmail = d.authorEmail();
+        }
     }
 }
