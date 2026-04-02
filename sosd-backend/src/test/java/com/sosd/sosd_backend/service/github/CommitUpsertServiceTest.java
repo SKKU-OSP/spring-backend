@@ -38,12 +38,12 @@ class CommitUpsertServiceTest {
         Long accountId = 200L; // github_id가 PK라고 가정
 
         var now = OffsetDateTime.now(ZoneOffset.UTC);
-        var resp1 = new GithubCommitResponseDto("sha-1", 10, 2, "feat: A", now.minusDays(1), now.minusDays(1));
-        var resp2 = new GithubCommitResponseDto("sha-2", 5, 1, "fix: B", now, now);
+        var resp1 = new GithubCommitResponseDto("sha-1", 10, 2, "feat: A", now.minusDays(1), now.minusDays(1), null);
+        var resp2 = new GithubCommitResponseDto("sha-2", 5, 1, "fix: B", now, now, null);
 
         // 매퍼 스텁: 응답 -> 업서트 DTO
-        var dto1 = new GithubCommitUpsertDto("sha-1", 10, 2, now.minusDays(1).toLocalDateTime(), now.minusDays(1).toLocalDateTime(), "feat: A", repoId, accountId);
-        var dto2 = new GithubCommitUpsertDto("sha-2", 5, 1, now.toLocalDateTime(), now.toLocalDateTime(), "fix: B", repoId, accountId);
+        var dto1 = new GithubCommitUpsertDto("sha-1", 10, 2, now.minusDays(1).toLocalDateTime(), now.minusDays(1).toLocalDateTime(), "feat: A", null, repoId, accountId);
+        var dto2 = new GithubCommitUpsertDto("sha-2", 5, 1, now.toLocalDateTime(), now.toLocalDateTime(), "fix: B", null, repoId, accountId);
 
         when(commitMapper.toUpsertDto(resp1, repoId, accountId)).thenReturn(dto1);
         when(commitMapper.toUpsertDto(resp2, repoId, accountId)).thenReturn(dto2);
