@@ -35,7 +35,7 @@ public class GithubAccountRepositoryLinkService {
             var entity = GithubAccountRepositoryEntity.builder()
                     .githubAccount(accountRef)
                     .repository(repoRef)
-                    .lastUpdatedAt(LocalDateTime.now())
+                    .lastUpdatedAt(null)
                     .build();
             return linkRepo.save(entity);
         });
