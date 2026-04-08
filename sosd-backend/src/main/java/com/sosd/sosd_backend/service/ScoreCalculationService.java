@@ -65,6 +65,9 @@ public class ScoreCalculationService {
             GithubContributionStats stats = (GithubContributionStats) row[0];
             String repoFullName = (String) row[1];
 
+            // 실제 기여가 없는 레포는 제외 (원래 OSP 로직과 동일: contr_repos는 실제 커밋/PR/이슈가 있는 레포만 포함)
+            if (stats.getCommitCount() + stats.getPrCount() + stats.getIssueCount() == 0) continue;
+
             // OSP Ver1 공식으로 레포 점수 계산
             double commitLineScore = Math.min(stats.getCommitLines() / 10000.0, 1.0);
             double commitCntScore = Math.min(stats.getCommitCount() / 50.0, 1.0);
