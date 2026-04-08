@@ -28,4 +28,9 @@ public interface GithubAccountRepository extends JpaRepository<GithubAccount, Lo
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("update GithubAccount a set a.lastCrawling = :ts where a.githubId = :githubId")
     int updateLastCrawlingByGithubId(Long githubId, LocalDateTime ts);
+
+    // 학번 기준 username 업데이트
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update GithubAccount a set a.githubLoginUsername = :newUsername where a.userAccount.studentId = :studentId")
+    int updateGithubLoginUsernameByStudentId(String studentId, String newUsername);
 }

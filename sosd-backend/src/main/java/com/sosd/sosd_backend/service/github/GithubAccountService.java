@@ -19,4 +19,10 @@ public class GithubAccountService {
     public void updateLastCrawling(Long githubId, LocalDateTime lastCrawling) {
         githubAccountRepository.updateLastCrawlingByGithubId(githubId, lastCrawling);
     }
+
+    @Transactional
+    public boolean updateGithubLoginUsername(String studentId, String newUsername) {
+        int updated = githubAccountRepository.updateGithubLoginUsernameByStudentId(studentId, newUsername);
+        return updated > 0;
+    }
 }
