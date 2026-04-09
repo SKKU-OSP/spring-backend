@@ -115,8 +115,9 @@ SQL_RAW_ISSUE_COUNT = """
 
 # github_score 요약
 SQL_SCORE = """
-    SELECT total_score, commit_count, commit_lines, pr_count, issue_count, best_repo
-    FROM github_score
+    SELECT total_score, commit_count, (total_addition + total_deletion) AS commit_lines,
+           pr_count, issue_count, best_repo
+    FROM spring_github_score
     WHERE github_id = %s AND year = %s
     LIMIT 1
 """
