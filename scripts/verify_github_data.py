@@ -87,7 +87,7 @@ SQL_CONTRIBUTION_STATS = """
 # raw 테이블에서 직접 카운트 (집계 테이블 vs 원본 교차검증)
 SQL_RAW_COMMIT_COUNT = """
     SELECT COUNT(*) AS cnt,
-           COALESCE(SUM(gc.addition + gc.deletion), 0) AS lines
+           COALESCE(SUM(gc.addition + gc.deletion), 0) AS line_sum
     FROM github_commit gc
     JOIN github_repository gr ON gc.repo_id = gr.id
     WHERE gc.github_id = %s
@@ -160,7 +160,7 @@ def query_raw_counts(conn, github_id: int, full_name: str, year: int):
 
     return {
         "commit_count": commit_row["cnt"],
-        "commit_lines": commit_row["lines"],
+        "commit_lines": commit_row["line_sum"],
         "pr_count":     pr_row["cnt"],
         "issue_count":  issue_row["cnt"],
     }
