@@ -268,51 +268,32 @@ def print_table_row(label: str, db_val, raw_val, api_val):
 # 메인 로직
 # ══════════════════════════════════════════════════════════════════════════════
 
-def run(args):
-    if not HAS_REQUESTS:
-        print("[ERROR] requests가 설치되지 않았습니다. pip install requests")
-        sys.exit(1)
+SQL_YEARS_FOR_USER = """
+    SELECT DISTINCT year
+    FROM github_contribution_stats
+    WHERE github_id = %s
+    ORDER BY year DESC
+"""
 
-    login    = args.login
-    year     = args.year
-    token    = args.token
-    headers  = make_headers(token)
-    skip_api = args.skip_api
 
-    # ── DB 접속 및 유저 조회 ──────────────────────────────────────────────────
-    print(f"\n{'═'*65}")
-    print(f"  GitHub 데이터 정합성 검증   login={login}  year={year}")
-    print(f"{'═'*65}")
-
-    conn = get_db_connection(args)
-    with conn.cursor() as cur:
-        cur.execute(SQL_GET_GITHUB_ID, (login,))
-        row = cur.fetchone()
-
-    if not row:
-        print(f"[ERROR] DB에서 '{login}' 유저를 찾을 수 없습니다.")
-        conn.close()
-        sys.exit(1)
-
-    github_id = row["github_id"]
-    print(f"  DB github_id = {github_id}")
-
-    # ── contribution_stats 조회 ───────────────────────────────────────────────
+def verify_one_year(conn, github_id, login, year, headers, skip_api):
+    """단일 연도 검증. 레포별 상세 출력 + 연도 합계 반환."""
     stats, score = query_db_stats(conn, github_id, year)
 
     if not stats:
         print(f"\n  [정보] {year}년 contribution_stats 데이터가 없습니다.")
-        conn.close()
-        return
+        return None
 
     if score:
-        print(f"\n  [github_score] total={score['total_score']}  "
+        print(f"\n  [spring_github_score] total={score['total_score']}  "
               f"commits={score['commit_count']}  lines={score['commit_lines']}  "
               f"pr={score['pr_count']}  issue={score['issue_count']}  "
               f"best_repo={score['best_repo']}")
 
-    # ── 레포별 검증 ────────────────────────────────────────────────────────────
     total_mismatch = 0
+    year_db  = {"commits": 0, "lines": 0, "prs": 0, "issues": 0}
+    year_api = {"commits": 0, "lines": 0, "prs": 0, "issues": 0}
+    api_available = False
 
     for s in stats:
         full_name = s["full_name"]
@@ -320,28 +301,38 @@ def run(args):
 
         print(f"\n  ┌─ {full_name}")
 
-        # raw 테이블 교차검증
         raw = query_raw_counts(conn, github_id, full_name, year)
 
-        # GitHub API 호출 (--skip-api 플래그로 생략 가능)
         if skip_api:
             api_commits = api_prs = api_issues = None
         else:
-            # Rate limit 방지: Search API는 1분 30회 제한
             time.sleep(0.5)
             api_commits = github_commit_count(owner, repo, login, year, headers)
-            time.sleep(1.5)  # Search API rate limit 여유
+            time.sleep(1.5)
             api_prs     = github_search_count(full_name, login, year, "pr",    headers)
             time.sleep(1.5)
             api_issues  = github_search_count(full_name, login, year, "issue", headers)
 
-        # 출력
         print_table_row("커밋 수",    s["commit_count"], raw["commit_count"], api_commits)
-        print_table_row("커밋 라인수", s["commit_lines"], raw["commit_lines"], None)  # API로 검증 불가
+        print_table_row("커밋 라인수", s["commit_lines"], raw["commit_lines"], None)
         print_table_row("PR 수",      s["pr_count"],     raw["pr_count"],     api_prs)
         print_table_row("이슈 수",    s["issue_count"],  raw["issue_count"],  api_issues)
 
-        # 불일치 집계
+        # DB 합산
+        year_db["commits"] += s["commit_count"]
+        year_db["lines"]   += s["commit_lines"]
+        year_db["prs"]     += s["pr_count"]
+        year_db["issues"]  += s["issue_count"]
+
+        # API 합산 (None이 아닌 것만)
+        if api_commits is not None:
+            year_api["commits"] += api_commits
+            api_available = True
+        if api_prs is not None:
+            year_api["prs"] += api_prs
+        if api_issues is not None:
+            year_api["issues"] += api_issues
+
         for db_val, raw_val in [
             (s["commit_count"], raw["commit_count"]),
             (s["pr_count"],     raw["pr_count"]),
@@ -362,17 +353,100 @@ def run(args):
         print(f"  │  guideline_score={s['guideline_score']:.1f}  repo_score={s['repo_score']:.3f}")
         print(f"  └{'─'*50}")
 
-    conn.close()
+    return {
+        "year":          year,
+        "db":            year_db,
+        "api":           year_api if api_available else None,
+        "mismatch":      total_mismatch,
+    }
 
-    # ── 요약 ──────────────────────────────────────────────────────────────────
-    print(f"\n{'─'*65}")
-    if total_mismatch == 0:
-        print("  [결과] 모든 수치 일치 ✓")
+
+def print_summary(results):
+    """연도별 합계 요약 테이블 출력."""
+    print(f"\n{'═'*75}")
+    print(f"  연도별 합계 요약")
+    print(f"{'─'*75}")
+    print(f"  {'연도':<6} {'구분':<5} {'커밋':>8} {'커밋라인':>12} {'PR':>6} {'이슈':>6}  {'불일치'}")
+    print(f"{'─'*75}")
+
+    total_mismatch = 0
+    for r in results:
+        if r is None:
+            continue
+        year = r["year"]
+        db   = r["db"]
+        api  = r["api"]
+        mm   = r["mismatch"]
+        total_mismatch += mm
+
+        print(f"  {year:<6} {'DB':<5} {db['commits']:>8} {db['lines']:>12} {db['prs']:>6} {db['issues']:>6}")
+        if api:
+            c_diff = db['commits'] - api['commits']
+            p_diff = db['prs']     - api['prs']
+            i_diff = db['issues']  - api['issues']
+            c_str = f"{api['commits']:>8}" + (f" ({c_diff:+d})" if c_diff != 0 else "  ✓   ")
+            p_str = f"{api['prs']:>6}"     + (f"({p_diff:+d})" if p_diff != 0 else " ✓")
+            i_str = f"{api['issues']:>6}"  + (f"({i_diff:+d})" if i_diff != 0 else " ✓")
+            print(f"  {'':<6} {'API':<5} {c_str:>14} {'N/A':>12} {p_str:>8} {i_str:>8}  {'✗ '+str(mm)+'건' if mm else '✓'}")
+        else:
+            print(f"  {'':<6} {'API':<5} {'(토큰 필요 또는 skip-api)':>40}")
+        print(f"  {'─'*73}")
+
+    print(f"\n  전체 불일치 합계: {total_mismatch}건 {'✓' if total_mismatch == 0 else '✗'}")
+    print(f"  ※ DB < API: 수집 누락   ※ DB > API: GitHub에서 삭제/비공개 처리됨")
+    print(f"{'═'*75}\n")
+
+
+def run(args):
+    if not HAS_REQUESTS:
+        print("[ERROR] requests가 설치되지 않았습니다. pip install requests")
+        sys.exit(1)
+
+    login    = args.login
+    year_arg = args.year
+    token    = args.token
+    headers  = make_headers(token)
+    skip_api = args.skip_api
+
+    conn = get_db_connection(args)
+    with conn.cursor() as cur:
+        cur.execute(SQL_GET_GITHUB_ID, (login,))
+        row = cur.fetchone()
+
+    if not row:
+        print(f"[ERROR] DB에서 '{login}' 유저를 찾을 수 없습니다.")
+        conn.close()
+        sys.exit(1)
+
+    github_id = row["github_id"]
+
+    # 검증 대상 연도 결정
+    if year_arg == 0:  # all
+        with conn.cursor() as cur:
+            cur.execute(SQL_YEARS_FOR_USER, (github_id,))
+            years = [r["year"] for r in cur.fetchall()]
+        if not years:
+            print(f"[ERROR] DB에 {login}의 데이터가 없습니다.")
+            conn.close()
+            sys.exit(1)
     else:
-        print(f"  [결과] 불일치 항목 {total_mismatch}개 발견 ✗")
-        print("  ※ DB값 > API값: 아직 수집됐으나 GitHub에선 삭제/비공개 처리됨")
-        print("  ※ DB값 < API값: 수집 누락 가능성 있음")
-    print(f"{'─'*65}\n")
+        years = [year_arg]
+
+    print(f"\n{'═'*65}")
+    print(f"  GitHub 데이터 정합성 검증   login={login}  year={year_arg if year_arg else 'all'}")
+    print(f"  DB github_id = {github_id}  |  검증 연도: {years}")
+    print(f"{'═'*65}")
+
+    results = []
+    for year in years:
+        print(f"\n{'━'*65}")
+        print(f"  ■ {year}년")
+        print(f"{'━'*65}")
+        result = verify_one_year(conn, github_id, login, year, headers, skip_api)
+        results.append(result)
+
+    conn.close()
+    print_summary(results)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -386,7 +460,8 @@ def main():
         epilog=__doc__,
     )
     parser.add_argument("login", help="검증할 GitHub 로그인 username (예: lmatarodo)")
-    parser.add_argument("year",  type=int, help="검증 연도 (예: 2026)")
+    parser.add_argument("year", nargs="?", default="all",
+                        help="검증 연도 (예: 2026) 또는 'all' (기본값: all)")
 
     parser.add_argument("--token",       default=None,       help="GitHub Personal Access Token (없으면 rate limit 60회/h)")
     parser.add_argument("--skip-api",    action="store_true", help="GitHub API 호출 생략 (DB 내부 교차검증만)")
@@ -400,6 +475,14 @@ def main():
     db.add_argument("--db-name",     default="sosd",      help="DB 이름 (기본: sosd)")
 
     args = parser.parse_args()
+    # year 파싱: "all" → 0, 숫자 문자열 → int
+    if args.year == "all":
+        args.year = 0
+    else:
+        try:
+            args.year = int(args.year)
+        except ValueError:
+            parser.error(f"year는 숫자 또는 'all'이어야 합니다: {args.year}")
     run(args)
 
 
