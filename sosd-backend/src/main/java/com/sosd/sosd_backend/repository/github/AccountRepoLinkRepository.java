@@ -42,11 +42,12 @@ public interface AccountRepoLinkRepository extends JpaRepository<GithubAccountRe
     """)
     List<GithubAccount> findAccountsByRepoId(@Param("repoId") Long repoId);
 
-    // 시스템에 등록된 모든 레포 조회 (중복 없이)
+    // 시스템에 등록된 모든 레포 조회 (중복 없이, private 레포 제외)
     @Query("""
         select distinct r
         from GithubAccountRepositoryEntity gar
         join gar.repository r
+        where r.isPrivate = false or r.isPrivate is null
     """)
     List<GithubRepositoryEntity> findAllLinkedRepos();
 

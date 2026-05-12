@@ -90,4 +90,18 @@ public interface AggregationGithubContributionStatsRepository extends JpaReposit
         ORDER BY s.repoScore DESC
     """)
     List<Object[]> findAllWithRepoNameByGithubIdAndYear(Long githubId, int year);
+
+    /**
+     * private 처리된 레포의 contribution_stats 삭제
+     */
+    @Modifying
+    @Transactional
+    @Query("""
+        DELETE FROM GithubContributionStats s
+        WHERE s.repoId IN (
+            SELECT r.id FROM GithubRepositoryEntity r
+            WHERE r.isPrivate = true
+        )
+    """)
+    int deleteByPrivateRepos();
 }
