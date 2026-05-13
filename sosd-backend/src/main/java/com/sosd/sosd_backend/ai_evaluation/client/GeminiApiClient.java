@@ -26,7 +26,7 @@ public class GeminiApiClient {
     @Value("${gemini.api.key}")
     private String apiKey;
 
-    @Value("${gemini.api.model:gemini-3.0-flash}")
+    @Value("${gemini.api.model:gemini-3-flash-preview}")
     private String model;
 
     public GeminiApiClient(ObjectMapper objectMapper) {
