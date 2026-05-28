@@ -9,7 +9,7 @@ import com.sosd.sosd_backend.dto.api.GithubScoreApiDto;
 import com.sosd.sosd_backend.entity.github.GithubAccount;
 import com.sosd.sosd_backend.entity.github.GithubScoreEntity;
 import com.sosd.sosd_backend.repository.github.GithubAccountRepository;
-import com.sosd.sosd_backend.service.ScoreCalculationService;
+import com.sosd.sosd_backend.service.ScoreCalculator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +30,7 @@ import java.util.List;
 @RequiredArgsConstructor        // 생성자 자동 생성
 public class GithubDataApiController {
 
-    private final ScoreCalculationService scoreCalculationService;
+    private final ScoreCalculator scoreCalculationService;
     private final GithubAccountRepository githubAccountRepository;
 
     /**
