@@ -6,3 +6,6 @@
 
 ### env ###
 .env
+
+### score calculation logic (not open-sourced) ###
+sosd-backend/src/main/java/com/sosd/sosd_backend/service/ScoreCalculationService.java
