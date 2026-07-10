@@ -59,9 +59,17 @@ public class AiEvaluationController {
                     .body(Map.of("status", "fail", "message", e.getMessage()));
         } catch (Exception e) {
             log.error("README 평가 실패: {}/{} - {}", githubUsername, repoName, e.getMessage());
-            String msg = e.getMessage() != null && e.getMessage().contains("429")
-                    ? "AI 서비스 호출 쿼터가 초과되었습니다. 잠시 후 다시 시도해 주세요."
-                    : "AI 분석 중 오류가 발생했습니다.";
+            String m = e.getMessage() != null ? e.getMessage() : "";
+            String msg;
+            if (m.contains("429") || m.contains("RESOURCE_EXHAUSTED")) {
+                msg = "AI 사용량 한도를 초과했습니다. 잠시 후 다시 시도해 주세요.";
+            } else if (m.contains("503") || m.contains("UNAVAILABLE") || m.contains("high demand")) {
+                msg = "AI 서버가 일시적으로 혼잡합니다. 잠시 후 다시 시도해 주세요.";
+            } else if (m.contains("timed out") || m.contains("Read timed out")) {
+                msg = "AI 응답 시간이 초과되었습니다. README가 너무 길거나 서버가 혼잡할 수 있습니다.";
+            } else {
+                msg = "AI 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
+            }
             return ResponseEntity.internalServerError()
                     .body(Map.of("status", "fail", "message", msg));
         }

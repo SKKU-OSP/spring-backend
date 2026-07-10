@@ -5,7 +5,9 @@ CREATE TABLE IF NOT EXISTS github_repo_ai_evaluation (
     repo_name VARCHAR(100) NOT NULL COMMENT '레포지토리명',
 
     -- README 평가
-    readme_score VARCHAR(10)                    COMMENT 'A+~F 등급',
+    readme_score VARCHAR(10)                    COMMENT 'A~D 등급',
+    readme_total_score FLOAT                    COMMENT '가중 총점 (18점 만점)',
+    readme_criteria_scores JSON                 COMMENT '기준별 점수 및 근거',
     readme_missing_essentials JSON              COMMENT '누락된 필수 항목 배열',
     readme_strengths JSON                       COMMENT '잘한 점 배열 (최대 3개)',
     readme_improvements JSON                    COMMENT '보완할 점 배열 (최대 3개)',
