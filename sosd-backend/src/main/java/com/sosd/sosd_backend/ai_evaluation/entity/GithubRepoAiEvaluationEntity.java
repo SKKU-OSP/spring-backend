@@ -28,6 +28,12 @@ public class GithubRepoAiEvaluationEntity {
     @Column(name = "readme_score", length = 10)
     private String readmeScore;
 
+    @Column(name = "readme_total_score")
+    private Double readmeTotalScore;
+
+    @Column(name = "readme_criteria_scores", columnDefinition = "JSON")
+    private String readmeCriteriaScores;
+
     @Column(name = "readme_missing_essentials", columnDefinition = "JSON")
     @Convert(converter = JsonListConverter.class)
     private List<String> readmeMissingEssentials;
@@ -55,6 +61,8 @@ public class GithubRepoAiEvaluationEntity {
             String githubLoginUsername,
             String repoName,
             String readmeScore,
+            Double readmeTotalScore,
+            String readmeCriteriaScores,
             List<String> readmeMissingEssentials,
             List<String> readmeStrengths,
             List<String> readmeImprovements,
@@ -63,6 +71,8 @@ public class GithubRepoAiEvaluationEntity {
         this.githubLoginUsername = githubLoginUsername;
         this.repoName = repoName;
         this.readmeScore = readmeScore;
+        this.readmeTotalScore = readmeTotalScore;
+        this.readmeCriteriaScores = readmeCriteriaScores;
         this.readmeMissingEssentials = readmeMissingEssentials;
         this.readmeStrengths = readmeStrengths;
         this.readmeImprovements = readmeImprovements;
@@ -73,12 +83,16 @@ public class GithubRepoAiEvaluationEntity {
 
     public void updateReadmeEvaluation(
             String readmeScore,
+            Double readmeTotalScore,
+            String readmeCriteriaScores,
             List<String> readmeMissingEssentials,
             List<String> readmeStrengths,
             List<String> readmeImprovements,
             List<String> readmeAdvice
     ) {
         this.readmeScore = readmeScore;
+        this.readmeTotalScore = readmeTotalScore;
+        this.readmeCriteriaScores = readmeCriteriaScores;
         this.readmeMissingEssentials = readmeMissingEssentials;
         this.readmeStrengths = readmeStrengths;
         this.readmeImprovements = readmeImprovements;
