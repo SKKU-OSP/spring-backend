@@ -1,6 +1,7 @@
 package com.sosd.sosd_backend.controller.api;
 
 import com.sosd.sosd_backend.dto.api.ApiResponse;
+import com.sosd.sosd_backend.dto.api.CommitDiffApiDto;
 import com.sosd.sosd_backend.dto.api.GithubCommitApiDto;
 import com.sosd.sosd_backend.dto.api.GithubPullRequestApiDto;
 import com.sosd.sosd_backend.dto.api.GithubIssueApiDto;
@@ -10,6 +11,7 @@ import com.sosd.sosd_backend.entity.github.GithubAccount;
 import com.sosd.sosd_backend.entity.github.GithubScoreEntity;
 import com.sosd.sosd_backend.repository.github.GithubAccountRepository;
 import com.sosd.sosd_backend.service.ScoreCalculator;
+import com.sosd.sosd_backend.service.github.CommitDiffService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +34,7 @@ public class GithubDataApiController {
 
     private final ScoreCalculator scoreCalculationService;
     private final GithubAccountRepository githubAccountRepository;
+    private final CommitDiffService commitDiffService;
 
     /**
      * 커밋 데이터 조회 API
@@ -400,6 +403,22 @@ public class GithubDataApiController {
      *
      * @return 간단한 상태 메시지
      */
+    /**
+     * 커밋 diff 조회 API (온디맨드 — GitHub REST API 프록시)
+     *
+     * URL: GET /api/v1/github/commits/{owner}/{repo}/{sha}/diff
+     */
+    @GetMapping("/commits/{owner}/{repo}/{sha}/diff")
+    public ResponseEntity<CommitDiffApiDto> getCommitDiff(
+            @PathVariable String owner,
+            @PathVariable String repo,
+            @PathVariable String sha
+    ) {
+        log.info("커밋 diff 조회 API: {}/{}/{}", owner, repo, sha);
+        CommitDiffApiDto diff = commitDiffService.getDiff(owner, repo, sha);
+        return ResponseEntity.ok(diff);
+    }
+
     @GetMapping("/health")
     public ResponseEntity<String> health() {
         return ResponseEntity.ok("GitHub Data API is running!");
