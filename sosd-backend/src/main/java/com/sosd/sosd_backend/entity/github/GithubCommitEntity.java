@@ -40,6 +40,9 @@ public class GithubCommitEntity {
     @Column(name = "message")
     private String message;
 
+    @Column(name = "message_body", columnDefinition = "TEXT")
+    private String messageBody;
+
     @Column(name = "author_github")
     private String authorGithub;
 
@@ -66,6 +69,7 @@ public class GithubCommitEntity {
             LocalDateTime authorDate,
             LocalDateTime committerDate,
             String message,
+            String messageBody,
             String authorGithub,
             String authorEmail,
             GithubRepositoryEntity repository,
@@ -78,6 +82,7 @@ public class GithubCommitEntity {
         this.authorDate = authorDate;
         this.committerDate = committerDate;
         this.message = message;
+        this.messageBody = messageBody;
         this.authorGithub = authorGithub;
         this.authorEmail = authorEmail;
         this.repository = repository;
@@ -104,6 +109,7 @@ public class GithubCommitEntity {
                 .authorDate(d.authorDateUtc())     // 이미 UTC로 정규화된 값
                 .committerDate(d.committerDateUtc())
                 .message(d.message())
+                .messageBody(d.messageBody())
                 .authorGithub(d.authorLogin())
                 .authorEmail(d.authorEmail())
                 .repository(repository)
@@ -130,6 +136,9 @@ public class GithubCommitEntity {
         }
         if (!java.util.Objects.equals(this.message, d.message())) {
             this.message = d.message();
+        }
+        if (!java.util.Objects.equals(this.messageBody, d.messageBody())) {
+            this.messageBody = d.messageBody();
         }
         if (d.authorLogin() != null && !java.util.Objects.equals(this.authorGithub, d.authorLogin())) {
             this.authorGithub = d.authorLogin();
