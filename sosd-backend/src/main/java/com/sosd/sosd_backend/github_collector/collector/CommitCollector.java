@@ -49,6 +49,7 @@ public class CommitCollector implements GithubResourceCollector
                     nodes {
                       oid
                       messageHeadline
+                      messageBody
                       authoredDate
                       committedDate
                       additions

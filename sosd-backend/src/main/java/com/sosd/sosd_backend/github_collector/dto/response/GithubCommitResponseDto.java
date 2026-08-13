@@ -11,6 +11,7 @@ public record GithubCommitResponseDto(
         Integer additions,
         Integer deletions,
         @JsonProperty("messageHeadline") String message,
+        String messageBody,
         OffsetDateTime authoredDate,
         OffsetDateTime committedDate,
         Author author
