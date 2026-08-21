@@ -2,6 +2,7 @@ package com.sosd.sosd_backend.controller.api;
 
 import com.sosd.sosd_backend.dto.api.ApiResponse;
 import com.sosd.sosd_backend.dto.api.CommitDiffApiDto;
+import com.sosd.sosd_backend.dto.api.PrCommitListApiDto;
 import com.sosd.sosd_backend.dto.api.GithubCommitApiDto;
 import com.sosd.sosd_backend.dto.api.GithubPullRequestApiDto;
 import com.sosd.sosd_backend.dto.api.GithubIssueApiDto;
@@ -12,6 +13,7 @@ import com.sosd.sosd_backend.entity.github.GithubScoreEntity;
 import com.sosd.sosd_backend.repository.github.GithubAccountRepository;
 import com.sosd.sosd_backend.service.ScoreCalculator;
 import com.sosd.sosd_backend.service.github.CommitDiffService;
+import com.sosd.sosd_backend.service.github.PullRequestCommitService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +37,7 @@ public class GithubDataApiController {
     private final ScoreCalculator scoreCalculationService;
     private final GithubAccountRepository githubAccountRepository;
     private final CommitDiffService commitDiffService;
+    private final PullRequestCommitService pullRequestCommitService;
 
     /**
      * 커밋 데이터 조회 API
@@ -417,6 +420,17 @@ public class GithubDataApiController {
         log.info("커밋 diff 조회 API: {}/{}/{}", owner, repo, sha);
         CommitDiffApiDto diff = commitDiffService.getDiff(owner, repo, sha);
         return ResponseEntity.ok(diff);
+    }
+
+    /** PR에 포함된 커밋의 가벼운 메타데이터 목록. patch는 포함하지 않는다. */
+    @GetMapping("/pulls/{owner}/{repo}/{prNumber}/commits")
+    public ResponseEntity<PrCommitListApiDto> getPullRequestCommits(
+            @PathVariable String owner,
+            @PathVariable String repo,
+            @PathVariable int prNumber
+    ) {
+        log.info("PR 커밋 목록 조회 API: {}/{}#{}", owner, repo, prNumber);
+        return ResponseEntity.ok(pullRequestCommitService.getCommits(owner, repo, prNumber));
     }
 
     @GetMapping("/health")
