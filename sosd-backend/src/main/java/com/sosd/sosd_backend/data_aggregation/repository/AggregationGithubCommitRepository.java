@@ -16,7 +16,10 @@ public interface AggregationGithubCommitRepository extends JpaRepository<GithubC
                COUNT(*)                               AS commit_count,
                COUNT(DISTINCT c.repo_id)              AS co_repos
         FROM github_commit c
+        JOIN github_repository r ON r.id = c.repo_id
         WHERE c.github_id = :githubId
+          AND (r.is_private = FALSE OR r.is_private IS NULL)
+          AND (r.availability_status IS NULL OR r.availability_status <> 'PUBLICLY_UNAVAILABLE')
         GROUP BY DATE_FORMAT(c.author_date, '%Y-%m-01')
     """, nativeQuery = true)
     List<Object[]> findMonthlyCommitStatsByGithubId(@Param("githubId") Long githubId);

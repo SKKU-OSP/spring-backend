@@ -22,7 +22,10 @@ public interface AggregationGithubAccountRepositoryLinkRepository extends JpaRep
             gar.lastUpdatedAt
         )
         FROM GithubAccountRepositoryEntity gar
-        WHERE NOT EXISTS (
+        WHERE (gar.repository.isPrivate = false OR gar.repository.isPrivate IS NULL)
+          AND (gar.repository.availabilityStatus IS NULL OR gar.repository.availabilityStatus <>
+               com.sosd.sosd_backend.entity.github.RepositoryAvailabilityStatus.PUBLICLY_UNAVAILABLE)
+          AND NOT EXISTS (
             SELECT 1 FROM GithubContributionStats s
             WHERE s.githubId = gar.githubAccount.githubId
               AND s.repoId = gar.repository.id
@@ -46,6 +49,9 @@ public interface AggregationGithubAccountRepositoryLinkRepository extends JpaRep
             gar.lastUpdatedAt
         )
         FROM GithubAccountRepositoryEntity gar
+        WHERE (gar.repository.isPrivate = false OR gar.repository.isPrivate IS NULL)
+          AND (gar.repository.availabilityStatus IS NULL OR gar.repository.availabilityStatus <>
+               com.sosd.sosd_backend.entity.github.RepositoryAvailabilityStatus.PUBLICLY_UNAVAILABLE)
     """)
     List<AccountRepoProjection> findAllLinks();
 }

@@ -34,6 +34,17 @@ public interface AccountRepoLinkRepository extends JpaRepository<GithubAccountRe
     """)
     List<GithubRepositoryEntity> findReposByAccountId(@Param("accountId") Long accountId);
 
+    @Query("""
+        select r
+        from GithubAccountRepositoryEntity gar
+        join gar.repository r
+        where gar.id.githubAccountId = :accountId
+          and (r.isPrivate = false or r.isPrivate is null)
+          and (r.availabilityStatus is null or r.availabilityStatus =
+               com.sosd.sosd_backend.entity.github.RepositoryAvailabilityStatus.AVAILABLE)
+    """)
+    List<GithubRepositoryEntity> findCollectableReposByAccountId(@Param("accountId") Long accountId);
+
     // 단일 레포와 링크된 모든 계정 조회 (레포 기준 수집용)
     @Query("""
         select gar.githubAccount
@@ -47,9 +58,18 @@ public interface AccountRepoLinkRepository extends JpaRepository<GithubAccountRe
         select distinct r
         from GithubAccountRepositoryEntity gar
         join gar.repository r
-        where r.isPrivate = false or r.isPrivate is null
+        where (r.isPrivate = false or r.isPrivate is null)
+          and (r.availabilityStatus is null or r.availabilityStatus = com.sosd.sosd_backend.entity.github.RepositoryAvailabilityStatus.AVAILABLE)
     """)
     List<GithubRepositoryEntity> findAllLinkedRepos();
+
+    // 접근 불가/비공개 저장소도 재확인해야 복구를 감지할 수 있으므로 상태와 무관하게 조회한다.
+    @Query("""
+        select distinct r
+        from GithubAccountRepositoryEntity gar
+        join gar.repository r
+    """)
+    List<GithubRepositoryEntity> findAllLinkedReposForAvailabilityCheck();
 
     // === 커서 단건 조회 ===
     @Query("""

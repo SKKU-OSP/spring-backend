@@ -51,8 +51,12 @@ public interface AggregationGithubContributionStatsRepository extends JpaReposit
             COALESCE(MAX(s.guidelineScore), 0.0)
         )
         FROM GithubContributionStats s
+        JOIN GithubRepositoryEntity r ON s.repoId = r.id
         WHERE s.githubId = :githubId
           AND s.year = :year
+          AND (r.isPrivate = false OR r.isPrivate IS NULL)
+          AND (r.availabilityStatus IS NULL OR r.availabilityStatus <>
+               com.sosd.sosd_backend.entity.github.RepositoryAvailabilityStatus.PUBLICLY_UNAVAILABLE)
     """)
     Optional<com.sosd.sosd_backend.service.ContributionAggregate> aggregateByGithubIdAndYear(Long githubId, int year);
 
@@ -62,6 +66,9 @@ public interface AggregationGithubContributionStatsRepository extends JpaReposit
         JOIN GithubRepositoryEntity r ON s.repoId = r.id
         WHERE s.githubId = :githubId
           AND s.year = :year
+          AND (r.isPrivate = false OR r.isPrivate IS NULL)
+          AND (r.availabilityStatus IS NULL OR r.availabilityStatus <>
+               com.sosd.sosd_backend.entity.github.RepositoryAvailabilityStatus.PUBLICLY_UNAVAILABLE)
         ORDER BY s.commitLines DESC
     """)
     List<String> findTopRepoFullNameByCommitLines(Long githubId, int year);
@@ -72,8 +79,12 @@ public interface AggregationGithubContributionStatsRepository extends JpaReposit
     @Query("""
         SELECT s
         FROM GithubContributionStats s
+        JOIN GithubRepositoryEntity r ON s.repoId = r.id
         WHERE s.githubId = :githubId
           AND s.year = :year
+          AND (r.isPrivate = false OR r.isPrivate IS NULL)
+          AND (r.availabilityStatus IS NULL OR r.availabilityStatus <>
+               com.sosd.sosd_backend.entity.github.RepositoryAvailabilityStatus.PUBLICLY_UNAVAILABLE)
         ORDER BY s.repoScore DESC
     """)
     List<GithubContributionStats> findAllByGithubIdAndYearOrderByRepoScoreDesc(Long githubId, int year);
@@ -87,12 +98,16 @@ public interface AggregationGithubContributionStatsRepository extends JpaReposit
         JOIN GithubRepositoryEntity r ON s.repoId = r.id
         WHERE s.githubId = :githubId
           AND s.year = :year
+          AND (r.isPrivate = false OR r.isPrivate IS NULL)
+          AND (r.availabilityStatus IS NULL OR r.availabilityStatus <>
+               com.sosd.sosd_backend.entity.github.RepositoryAvailabilityStatus.PUBLICLY_UNAVAILABLE)
         ORDER BY s.repoScore DESC
     """)
     List<Object[]> findAllWithRepoNameByGithubIdAndYear(Long githubId, int year);
 
     /**
-     * private 처리된 레포의 contribution_stats 삭제
+     * private 또는 반복 확인 후 공개 접근 불가로 확정된 레포의 파생 통계 삭제.
+     * 커밋/PR/이슈 원시 데이터는 삭제하지 않는다.
      */
     @Modifying
     @Transactional
@@ -101,7 +116,8 @@ public interface AggregationGithubContributionStatsRepository extends JpaReposit
         WHERE s.repoId IN (
             SELECT r.id FROM GithubRepositoryEntity r
             WHERE r.isPrivate = true
+               OR r.availabilityStatus = com.sosd.sosd_backend.entity.github.RepositoryAvailabilityStatus.PUBLICLY_UNAVAILABLE
         )
     """)
-    int deleteByPrivateRepos();
+    int deleteByIneligibleRepos();
 }

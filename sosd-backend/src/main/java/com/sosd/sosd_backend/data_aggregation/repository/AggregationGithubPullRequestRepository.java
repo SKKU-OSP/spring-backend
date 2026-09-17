@@ -15,7 +15,10 @@ public interface AggregationGithubPullRequestRepository extends JpaRepository<Gi
         SELECT DATE_FORMAT(p.pr_date, '%Y-%m-01') AS yymm,
                COUNT(*)                           AS pr_count
         FROM github_pull_request p
+        JOIN github_repository r ON r.id = p.repo_id
         WHERE p.github_id = :githubId
+          AND (r.is_private = FALSE OR r.is_private IS NULL)
+          AND (r.availability_status IS NULL OR r.availability_status <> 'PUBLICLY_UNAVAILABLE')
         GROUP BY DATE_FORMAT(p.pr_date, '%Y-%m-01')
     """, nativeQuery = true)
     List<Object[]> findMonthlyPrStatsByGithubId(@Param("githubId") Long githubId);

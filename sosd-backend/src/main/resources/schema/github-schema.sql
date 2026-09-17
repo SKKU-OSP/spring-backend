@@ -57,6 +57,11 @@ CREATE TABLE IF NOT EXISTS github_repository (
     is_private BOOLEAN DEFAULT FALSE COMMENT '비공개 여부',
     last_starred_at DATETIME COMMENT 'star 증분형 수집을 위한 마지막 star 날짜 저장',
     last_collected_at DATETIME COMMENT '만약 updated_at 보다 뒤라면, 레포 정보 + star 새롭게 증분 수집',
+    availability_status VARCHAR(32) NOT NULL DEFAULT 'AVAILABLE' COMMENT '공개 접근 가능 상태',
+    consecutive_unavailable_count INT NOT NULL DEFAULT 0 COMMENT '연속 NOT_FOUND 확인 횟수',
+    last_availability_checked_at DATETIME COMMENT '마지막 공개 접근 확인 시각',
+    unavailable_since DATETIME COMMENT '연속 접근 불가가 시작된 시각',
+    last_availability_error VARCHAR(512) COMMENT '최근 접근 불가 확인 메시지',
 
     -- 인덱스
     UNIQUE INDEX uq_repository_github_repo_id (github_repo_id) COMMENT '깃허브 저장소 고유 ID (깃허브 api에서 제공)',
@@ -64,7 +69,8 @@ CREATE TABLE IF NOT EXISTS github_repository (
     INDEX idx_repository_full_name (full_name, is_private) COMMENT '저장소 full_name으로 직접 조회',
     INDEX idx_repository_created_at (github_repository_created_at,is_private) COMMENT '생성일 기준 조회 및 통계용',
     INDEX idx_repository_updated_at (github_repository_updated_at,is_private) COMMENT '최근 업데이트 저장소 조회용',
-    INDEX idx_repository_last_collected_at (last_collected_at) COMMENT '스케쥴러에서 최근순 조회용'
+    INDEX idx_repository_last_collected_at (last_collected_at) COMMENT '스케쥴러에서 최근순 조회용',
+    INDEX idx_repository_availability (availability_status, is_private) COMMENT '수집 및 공개 통계 대상 조회용'
 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GitHub 레포지토리 테이블';
 
