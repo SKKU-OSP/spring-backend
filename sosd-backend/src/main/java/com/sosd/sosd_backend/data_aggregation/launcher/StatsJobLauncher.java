@@ -23,8 +23,8 @@ public class StatsJobLauncher {
     private final AggregationGithubContributionStatsRepository contributionStatsRepository;
 
     public void runContributionStatsJob() {
-        int deleted = contributionStatsRepository.deleteByPrivateRepos();
-        log.info("private 레포 contribution_stats 정리: {}건 삭제", deleted);
+        int deleted = contributionStatsRepository.deleteByIneligibleRepos();
+        log.info("비공개/공개 접근 불가 레포 contribution_stats 정리: {}건 삭제", deleted);
 
         try {
             jobLauncher.run(

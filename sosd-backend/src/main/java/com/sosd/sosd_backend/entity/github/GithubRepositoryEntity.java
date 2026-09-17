@@ -108,6 +108,22 @@ public class GithubRepositoryEntity {
     @Column(name = "last_collected_at")
     private LocalDateTime lastCollectedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "availability_status", nullable = false, length = 32)
+    private RepositoryAvailabilityStatus availabilityStatus = RepositoryAvailabilityStatus.AVAILABLE;
+
+    @Column(name = "consecutive_unavailable_count", nullable = false)
+    private Integer consecutiveUnavailableCount = 0;
+
+    @Column(name = "last_availability_checked_at")
+    private LocalDateTime lastAvailabilityCheckedAt;
+
+    @Column(name = "unavailable_since")
+    private LocalDateTime unavailableSince;
+
+    @Column(name = "last_availability_error", length = 512)
+    private String lastAvailabilityError;
+
     @Builder
     public GithubRepositoryEntity(
             Long githubRepoId,
@@ -177,7 +193,44 @@ public class GithubRepositoryEntity {
         if (dto.githubPushedAt() != null) this.githubPushedAt = dto.githubPushedAt();
         if (dto.additionalData() != null) this.additionalData = dto.additionalData();
         if (dto.contributor() != null) this.contributor = dto.contributor();
-        if (dto.isPrivate() != null) this.isPrivate = dto.isPrivate();
+        if (dto.isPrivate() != null) {
+            markAvailable(dto.ownerName(), dto.repoName(), dto.isPrivate(), LocalDateTime.now());
+        }
+    }
+
+    /** GitHub에서 같은 repository id를 정상 조회한 경우 상태와 연속 실패 횟수를 복구한다. */
+    public void markAvailable(String canonicalOwnerName, String canonicalRepoName,
+                              Boolean privateRepository, LocalDateTime checkedAt) {
+        if (canonicalOwnerName != null && !canonicalOwnerName.isBlank()) this.ownerName = canonicalOwnerName;
+        if (canonicalRepoName != null && !canonicalRepoName.isBlank()) this.repoName = canonicalRepoName;
+        if (privateRepository != null) this.isPrivate = privateRepository;
+        this.availabilityStatus = RepositoryAvailabilityStatus.AVAILABLE;
+        this.consecutiveUnavailableCount = 0;
+        this.lastAvailabilityCheckedAt = checkedAt;
+        this.unavailableSince = null;
+        this.lastAvailabilityError = null;
+    }
+
+    /** 명시적인 NOT_FOUND만 누적한다. 일시적 API 오류는 이 메서드의 호출 대상이 아니다. */
+    public void markPubliclyUnavailable(LocalDateTime checkedAt, int confirmationThreshold, String error) {
+        int threshold = Math.max(1, confirmationThreshold);
+        int failures = (consecutiveUnavailableCount == null ? 0 : consecutiveUnavailableCount) + 1;
+        this.consecutiveUnavailableCount = failures;
+        this.lastAvailabilityCheckedAt = checkedAt;
+        if (this.unavailableSince == null) this.unavailableSince = checkedAt;
+        this.lastAvailabilityError = abbreviate(error, 512);
+        this.availabilityStatus = failures >= threshold
+                ? RepositoryAvailabilityStatus.PUBLICLY_UNAVAILABLE
+                : RepositoryAvailabilityStatus.SUSPECTED_UNAVAILABLE;
+    }
+
+    public boolean isPubliclyUnavailable() {
+        return availabilityStatus == RepositoryAvailabilityStatus.PUBLICLY_UNAVAILABLE;
+    }
+
+    private static String abbreviate(String value, int maxLength) {
+        if (value == null || value.length() <= maxLength) return value;
+        return value.substring(0, maxLength);
     }
 
 }

@@ -16,6 +16,8 @@ public interface AggregationGithubRepositoryRepository extends JpaRepository<Git
                COUNT(*)                                                 AS cr_repos
         FROM github_repository r
         WHERE r.owner_name = :loginUsername
+          AND (r.is_private = FALSE OR r.is_private IS NULL)
+          AND (r.availability_status IS NULL OR r.availability_status <> 'PUBLICLY_UNAVAILABLE')
         GROUP BY DATE_FORMAT(r.github_repository_created_at, '%Y-%m-01')
     """, nativeQuery = true)
     List<Object[]> findMonthlyCrReposByLoginUsername(@Param("loginUsername") String loginUsername);

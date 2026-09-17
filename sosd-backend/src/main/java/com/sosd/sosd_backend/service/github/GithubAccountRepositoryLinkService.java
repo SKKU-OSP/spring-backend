@@ -50,16 +50,8 @@ public class GithubAccountRepositoryLinkService {
     /** 2-1) repoRef 반환 */
     @Transactional(readOnly = true)
     public List<RepoRef> listRepoRefs(Long accountId) {
-        return linkRepo.findReposByAccountId(accountId).stream()
-                .map(e -> new RepoRef(
-                        e.getId(),
-                        e.getGithubRepoId(),
-                        e.getOwnerName(),
-                        e.getRepoName(),
-                        e.getFullName(),
-                        e.getGithubRepositoryUpdatedAt(),
-                        e.getGithubPushedAt()
-                ))
+        return linkRepo.findCollectableReposByAccountId(accountId).stream()
+                .map(this::toRepoRef)
                 .toList();
     }
 
@@ -82,16 +74,28 @@ public class GithubAccountRepositoryLinkService {
     @Transactional(readOnly = true)
     public List<RepoRef> listAllLinkedRepos() {
         return linkRepo.findAllLinkedRepos().stream()
-                .map(e -> new RepoRef(
-                        e.getId(),
-                        e.getGithubRepoId(),
-                        e.getOwnerName(),
-                        e.getRepoName(),
-                        e.getFullName(),
-                        e.getGithubRepositoryUpdatedAt(),
-                        e.getGithubPushedAt()
-                ))
+                .map(this::toRepoRef)
                 .toList();
+    }
+
+    /** 접근 불가 상태를 포함한 전체 링크 저장소 목록 (상태 재확인 전용). */
+    @Transactional(readOnly = true)
+    public List<RepoRef> listAllLinkedReposForAvailabilityCheck() {
+        return linkRepo.findAllLinkedReposForAvailabilityCheck().stream()
+                .map(this::toRepoRef)
+                .toList();
+    }
+
+    private RepoRef toRepoRef(GithubRepositoryEntity e) {
+        return new RepoRef(
+                e.getId(),
+                e.getGithubRepoId(),
+                e.getOwnerName(),
+                e.getRepoName(),
+                e.getFullName(),
+                e.getGithubRepositoryUpdatedAt(),
+                e.getGithubPushedAt()
+        );
     }
 
     /** 3) 커서 가져오기 */

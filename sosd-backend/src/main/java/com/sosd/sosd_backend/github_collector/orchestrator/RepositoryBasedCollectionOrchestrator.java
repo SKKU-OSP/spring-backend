@@ -3,6 +3,7 @@ package com.sosd.sosd_backend.github_collector.orchestrator;
 import com.sosd.sosd_backend.github_collector.dto.ref.GithubAccountRef;
 import com.sosd.sosd_backend.github_collector.dto.ref.RepoRef;
 import com.sosd.sosd_backend.service.github.GithubAccountRepositoryLinkService;
+import com.sosd.sosd_backend.service.github.RepositoryAvailabilityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -34,11 +35,15 @@ public class RepositoryBasedCollectionOrchestrator {
 
     private final GithubRepositoryOrchestrator githubRepositoryOrchestrator;
     private final GithubAccountRepositoryLinkService linkService;
+    private final RepositoryAvailabilityService availabilityService;
 
     /**
      * 시스템에 등록된 모든 레포에 대해 수집 수행
      */
     public void collectAll() {
+        List<RepoRef> availabilityTargets = linkService.listAllLinkedReposForAvailabilityCheck();
+        availabilityService.refreshAvailability(availabilityTargets);
+
         List<RepoRef> allRepos = linkService.listAllLinkedRepos();
         log.info(">>> Start repo-based collection. total repos={}", allRepos.size());
 

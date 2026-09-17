@@ -15,7 +15,10 @@ public interface AggregationGithubIssueRepository extends JpaRepository<GithubIs
         SELECT DATE_FORMAT(i.issue_date, '%Y-%m-01') AS yymm,
                COUNT(*)                              AS issue_count
         FROM github_issue i
+        JOIN github_repository r ON r.id = i.repo_id
         WHERE i.github_id = :githubId
+          AND (r.is_private = FALSE OR r.is_private IS NULL)
+          AND (r.availability_status IS NULL OR r.availability_status <> 'PUBLICLY_UNAVAILABLE')
         GROUP BY DATE_FORMAT(i.issue_date, '%Y-%m-01')
     """, nativeQuery = true)
     List<Object[]> findMonthlyIssueStatsByGithubId(@Param("githubId") Long githubId);
